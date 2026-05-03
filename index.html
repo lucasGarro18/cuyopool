@@ -87,10 +87,10 @@ body.ch #cdot{opacity:.4;width:5px;height:5px}
 .mnav-cta:hover{background:var(--gold);color:var(--bg) !important}
 .mnav-soc{display:flex;gap:18px;margin-top:6px}
 .mnav-soc a{font-size:.48rem !important;letter-spacing:.2em;text-transform:uppercase;color:var(--muted2) !important;font-family:'DM Sans',sans-serif !important}
+/* GLOBAL VIDEO BG */
+#pg-vid{position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;object-position:center;z-index:-1;pointer-events:none}
 /* HERO */
-.hero{position:relative;width:100%;height:100svh;min-height:640px;display:flex;align-items:flex-end;overflow:hidden}
-.hero-vid-wrap{position:absolute;inset:0;z-index:0}
-.hero-vid{width:100%;height:100%;object-fit:cover;object-position:center;opacity:.88}
+.hero{position:relative;width:100%;height:100svh;min-height:640px;display:flex;align-items:flex-end;background:transparent}
 
 
 
@@ -98,10 +98,6 @@ body.ch #cdot{opacity:.4;width:5px;height:5px}
 
 
 
-@keyframes cascFall{to{background-position:0 78px}}
-.infinity-casc{position:relative;height:180px;overflow:hidden;margin-top:-2px;background:linear-gradient(180deg,rgba(8,100,185,.48) 0%,rgba(5,40,100,.18) 62%,transparent 100%)}
-.infinity-casc::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(180deg,rgba(28,168,240,.22) 0px,rgba(12,120,210,.10) 16px,rgba(28,168,240,.18) 32px,rgba(12,120,210,.07) 48px);background-size:100% 48px;animation:cascFall .85s linear infinite;mix-blend-mode:screen}
-.infinity-casc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:90px;background:linear-gradient(transparent,#07080f)}
 .hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,8,15,.32) 0%,rgba(7,8,15,.04) 18%,rgba(7,8,15,.5) 60%,rgba(7,8,15,1) 100%),linear-gradient(90deg,rgba(7,8,15,.6) 0%,transparent 60%)}
 .hero-shimmer{position:absolute;inset:0;pointer-events:none;background:linear-gradient(120deg,transparent 38%,rgba(122,184,204,.04) 52%,transparent 66%);animation:shimmer 7s ease-in-out infinite;z-index:1}
 @keyframes shimmer{0%,100%{opacity:0;transform:translateX(-8%)}50%{opacity:1;transform:translateX(8%)}}
@@ -131,7 +127,7 @@ body.ch #cdot{opacity:.4;width:5px;height:5px}
 .hsi-bar{width:1px;height:46px;background:linear-gradient(to bottom,var(--gold),transparent);animation:hsiP 2.2s ease-in-out infinite}
 @keyframes hsiP{0%,100%{transform:scaleY(1);opacity:.35}50%{transform:scaleY(.5);opacity:.9}}
 /* ARQUITECTOS HIGHLIGHT BAND */
-.arch-band{background:var(--bg3);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:20px 52px;display:flex;align-items:center;justify-content:space-between;gap:30px;flex-wrap:wrap}
+.arch-band{background:rgba(16,18,30,0.82);backdrop-filter:blur(10px);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:20px 52px;display:flex;align-items:center;justify-content:space-between;gap:30px;flex-wrap:wrap}
 .arch-item{display:flex;align-items:center;gap:12px}
 .arch-icon{width:36px;height:36px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:.9rem;flex-shrink:0}
 .arch-txt strong{font-size:.5rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:3px}
@@ -167,7 +163,7 @@ body.ch #cdot{opacity:.4;width:5px;height:5px}
 .srule.c{margin-left:auto;margin-right:auto}
 .sdesc{font-size:.78rem;line-height:2.05;color:var(--muted)}
 /* QUIÉNES SOMOS */
-.quienes{background:var(--bg2);padding:96px 52px}
+.quienes{background:rgba(11,13,24,0.84);backdrop-filter:blur(10px);padding:96px 52px}
 .quienes-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:3px}
 .q-imgbox{position:relative;overflow:hidden}
 .q-imgbox img{height:100%;min-height:420px;filter:brightness(.72) saturate(.85);transition:transform .9s,filter .6s}
@@ -191,13 +187,13 @@ body.ch #cdot{opacity:.4;width:5px;height:5px}
 .mv-val{display:flex;align-items:flex-start;gap:9px;font-size:.68rem;color:var(--muted);line-height:1.65;margin-top:9px}
 .mv-val::before{content:'◆';color:var(--gold);font-size:.52rem;margin-top:2px;flex-shrink:0}
 /* STATS */
-.stats-band{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;justify-content:center;flex-wrap:wrap}
+.stats-band{background:rgba(7,8,15,0.82);backdrop-filter:blur(10px);border-top:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;justify-content:center;flex-wrap:wrap}
 .sb-item{flex:1;min-width:160px;max-width:220px;padding:26px 14px;text-align:center;border-right:1px solid var(--linew)}
 .sb-item:last-child{border-right:none}
 .sb-n{font-family:'Bodoni Moda',serif;font-size:2.3rem;font-weight:300;color:var(--gold2);display:block;line-height:1;margin-bottom:6px}
 .sb-l{font-size:.48rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
 /* LÍNEAS – EXPERIENCE GALLERY */
-.lineas{background:var(--bg2);padding:96px 0}
+.lineas{background:rgba(11,13,24,0.82);backdrop-filter:blur(10px);padding:96px 0}
 .lineas-head{padding:0 52px 50px;display:flex;align-items:flex-end;justify-content:space-between;gap:34px}
 .lineas-rdesc{font-size:.74rem;line-height:1.95;color:var(--muted);max-width:290px;text-align:right}
 /* FULL BLEED GALLERY – cards fijas que se revelan con scroll */
@@ -224,7 +220,7 @@ body.ch #cdot{opacity:.4;width:5px;height:5px}
 .gcard-cta .la{width:18px;height:1px;background:var(--gold);position:relative}
 .gcard-cta .la::after{content:'';position:absolute;right:0;top:-3px;width:5px;height:5px;border-top:1px solid var(--gold);border-right:1px solid var(--gold);transform:rotate(45deg)}
 /* PORCELANATO HIGHLIGHT */
-.porcela{background:var(--bg4);padding:80px 52px;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;border-top:1px solid var(--line)}
+.porcela{background:rgba(22,25,40,0.86);backdrop-filter:blur(10px);padding:80px 52px;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;border-top:1px solid var(--line)}
 .por-txt .sdesc{margin-top:18px}
 .por-txt .sdesc+.sdesc{margin-top:11px}
 .por-features{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:28px}
@@ -241,7 +237,7 @@ body.ch #cdot{opacity:.4;width:5px;height:5px}
 .por-img-badge strong{font-size:.48rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:4px}
 .por-img-badge span{font-size:.82rem;color:var(--white)}
 /* PROCESO */
-.proceso{background:var(--bg);padding:96px 52px}
+.proceso{background:rgba(7,8,15,0.82);backdrop-filter:blur(10px);padding:96px 52px}
 .proc-top{display:grid;grid-template-columns:1fr 1fr;gap:68px;align-items:end;margin-bottom:58px}
 .tl{display:grid;grid-template-columns:1fr 1fr;gap:2px}
 .ti{background:var(--bg2);padding:44px 38px;border:1px solid var(--linew);position:relative;overflow:hidden;transition:border-color .4s}
@@ -260,7 +256,7 @@ body.ch #cdot{opacity:.4;width:5px;height:5px}
 .pf-n{font-family:'Bodoni Moda',serif;font-size:.9rem;color:var(--gold);opacity:.5;line-height:1.2;flex-shrink:0;min-width:16px}
 .pf-t{font-size:.63rem;line-height:1.75;color:var(--muted)}
 /* PORTFOLIO */
-.proyectos{background:var(--bg2);padding:96px 52px}
+.proyectos{background:rgba(11,13,24,0.82);backdrop-filter:blur(10px);padding:96px 52px}
 .proy-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:48px;gap:32px}
 .proy-sub{font-size:.74rem;line-height:1.95;color:var(--muted);max-width:320px;text-align:right}
 .proy-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:3px}
@@ -281,7 +277,7 @@ body.ch #cdot{opacity:.4;width:5px;height:5px}
 .pc:nth-child(6){grid-column:span 2;aspect-ratio:16/8}
 .proy-foot{text-align:center;margin-top:36px}
 /* TESTIMONIOS */
-.test{background:var(--bg);padding:96px 52px}
+.test{background:rgba(7,8,15,0.82);backdrop-filter:blur(10px);padding:96px 52px}
 .test-head{text-align:center;max-width:500px;margin:0 auto 48px}
 .test-head .srule{margin:11px auto 0}
 .test-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px}
@@ -296,7 +292,7 @@ body.ch #cdot{opacity:.4;width:5px;height:5px}
 .tc-name{font-size:.7rem;font-weight:400;margin-bottom:2px}
 .tc-loc{font-size:.46rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);opacity:.7;display:block}
 /* CONTACTO */
-.contacto{display:grid;grid-template-columns:55fr 45fr;background:var(--bg3);min-height:90vh}
+.contacto{display:grid;grid-template-columns:55fr 45fr;background:rgba(16,18,30,0.86);backdrop-filter:blur(10px);min-height:90vh}
 .ct-l{padding:78px 62px;display:flex;flex-direction:column;justify-content:center}
 .ct-l .srule{margin:15px 0 21px}
 .ct-sub{font-size:.74rem;line-height:2;color:var(--muted);margin-bottom:24px;max-width:400px}
@@ -346,7 +342,7 @@ body.ch #cdot{opacity:.4;width:5px;height:5px}
 .ct-r-grad{position:absolute;inset:0;background:linear-gradient(to right,var(--bg3) 0%,transparent 30%),linear-gradient(to top,var(--bg3) 0%,transparent 32%)}
 .ct-watermark{position:absolute;bottom:28px;right:28px;font-family:'Bodoni Moda',serif;font-size:1.3rem;font-weight:300;letter-spacing:.2em;color:rgba(232,226,214,.06);text-align:right;line-height:1.2}
 /* FOOTER */
-footer{background:#040508;padding:54px 52px 24px;border-top:1px solid var(--line)}
+footer{background:rgba(4,5,8,0.92);backdrop-filter:blur(10px);padding:54px 52px 24px;border-top:1px solid var(--line)}
 .ft-grid{display:grid;grid-template-columns:1.8fr 1fr 1fr 1fr;gap:42px;margin-bottom:42px}
 .ft-logo-wrap{display:flex;align-items:center;gap:11px;margin-bottom:11px}
 .ft-logo-img{width:38px;height:38px;object-fit:contain;flex-shrink:0}
@@ -1292,12 +1288,7 @@ footer{background:#040508;padding:54px 52px 24px;border-top:1px solid var(--line
 
 <div id="main-content">
 <section class="hero" id="inicio">
-  <div class="hero-vid-wrap">
-    <video class="hero-vid" autoplay muted loop playsinline preload="auto">
-      <source src="hero.mp4" type="video/mp4">
-    </video>
-    <div class="hero-overlay"></div>
-  </div>
+  <div class="hero-overlay"></div>
   <div class="hero-shimmer" aria-hidden="true"></div>
   <div class="hero-geo" aria-hidden="true"><div class="geo"></div><div class="geo"></div><div class="geo"></div></div>
   <div class="hero-inner">
@@ -1332,9 +1323,6 @@ footer{background:#040508;padding:54px 52px 24px;border-top:1px solid var(--line
     <div class="hsi-bar"></div>
   </div>
 </section>
-
-<!-- DESBORDE INFINITO — transición pool → página -->
-<div class="infinity-casc" aria-hidden="true"></div>
 
 <!-- ARQUITECTOS BAND -->
 <div class="arch-band">
@@ -2245,22 +2233,9 @@ window.addEventListener('load', function(){
 
 </div><!-- /#main-content -->
 
-<!-- Video de cascada como fondo de toda la pagina al hacer scroll -->
-<video id="bg-water" autoplay muted loop playsinline aria-hidden="true" style="position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-1;pointer-events:none;opacity:0;transition:opacity 1.2s ease">
+<video id="pg-vid" autoplay muted loop playsinline preload="auto" aria-hidden="true">
   <source src="hero.mp4" type="video/mp4">
 </video>
-<script>
-(function(){
-  var bv=document.getElementById('bg-water');
-  if(!bv) return;
-  window.addEventListener('scroll',function(){
-    var hEl=document.getElementById('inicio');
-    var hH=hEl?hEl.offsetHeight:700;
-    var p=Math.min(Math.max((window.scrollY-hH*.60)/(hH*.40),0),1);
-    bv.style.opacity=(p*.58).toFixed(3);
-  },{passive:true});
-})();
-</script>
 
 </body>
 </html>
