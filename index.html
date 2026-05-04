@@ -2320,14 +2320,14 @@ var VS_DISP = [
   '}'
 ].join('\n');
 
-/* ── FS_SIM: ecuación de onda + depresión del cursor ── */
+/* wave simulation shader */
 var FS_SIM = [
   'precision highp float;',
   'uniform sampler2D uPrev;',
   'uniform sampler2D uCurr;',
   'uniform vec2 uInvSim;',
-  'uniform vec2 uCursor;',    /* posición cursor en GL coords */
-  'uniform float uCursorOn;', /* 0=inactivo, 1=activo */
+  'uniform vec2 uCursor;',
+  'uniform float uCursorOn;',
   'varying vec2 v;',
   'void main(){',
   '  float curr = texture2D(uCurr, v).r;',
@@ -2338,7 +2338,6 @@ var FS_SIM = [
   '  float D = texture2D(uCurr, v + vec2(0.0, -uInvSim.y)).r;',
   '  float next = (L + R + U + D) * 0.5 - prev;',
   '  next *= 0.985;',
-  '  /* Depresión suave del cursor — el agua se aparta */',
   '  if(uCursorOn > 0.0){',
   '    float d = distance(v, uCursor);',
   '    float mask = exp(-d * d * 85.0);',
@@ -2348,40 +2347,37 @@ var FS_SIM = [
   '}'
 ].join('\n');
 
-/* ── FS_RENDER: refracción FBO + desvío directo del cursor + grading ── */
+/* render shader: FBO refraction + finger deflection + color grading */
 var FS_RENDER = [
   'precision highp float;',
   'uniform sampler2D uVideo;',
   'uniform sampler2D uHeight;',
   'uniform vec2 uRes;',
   'uniform float uScroll;',
-  'uniform vec2 uCursor;',    /* cursor en coords de pantalla (y desde arriba) */
+  'uniform vec2 uCursor;',
   'uniform float uCursorOn;',
   'varying vec2 v;',
   'void main(){',
   '  vec2 uv = v;',
-  '  /* Refracción desde el mapa de altura (FBO) */',
   '  vec2 hc = vec2(uv.x, 1.0 - uv.y);',
   '  float hL = texture2D(uHeight, hc + vec2(-1.0/128.0, 0.0)).r;',
   '  float hR = texture2D(uHeight, hc + vec2( 1.0/128.0, 0.0)).r;',
   '  float hU = texture2D(uHeight, hc + vec2(0.0,  1.0/128.0)).r;',
   '  float hD = texture2D(uHeight, hc + vec2(0.0, -1.0/128.0)).r;',
   '  vec2 waveOff = vec2(hR - hL, hU - hD) * 0.38;',
-  '  /* Desvío directo — dedo en la cascada */',
   '  vec2 fingerOff = vec2(0.0);',
   '  if(uCursorOn > 0.0){',
   '    float ar = uRes.x / uRes.y;',
   '    vec2 diff = uv - uCursor;',
-  '    diff.x *= ar;',         /* distancia corregida por aspecto */
+  '    diff.x *= ar;',
   '    float dist = length(diff);',
   '    if(dist > 0.0001){',
   '      float inf = exp(-dist * dist * 13.0);',
   '      vec2 dir = normalize(diff);',
-  '      dir.x *= 1.6;',      /* el agua se parte más en X */
+  '      dir.x *= 1.6;',
   '      fingerOff = dir * inf * 0.030 * uCursorOn;',
   '    }',
   '  }',
-  '  /* Mapeo UV: video portrait 720×1280 en pantalla landscape */',
   '  float sA = uRes.x / uRes.y;',
   '  float vh = 0.5625 / sA;',
   '  float mO = max(0.0, 0.80 - vh);',
@@ -2391,7 +2387,6 @@ var FS_RENDER = [
   '    clamp(uScroll * mO + (uv.y + off.y) * vh, 0.001, 0.999)',
   '  );',
   '  vec4 col = texture2D(uVideo, vuv);',
-  '  /* Sharpening — unsharp mask */',
   '  vec2 tx = vec2(1.0/720.0, 1.0/1280.0);',
   '  vec3 b4 = (',
   '    texture2D(uVideo, vuv + vec2( tx.x, 0.0)).rgb +',
@@ -2401,7 +2396,6 @@ var FS_RENDER = [
   '  ) * 0.25;',
   '  col.rgb += (col.rgb - b4) * 0.55;',
   '  col.rgb = clamp(col.rgb, 0.0, 1.0);',
-  '  /* Color grading */',
   '  float lum = dot(col.rgb, vec3(0.2126, 0.7152, 0.0722));',
   '  col.rgb = mix(vec3(lum), col.rgb, 1.35);',
   '  col.rgb = (col.rgb - 0.5) * 1.22 + 0.5;',
@@ -2438,6 +2432,7 @@ gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
 
 function bindQuad(prog){
+  gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
   var loc = gl.getAttribLocation(prog, 'a');
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
