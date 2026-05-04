@@ -96,11 +96,26 @@ body.ch #cdot{opacity:.4;width:5px;height:5px}
 .vignette{position:fixed;top:0;left:0;width:100%;height:38vh;z-index:1;background:linear-gradient(to bottom,rgba(0,0,0,0.58) 0%,transparent 100%);pointer-events:none}
 /* ── SECCIONES: completamente transparentes ──────────── */
 .arch-band,.quienes,.stats-band,.lineas,.porcela,.proceso,.proyectos,.test,.contacto,footer{background:transparent !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important}
-/* ── TARJETAS SIN FONDO — texto flotando sobre el agua ── */
-.q-text,.mv-card,.ti,.proc-full,.por-feat,.por-img-badge,.fi,.contact-info{background:transparent !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;border-color:rgba(197,165,90,0.18) !important}
-/* ── LEGIBILIDAD: sombra de texto sobre el agua ─────── */
-body{text-shadow:0 1px 8px rgba(0,0,0,0.92),0 2px 20px rgba(0,0,0,0.6)}
-h1,h2,h3,h4,h5,h6,.sh,.stag,.sdesc,.hero-desc,.sb-n,.sb-l,.arch-txt span,.arch-txt strong{text-shadow:0 1px 10px rgba(0,0,0,0.98),0 0 32px rgba(0,0,0,0.85),0 3px 6px rgba(0,0,0,1) !important}
+/* ── TODAS LAS CAJAS SIN FONDO — texto flotando sobre el agua ── */
+.q-text,.mv-card,.ti,.proc-full,.por-feat,.por-img-badge,.tc,.cl,.agent-card,
+.ct-l,.sb-item,.arch-item,.contacts-agents,.ct-links{
+  background:transparent !important;
+  backdrop-filter:none !important;-webkit-backdrop-filter:none !important;
+  border-color:rgba(197,165,90,0.16) !important}
+/* ── INPUTS DEL FORMULARIO: vidrio sutil ─────────────── */
+.fi input,.fi select,.fi textarea{
+  background:rgba(5,6,15,0.35) !important;
+  backdrop-filter:blur(8px) !important;-webkit-backdrop-filter:blur(8px) !important;
+  border-bottom-color:rgba(197,165,90,0.45) !important}
+/* ── DEGRADADOS DE CONTACTO: usar transparente ──────── */
+.ct-r-grad{background:linear-gradient(to right,rgba(5,6,12,0.55) 0%,transparent 35%),
+           linear-gradient(to top,rgba(5,6,12,0.55) 0%,transparent 38%) !important}
+/* ── LEGIBILIDAD: sombra de texto multicapa ──────────── */
+body{text-shadow:0 1px 8px rgba(0,0,0,0.95),0 2px 20px rgba(0,0,0,0.7)}
+h1,h2,h3,h4,h5,h6,.sh,.stag,.sdesc,.hero-desc,.sb-n,.sb-l,
+.arch-txt span,.arch-txt strong,.tc-txt,.ft-brand p,.ct-sub{
+  text-shadow:0 1px 10px rgba(0,0,0,1),0 0 28px rgba(0,0,0,0.9),
+              0 3px 8px rgba(0,0,0,1) !important}
 /* HERO */
 .hero{position:relative;width:100%;height:80vh;min-height:560px;display:flex;align-items:flex-end;background:transparent}
 
@@ -2348,15 +2363,26 @@ var FS = [
   '    clamp(S * mO + du.y * vh, 0.001, 0.999)',
   '  );',
   '  vec4 col = texture2D(T, vuv);',
+  '  /* Sharpening: unsharp mask con vecinos del video 720×1280 */',
+  '  vec2 tx = vec2(1.0/720.0, 1.0/1280.0);',
+  '  vec3 blur4 = (',
+  '    texture2D(T, vuv + vec2( tx.x,  0.0 )).rgb +',
+  '    texture2D(T, vuv + vec2(-tx.x,  0.0 )).rgb +',
+  '    texture2D(T, vuv + vec2(  0.0,  tx.y)).rgb +',
+  '    texture2D(T, vuv + vec2(  0.0, -tx.y)).rgb',
+  '  ) * 0.25;',
+  '  col.rgb += (col.rgb - blur4) * 0.55;',
+  '  col.rgb = clamp(col.rgb, 0.0, 1.0);',
   '  /* Color grading: saturación + contraste + gamma */',
   '  float lum = dot(col.rgb, vec3(0.2126, 0.7152, 0.0722));',
-  '  col.rgb = mix(vec3(lum), col.rgb, 1.32);',
-  '  col.rgb = (col.rgb - 0.5) * 1.18 + 0.5;',
-  '  col.rgb = pow(clamp(col.rgb, 0.0, 1.0), vec3(0.90));',
+  '  col.rgb = mix(vec3(lum), col.rgb, 1.35);',
+  '  col.rgb = (col.rgb - 0.5) * 1.22 + 0.5;',
+  '  col.rgb = pow(clamp(col.rgb, 0.0, 1.0), vec3(0.88));',
   '  col.rgb = clamp(col.rgb, 0.0, 1.0);',
-  '  /* Viñeta superior sutil */',
+  '  /* Oscuridad: más oscuro al bajar para que las letras se lean */',
+  '  float dark = 0.76 - S * 0.10;',
   '  float vg = smoothstep(0.0, 0.12, uv.y);',
-  '  gl_FragColor = vec4(col.rgb * (0.92 + 0.08 * vg), 1.0);',
+  '  gl_FragColor = vec4(col.rgb * (dark + 0.12 * vg), 1.0);',
   '}'
 ].join('\n');
 
