@@ -26,7 +26,7 @@ button{font-family:inherit;border:none;background:none;cursor:none}
 @media(pointer:coarse){button{cursor:pointer}}
 :focus-visible{outline:2px solid #c5a55a;outline-offset:3px}
 :root{
-  --bg:#07080f;--bg2:#0b0d18;--bg3:#10121e;--bg4:#161928;
+  --bg:rgba(7,8,15,0.82);--bg2:rgba(11,13,24,0.76);--bg3:rgba(16,18,30,0.72);--bg4:rgba(22,25,40,0.68);
   --gold:#c5a55a;--gold2:#dbb97a;--gold3:#f0d090;
   --white:#e8e2d6;--muted:rgba(232,226,214,.52);--muted2:rgba(232,226,214,.28);
   --line:rgba(197,165,90,.15);--linew:rgba(232,226,214,.07);
@@ -88,12 +88,19 @@ body.ch #cdot{opacity:.4;width:5px;height:5px}
 .mnav-cta:hover{background:var(--gold);color:var(--bg) !important}
 .mnav-soc{display:flex;gap:18px;margin-top:6px}
 .mnav-soc a{font-size:.48rem !important;letter-spacing:.2em;text-transform:uppercase;color:var(--muted2) !important;font-family:'DM Sans',sans-serif !important}
-/* ── VIDEO FIJO – DESBORDE INFINITO ────────────────── */
-#hero-video{position:fixed;top:0;left:0;width:100%;height:100vh;z-index:-1;object-fit:cover;object-position:center 0%;filter:saturate(1.25) contrast(1.12) brightness(0.88);transform:translateZ(0);will-change:object-position,transform}
-/* ── VIGNETTE – solo sombra superior para nav ───────── */
-.vignette{position:fixed;top:0;left:0;width:100%;height:100vh;z-index:0;background:linear-gradient(to bottom,rgba(0,0,0,0.62) 0%,rgba(0,0,0,0.18) 20%,transparent 45%);pointer-events:none}
-/* ── GLASSMORPHISM EN SECCIONES ─────────────────────── */
-.arch-band,.quienes,.stats-band,.lineas,.porcela,.proceso,.proyectos,.test,.contacto,footer{backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+/* ── VIDEO: oculto, fuente de textura para WebGL ────── */
+#hero-video{position:fixed;top:-4px;left:-4px;width:2px;height:2px;opacity:0;pointer-events:none;z-index:-10}
+/* ── CANVAS WebGL: fondo interactivo real ────────────── */
+#water-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none;display:block}
+/* ── VIGNETTE: solo sombra superior para nav ─────────── */
+.vignette{position:fixed;top:0;left:0;width:100%;height:38vh;z-index:1;background:linear-gradient(to bottom,rgba(0,0,0,0.58) 0%,transparent 100%);pointer-events:none}
+/* ── SECCIONES: completamente transparentes ──────────── */
+.arch-band,.quienes,.stats-band,.lineas,.porcela,.proceso,.proyectos,.test,.contacto,footer{background:transparent !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important}
+/* ── GLASS CARDS: agua visible a través de las tarjetas ─ */
+.q-text,.mv-card,.ti,.proc-full,.por-feat,.por-img-badge,.fi,.contact-info{background:rgba(5,6,12,0.74) !important;backdrop-filter:blur(12px) !important;-webkit-backdrop-filter:blur(12px) !important;border-color:rgba(197,165,90,0.14) !important}
+/* ── LEGIBILIDAD DE TEXTO ────────────────────────────── */
+body{text-shadow:0 1px 6px rgba(0,0,0,0.85)}
+.sh,.stag{text-shadow:0 2px 14px rgba(0,0,0,0.98),0 0 40px rgba(0,0,0,0.8) !important}
 /* HERO */
 .hero{position:relative;width:100%;height:80vh;min-height:560px;display:flex;align-items:flex-end;background:transparent}
 
@@ -1895,6 +1902,7 @@ window.addEventListener('load', function(){
     function raf(time){ lenis.raf(time); requestAnimationFrame(raf); }
     requestAnimationFrame(raf);
     lenis.on('scroll', ScrollTrigger.update);
+    lenis.on('scroll', function(e){ if(window.__setWP) window.__setWP(e.progress||0); });
     gsap.ticker.add(function(time){ lenis.raf(time * 1000); });
     gsap.ticker.lagSmoothing(0);
   }
@@ -2232,19 +2240,7 @@ window.addEventListener('load', function(){
     });
   });
 
-  /* ── DESBORDE INFINITO – revela la cascada al scrollear ── */
-  (function(){
-    var vid = document.getElementById('hero-video');
-    if(!vid) return;
-    ScrollTrigger.create({
-      start: 'top top',
-      end: 'bottom bottom',
-      onUpdate: function(self){
-        var pct = (self.progress * 80).toFixed(2);
-        vid.style.objectPosition = 'center ' + pct + '%';
-      }
-    });
-  })();
+  /* scroll progress for WebGL water handled by lenis.on('scroll') above */
 
   console.log('CUYO POOL — GSAP Premium ✅');
 });
@@ -2254,9 +2250,229 @@ window.addEventListener('load', function(){
 
 </div><!-- /#main-content -->
 
-<video id="hero-video" autoplay loop muted playsinline preload="auto" aria-hidden="true">
+<video id="hero-video" autoplay loop muted playsinline preload="auto" aria-hidden="true" style="position:fixed;top:-4px;left:-4px;width:2px;height:2px;opacity:0;pointer-events:none;z-index:-10">
   <source src="hero.mp4" type="video/mp4">
 </video>
+
+<script>
+/* ─────────────────────────────────────────────────────────
+   CUYO POOL — Desborde Infinito
+   WebGL + GLSL: video del río como textura live,
+   ondas de agua reactivas al cursor, cascada revelada al scrollear
+   ───────────────────────────────────────────────────────── */
+(function(){
+'use strict';
+
+var vid = document.getElementById('hero-video');
+if(!vid) return;
+
+/* Canvas background */
+var cvs = document.createElement('canvas');
+cvs.id = 'water-canvas';
+document.body.insertBefore(cvs, document.body.firstChild);
+
+var gl = cvs.getContext('webgl',{
+  alpha:false, antialias:false,
+  powerPreference:'high-performance',
+  preserveDrawingBuffer:false
+});
+if(!gl){ console.warn('CuyoPool: WebGL no disponible'); return; }
+
+/* Resize handler */
+function resize(){
+  var dpr = Math.min(window.devicePixelRatio||1, 2);
+  cvs.width  = Math.floor(window.innerWidth  * dpr);
+  cvs.height = Math.floor(window.innerHeight * dpr);
+  gl.viewport(0, 0, cvs.width, cvs.height);
+}
+resize();
+window.addEventListener('resize', resize, {passive:true});
+
+/* ── Vertex Shader ───────────────────────────────────── */
+var VS = [
+  'attribute vec2 a;',
+  'varying vec2 v;',
+  'void main(){',
+  '  v = a * 0.5 + 0.5;',
+  '  v.y = 1.0 - v.y;',
+  '  gl_Position = vec4(a, 0.0, 1.0);',
+  '}'
+].join('\n');
+
+/* ── Fragment Shader ─────────────────────────────────── */
+var FS = [
+  'precision highp float;',
+  'uniform sampler2D T;',
+  'uniform vec2 R;',          /* viewport resolution          */
+  'uniform float S;',          /* scroll progress 0→1          */
+  'uniform float t;',          /* tiempo en segundos           */
+  'uniform vec2 p0; uniform float a0;',
+  'uniform vec2 p1; uniform float a1;',
+  'uniform vec2 p2; uniform float a2;',
+  'uniform vec2 p3; uniform float a3;',
+  'uniform vec2 p4; uniform float a4;',
+  'varying vec2 v;',
+  '',
+  '/* Onda radial de ripple */',
+  'vec2 rip(vec2 uv, vec2 c, float age){',
+  '  if(age > 4.0) return vec2(0.0);',
+  '  float d = distance(uv, c);',
+  '  float amp = exp(-d * 5.5) * exp(-age * 1.5) * 0.034;',
+  '  float w = sin(d * 26.0 - age * 10.0) * amp;',
+  '  vec2 dir = (d > 0.001) ? normalize(uv - c) : vec2(0.0);',
+  '  return dir * w;',
+  '}',
+  '',
+  'void main(){',
+  '  vec2 uv = v;',
+  '  /* Movimiento ambiente del agua — multi-frecuencia */',
+  '  vec2 d = vec2(0.0);',
+  '  d.x += sin(uv.y * 11.0 + t * 0.62) * 0.0022;',
+  '  d.y += cos(uv.x *  8.0 + t * 0.54) * 0.0017;',
+  '  d.x += sin(uv.y * 26.0 + uv.x * 5.0 + t * 1.7) * 0.0007;',
+  '  d.y += cos(uv.x * 21.0 - uv.y * 4.0 + t * 1.4) * 0.0005;',
+  '  /* Ripples del cursor */',
+  '  d += rip(uv, p0, a0);',
+  '  d += rip(uv, p1, a1);',
+  '  d += rip(uv, p2, a2);',
+  '  d += rip(uv, p3, a3);',
+  '  d += rip(uv, p4, a4);',
+  '  vec2 du = uv + d;',
+  '  /* Mapeo de UV: video portrait 720×1280 en pantalla landscape */',
+  '  float sA = R.x / R.y;',     /* aspect pantalla (~1.78)  */
+  '  float vA = 0.5625;',        /* aspect video (720/1280)  */
+  '  float vh = vA / sA;',       /* fracción de altura visible */
+  '  float mO = max(0.0, 0.80 - vh);', /* rango de scroll     */
+  '  vec2 vuv = vec2(',
+  '    clamp(du.x, 0.001, 0.999),',
+  '    clamp(S * mO + du.y * vh, 0.001, 0.999)',
+  '  );',
+  '  vec4 col = texture2D(T, vuv);',
+  '  /* Viñeta superior sutil */',
+  '  float vg = smoothstep(0.0, 0.10, uv.y);',
+  '  gl_FragColor = col * (0.86 + 0.14 * vg);',
+  '}'
+].join('\n');
+
+/* ── Compilar shaders ────────────────────────────────── */
+function mkShader(type, src){
+  var s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
+  if(!gl.getShaderParameter(s, gl.COMPILE_STATUS))
+    console.error('Shader error:', gl.getShaderInfoLog(s));
+  return s;
+}
+var prog = gl.createProgram();
+gl.attachShader(prog, mkShader(gl.VERTEX_SHADER,   VS));
+gl.attachShader(prog, mkShader(gl.FRAGMENT_SHADER, FS));
+gl.linkProgram(prog);
+gl.useProgram(prog);
+
+/* ── Quad fullscreen ─────────────────────────────────── */
+var buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER,
+  new Float32Array([-1,-1, 1,-1, -1,1, 1,1]),
+  gl.STATIC_DRAW);
+var aLoc = gl.getAttribLocation(prog, 'a');
+gl.enableVertexAttribArray(aLoc);
+gl.vertexAttribPointer(aLoc, 2, gl.FLOAT, false, 0, 0);
+
+/* ── Uniforms ────────────────────────────────────────── */
+var U = {
+  T: gl.getUniformLocation(prog,'T'),
+  R: gl.getUniformLocation(prog,'R'),
+  S: gl.getUniformLocation(prog,'S'),
+  t: gl.getUniformLocation(prog,'t'),
+  p: [
+    gl.getUniformLocation(prog,'p0'), gl.getUniformLocation(prog,'p1'),
+    gl.getUniformLocation(prog,'p2'), gl.getUniformLocation(prog,'p3'),
+    gl.getUniformLocation(prog,'p4')
+  ],
+  a: [
+    gl.getUniformLocation(prog,'a0'), gl.getUniformLocation(prog,'a1'),
+    gl.getUniformLocation(prog,'a2'), gl.getUniformLocation(prog,'a3'),
+    gl.getUniformLocation(prog,'a4')
+  ]
+};
+
+/* ── Textura de video ────────────────────────────────── */
+var tex = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, tex);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+gl.uniform1i(U.T, 0);
+
+/* ── Ripples ─────────────────────────────────────────── */
+var N = 5;
+var rips = [];
+for(var i=0; i<N; i++) rips.push({x:-1, y:-1, age:99});
+var ri = 0;
+
+function addRip(cx, cy){
+  rips[ri] = { x: cx/window.innerWidth, y: 1.0 - cy/window.innerHeight, age: 0 };
+  ri = (ri+1) % N;
+}
+
+var lastRip = 0;
+document.addEventListener('mousemove', function(e){
+  if(performance.now() - lastRip > 88){
+    addRip(e.clientX, e.clientY);
+    lastRip = performance.now();
+  }
+});
+document.addEventListener('click', function(e){ addRip(e.clientX, e.clientY); });
+document.addEventListener('touchmove', function(e){
+  addRip(e.touches[0].clientX, e.touches[0].clientY);
+}, {passive:true});
+
+/* ── Scroll progress ─────────────────────────────────── */
+var scrollPct = 0;
+/* Exponer callback para Lenis (ver bloque GSAP) */
+window.__setWP = function(p){ scrollPct = p; };
+/* Fallback nativo */
+window.addEventListener('scroll', function(){
+  var m = document.body.scrollHeight - window.innerHeight;
+  if(m > 0) scrollPct = window.pageYOffset / m;
+}, {passive:true});
+
+/* ── Render loop ─────────────────────────────────────── */
+var t0 = performance.now();
+var tLast = t0;
+
+function render(now){
+  var dt = Math.min((now - tLast) / 1000, 0.05);
+  tLast = now;
+
+  gl.uniform2f(U.R, cvs.width, cvs.height);
+  gl.uniform1f(U.S, scrollPct);
+  gl.uniform1f(U.t, (now - t0) / 1000);
+
+  for(var j=0; j<N; j++){
+    rips[j].age += dt;
+    gl.uniform2f(U.p[j], rips[j].x, rips[j].y);
+    gl.uniform1f(U.a[j], rips[j].age);
+  }
+
+  /* Subir frame del video a GPU */
+  if(vid.readyState >= 2){
+    try{
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, vid);
+    }catch(e){}
+  }
+
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  requestAnimationFrame(render);
+}
+
+requestAnimationFrame(render);
+console.log('CuyoPool — WebGL Water ✅');
+})();
+</script>
 <div class="vignette" aria-hidden="true"></div>
 <script>
 (function(){
