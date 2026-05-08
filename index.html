@@ -89,7 +89,7 @@ body.ch #cdot{opacity:.4;width:5px;height:5px}
 .mnav-soc{display:flex;gap:18px;margin-top:6px}
 .mnav-soc a{font-size:.48rem !important;letter-spacing:.2em;text-transform:uppercase;color:var(--muted2) !important;font-family:'DM Sans',sans-serif !important}
 /* ── VIDEO: oculto, fuente de textura para WebGL ────── */
-#hero-video{position:fixed;top:-4px;left:-4px;width:2px;height:2px;opacity:0;pointer-events:none;z-index:-10}
+#hero-video{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 0%;pointer-events:none;z-index:-2}
 /* ── CANVAS WebGL: fondo interactivo real ────────────── */
 #water-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none;display:block}
 /* ── VIGNETTE: solo sombra superior para nav ─────────── */
@@ -2271,35 +2271,45 @@ window.addEventListener('load', function(){
 
 </div><!-- /#main-content -->
 
-<video id="hero-video" autoplay loop muted playsinline preload="auto" aria-hidden="true" style="position:fixed;top:-4px;left:-4px;width:2px;height:2px;opacity:0;pointer-events:none;z-index:-10">
+<video id="hero-video" autoplay loop muted playsinline preload="auto" aria-hidden="true">
   <source src="hero.mp4" type="video/mp4">
 </video>
 
 <script>
-/* ─────────────────────────────────────────────────────────
-   CUYO POOL — Desborde Infinito v3
-   Ping-pong FBO + "dedo en la cascada" cursor deflection
-   ───────────────────────────────────────────────────────── */
+/* CUYO POOL — Desborde Infinito v4
+   CSS video as visible background (always on)
+   WebGL canvas overlays with distortion when ready
+   Fallback: CSS video stays visible if WebGL fails */
 (function(){
 'use strict';
 
 var vid = document.getElementById('hero-video');
 if(!vid) return;
 
+/* CSS video scroll pan — works with or without WebGL */
+function panVideo(p){
+  vid.style.objectPosition = 'center ' + (p * 82).toFixed(1) + '%';
+}
+
+/* Canvas — starts invisible, fades in when WebGL is rendering */
 var cvs = document.createElement('canvas');
 cvs.id = 'water-canvas';
+cvs.style.opacity = '0';
+cvs.style.transition = 'opacity 0.6s ease';
 document.body.insertBefore(cvs, document.body.firstChild);
 
-var gl = cvs.getContext('webgl',{
-  alpha:false, antialias:false,
-  powerPreference:'high-performance',
-  preserveDrawingBuffer:false
+var gl = cvs.getContext('webgl', {
+  alpha: true,
+  premultipliedAlpha: false,
+  antialias: false,
+  powerPreference: 'high-performance',
+  preserveDrawingBuffer: false
 });
-if(!gl){ console.warn('CuyoPool: WebGL no disponible'); return; }
+if(!gl){ console.warn('CuyoPool: WebGL unavailable — CSS video active'); return; }
 
-var W, H, SW, SH;
+var W, H, SW, SH, fboOk = false, vidReady = false;
 
-/* ── VS_SIM: sin y-flip — convención GL para FBOs ── */
+/* ── Vertex shader: simulation pass (no y-flip, GL convention) ── */
 var VS_SIM = [
   'attribute vec2 a;',
   'varying vec2 v;',
@@ -2309,7 +2319,7 @@ var VS_SIM = [
   '}'
 ].join('\n');
 
-/* ── VS_DISP: con y-flip — espacio de pantalla ── */
+/* ── Vertex shader: display pass (y-flip for screen) ── */
 var VS_DISP = [
   'attribute vec2 a;',
   'varying vec2 v;',
@@ -2320,34 +2330,33 @@ var VS_DISP = [
   '}'
 ].join('\n');
 
-/* wave simulation shader */
+/* ── Wave simulation: finite difference + cursor depression ── */
 var FS_SIM = [
   'precision highp float;',
   'uniform sampler2D uPrev;',
   'uniform sampler2D uCurr;',
-  'uniform vec2 uInvSim;',
+  'uniform vec2 uInv;',
   'uniform vec2 uCursor;',
   'uniform float uCursorOn;',
   'varying vec2 v;',
   'void main(){',
-  '  float curr = texture2D(uCurr, v).r;',
-  '  float prev = texture2D(uPrev, v).r;',
-  '  float L = texture2D(uCurr, v + vec2(-uInvSim.x, 0.0)).r;',
-  '  float R = texture2D(uCurr, v + vec2( uInvSim.x, 0.0)).r;',
-  '  float U = texture2D(uCurr, v + vec2(0.0,  uInvSim.y)).r;',
-  '  float D = texture2D(uCurr, v + vec2(0.0, -uInvSim.y)).r;',
-  '  float next = (L + R + U + D) * 0.5 - prev;',
-  '  next *= 0.985;',
-  '  if(uCursorOn > 0.0){',
+  '  float c = texture2D(uCurr, v).r;',
+  '  float p = texture2D(uPrev, v).r;',
+  '  float L = texture2D(uCurr, v - vec2(uInv.x, 0.0)).r;',
+  '  float R = texture2D(uCurr, v + vec2(uInv.x, 0.0)).r;',
+  '  float U = texture2D(uCurr, v + vec2(0.0, uInv.y)).r;',
+  '  float D = texture2D(uCurr, v - vec2(0.0, uInv.y)).r;',
+  '  float n = (L + R + U + D) * 0.5 - p;',
+  '  n *= 0.986;',
+  '  if(uCursorOn > 0.001){',
   '    float d = distance(v, uCursor);',
-  '    float mask = exp(-d * d * 85.0);',
-  '    next = mix(next, -0.45, mask * 0.5 * uCursorOn);',
+  '    n = mix(n, -0.5, exp(-d*d*90.0) * uCursorOn * 0.55);',
   '  }',
-  '  gl_FragColor = vec4(clamp(next, -1.0, 1.0), 0.0, 0.0, 1.0);',
+  '  gl_FragColor = vec4(clamp(n, -1.0, 1.0), 0.0, 0.0, 1.0);',
   '}'
 ].join('\n');
 
-/* render shader: FBO refraction + finger deflection + color grading */
+/* ── Render: video + FBO refraction + finger deflection + grading ── */
 var FS_RENDER = [
   'precision highp float;',
   'uniform sampler2D uVideo;',
@@ -2360,85 +2369,86 @@ var FS_RENDER = [
   'void main(){',
   '  vec2 uv = v;',
   '  vec2 hc = vec2(uv.x, 1.0 - uv.y);',
-  '  float hL = texture2D(uHeight, hc + vec2(-1.0/128.0, 0.0)).r;',
-  '  float hR = texture2D(uHeight, hc + vec2( 1.0/128.0, 0.0)).r;',
-  '  float hU = texture2D(uHeight, hc + vec2(0.0,  1.0/128.0)).r;',
-  '  float hD = texture2D(uHeight, hc + vec2(0.0, -1.0/128.0)).r;',
-  '  vec2 waveOff = vec2(hR - hL, hU - hD) * 0.38;',
-  '  vec2 fingerOff = vec2(0.0);',
-  '  if(uCursorOn > 0.0){',
-  '    float ar = uRes.x / uRes.y;',
-  '    vec2 diff = uv - uCursor;',
-  '    diff.x *= ar;',
-  '    float dist = length(diff);',
-  '    if(dist > 0.0001){',
-  '      float inf = exp(-dist * dist * 13.0);',
-  '      vec2 dir = normalize(diff);',
-  '      dir.x *= 1.6;',
-  '      fingerOff = dir * inf * 0.030 * uCursorOn;',
+  '  float hL = texture2D(uHeight, hc - vec2(0.0078, 0.0)).r;',
+  '  float hR = texture2D(uHeight, hc + vec2(0.0078, 0.0)).r;',
+  '  float hU = texture2D(uHeight, hc + vec2(0.0, 0.0078)).r;',
+  '  float hD = texture2D(uHeight, hc - vec2(0.0, 0.0078)).r;',
+  '  vec2 wOff = vec2(hR - hL, hU - hD) * 0.44;',
+  '  vec2 fOff = vec2(0.0);',
+  '  if(uCursorOn > 0.001){',
+  '    vec2 d = (uv - uCursor) * vec2(uRes.x / uRes.y, 1.0);',
+  '    float dist = length(d);',
+  '    if(dist > 0.001){',
+  '      fOff = normalize(d) * vec2(1.8, 1.0) * exp(-dist*dist*11.0) * uCursorOn * 0.034;',
   '    }',
   '  }',
   '  float sA = uRes.x / uRes.y;',
   '  float vh = 0.5625 / sA;',
-  '  float mO = max(0.0, 0.80 - vh);',
-  '  vec2 off = waveOff + fingerOff;',
+  '  float mO = max(0.0, 0.82 - vh);',
+  '  vec2 off = wOff + fOff;',
   '  vec2 vuv = vec2(',
   '    clamp(uv.x + off.x, 0.001, 0.999),',
   '    clamp(uScroll * mO + (uv.y + off.y) * vh, 0.001, 0.999)',
   '  );',
   '  vec4 col = texture2D(uVideo, vuv);',
   '  vec2 tx = vec2(1.0/720.0, 1.0/1280.0);',
-  '  vec3 b4 = (',
-  '    texture2D(uVideo, vuv + vec2( tx.x, 0.0)).rgb +',
-  '    texture2D(uVideo, vuv + vec2(-tx.x, 0.0)).rgb +',
-  '    texture2D(uVideo, vuv + vec2(0.0,  tx.y)).rgb +',
-  '    texture2D(uVideo, vuv + vec2(0.0, -tx.y)).rgb',
-  '  ) * 0.25;',
-  '  col.rgb += (col.rgb - b4) * 0.55;',
-  '  col.rgb = clamp(col.rgb, 0.0, 1.0);',
+  '  vec3 b = (texture2D(uVideo,vuv+vec2(tx.x,0.0)).rgb +',
+  '            texture2D(uVideo,vuv-vec2(tx.x,0.0)).rgb +',
+  '            texture2D(uVideo,vuv+vec2(0.0,tx.y)).rgb +',
+  '            texture2D(uVideo,vuv-vec2(0.0,tx.y)).rgb) * 0.25;',
+  '  col.rgb = clamp(col.rgb + (col.rgb - b) * 0.6, 0.0, 1.0);',
   '  float lum = dot(col.rgb, vec3(0.2126, 0.7152, 0.0722));',
-  '  col.rgb = mix(vec3(lum), col.rgb, 1.35);',
-  '  col.rgb = (col.rgb - 0.5) * 1.22 + 0.5;',
-  '  col.rgb = pow(clamp(col.rgb, 0.0, 1.0), vec3(0.88));',
-  '  float dark = 0.76 - uScroll * 0.10;',
-  '  float vg = smoothstep(0.0, 0.12, uv.y);',
-  '  gl_FragColor = vec4(col.rgb * (dark + 0.12 * vg), 1.0);',
+  '  col.rgb = mix(vec3(lum), col.rgb, 1.30);',
+  '  col.rgb = clamp((col.rgb - 0.5) * 1.18 + 0.5, 0.0, 1.0);',
+  '  col.rgb = pow(col.rgb, vec3(0.90));',
+  '  float dark = 0.78 - uScroll * 0.08;',
+  '  col.rgb *= dark + smoothstep(0.0, 0.15, uv.y) * 0.10;',
+  '  gl_FragColor = vec4(col.rgb, 1.0);',
   '}'
 ].join('\n');
 
-/* ── Compilar ── */
+/* Compile with error reporting */
 function mkShader(type, src){
   var s = gl.createShader(type);
   gl.shaderSource(s, src);
   gl.compileShader(s);
-  if(!gl.getShaderParameter(s, gl.COMPILE_STATUS))
-    console.error('Shader:', gl.getShaderInfoLog(s));
+  if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
+    console.error('GLSL:', gl.getShaderInfoLog(s));
+    gl.deleteShader(s); return null;
+  }
   return s;
 }
-function mkProg(vs, fs){
+function mkProg(vSrc, fSrc){
+  var vs = mkShader(gl.VERTEX_SHADER, vSrc);
+  var fs = mkShader(gl.FRAGMENT_SHADER, fSrc);
+  if(!vs || !fs) return null;
   var p = gl.createProgram();
-  gl.attachShader(p, mkShader(gl.VERTEX_SHADER, vs));
-  gl.attachShader(p, mkShader(gl.FRAGMENT_SHADER, fs));
+  gl.attachShader(p, vs); gl.attachShader(p, fs);
   gl.linkProgram(p);
+  if(!gl.getProgramParameter(p, gl.LINK_STATUS)){
+    console.error('Link:', gl.getProgramInfoLog(p)); return null;
+  }
   return p;
 }
 
-var simProg    = mkProg(VS_SIM,  FS_SIM);
-var renderProg = mkProg(VS_DISP, FS_RENDER);
-
-/* ── Quad ── */
-var quadBuf = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
-
-function bindQuad(prog){
-  gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
-  var loc = gl.getAttribLocation(prog, 'a');
-  gl.enableVertexAttribArray(loc);
-  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+var simProg = mkProg(VS_SIM, FS_SIM);
+var renProg = mkProg(VS_DISP, FS_RENDER);
+if(!simProg || !renProg){
+  console.warn('CuyoPool: shader failed — CSS video fallback active'); return;
 }
 
-/* ── FBOs ── */
+/* Fullscreen quad */
+var qBuf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, qBuf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+function bindQ(prog){
+  gl.bindBuffer(gl.ARRAY_BUFFER, qBuf);
+  var a = gl.getAttribLocation(prog, 'a');
+  gl.enableVertexAttribArray(a);
+  gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
+}
+
+/* FBO with status check */
 function mkFBO(w, h){
   var tex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -2450,153 +2460,144 @@ function mkFBO(w, h){
   var fb = gl.createFramebuffer();
   gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+  var ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  return { tex: tex, fb: fb };
+  if(!ok){ gl.deleteTexture(tex); gl.deleteFramebuffer(fb); return null; }
+  return {tex:tex, fb:fb};
 }
-
 var fboA, fboB, fboC;
-
 function initFBOs(){
-  if(fboA){ gl.deleteTexture(fboA.tex); gl.deleteFramebuffer(fboA.fb); }
-  if(fboB){ gl.deleteTexture(fboB.tex); gl.deleteFramebuffer(fboB.fb); }
-  if(fboC){ gl.deleteTexture(fboC.tex); gl.deleteFramebuffer(fboC.fb); }
-  fboA = mkFBO(SW, SH);
-  fboB = mkFBO(SW, SH);
-  fboC = mkFBO(SW, SH);
+  [fboA,fboB,fboC].forEach(function(f){
+    if(f){ gl.deleteTexture(f.tex); gl.deleteFramebuffer(f.fb); }
+  });
+  fboA = mkFBO(SW,SH); fboB = mkFBO(SW,SH); fboC = mkFBO(SW,SH);
+  fboOk = !!(fboA && fboB && fboC);
+  if(!fboOk) console.warn('CuyoPool: FBO failed — CSS video fallback active');
 }
 
-/* ── Resize ── */
+/* Resize */
 function resize(){
   var dpr = Math.min(window.devicePixelRatio||1, 2);
-  W = Math.floor(window.innerWidth  * dpr);
+  W = Math.floor(window.innerWidth * dpr);
   H = Math.floor(window.innerHeight * dpr);
   cvs.width = W; cvs.height = H;
-  SW = Math.max(1, Math.floor(W * 0.28));
-  SH = Math.max(1, Math.floor(H * 0.28));
+  SW = Math.max(4, Math.floor(W * 0.25));
+  SH = Math.max(4, Math.floor(H * 0.25));
   initFBOs();
 }
 resize();
 window.addEventListener('resize', resize, {passive:true});
 
-/* ── Textura de video ── */
+/* Video texture — init with 1px black so first sample is safe */
 var vidTex = gl.createTexture();
 gl.bindTexture(gl.TEXTURE_2D, vidTex);
+gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,1,1,0,gl.RGB,gl.UNSIGNED_BYTE,new Uint8Array([0,0,0]));
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
-/* ── Cursor suavizado — GL coords (y desde abajo) para sim ── */
-var curX = 0.5, curY = 0.5;   /* posición suavizada en GL coords */
-var tgtX = 0.5, tgtY = 0.5;   /* target raw */
-var cursorOn = 0.0;            /* fade in/out */
-var cursorOnTarget = 0.0;
+/* Cursor — two coordinate systems:
+   sim: GL coords y=0 bottom (for FBO wave sim)
+   ren: screen coords y=0 top (for render UV deflection) */
+var sCurX=0.5, sCurY=0.5, rCurX=0.5, rCurY=0.5;
+var tX=0.5, tYgl=0.5, tYsc=0.5, cOn=0.0, cOnT=0.0;
 
-document.addEventListener('mousemove', function(e){
-  tgtX = e.clientX / window.innerWidth;
-  tgtY = 1.0 - e.clientY / window.innerHeight; /* GL y */
-  cursorOnTarget = 1.0;
-});
-document.addEventListener('mouseleave', function(){ cursorOnTarget = 0.0; });
+function onMove(px, py){
+  tX   = px / window.innerWidth;
+  tYgl = 1.0 - py / window.innerHeight;
+  tYsc = py / window.innerHeight;
+  cOnT = 1.0;
+}
+document.addEventListener('mousemove', function(e){ onMove(e.clientX, e.clientY); });
+document.addEventListener('mouseleave', function(){ cOnT = 0.0; });
 document.addEventListener('touchmove', function(e){
-  tgtX = e.touches[0].clientX / window.innerWidth;
-  tgtY = 1.0 - e.touches[0].clientY / window.innerHeight;
-  cursorOnTarget = 1.0;
+  onMove(e.touches[0].clientX, e.touches[0].clientY);
 }, {passive:true});
-document.addEventListener('touchend', function(){ cursorOnTarget = 0.0; });
+document.addEventListener('touchend', function(){ cOnT = 0.0; });
 
-/* ── Scroll ── */
+/* Scroll — updates both WebGL and CSS video */
 var scrollPct = 0;
-window.__setWP = function(p){ scrollPct = p; };
+function onScroll(p){
+  scrollPct = p;
+  panVideo(p);
+}
+window.__setWP = function(p){ onScroll(p); };
 window.addEventListener('scroll', function(){
   var m = document.body.scrollHeight - window.innerHeight;
-  if(m > 0) scrollPct = window.pageYOffset / m;
+  if(m > 0) onScroll(window.pageYOffset / m);
 }, {passive:true});
 
-/* ── Uniform locations ── */
+/* Uniform locations */
 var simU = {
-  uPrev:     gl.getUniformLocation(simProg, 'uPrev'),
-  uCurr:     gl.getUniformLocation(simProg, 'uCurr'),
-  uInvSim:   gl.getUniformLocation(simProg, 'uInvSim'),
-  uCursor:   gl.getUniformLocation(simProg, 'uCursor'),
-  uCursorOn: gl.getUniformLocation(simProg, 'uCursorOn')
+  uPrev:gl.getUniformLocation(simProg,'uPrev'),
+  uCurr:gl.getUniformLocation(simProg,'uCurr'),
+  uInv:gl.getUniformLocation(simProg,'uInv'),
+  uCursor:gl.getUniformLocation(simProg,'uCursor'),
+  uCursorOn:gl.getUniformLocation(simProg,'uCursorOn')
 };
 var renU = {
-  uVideo:    gl.getUniformLocation(renderProg, 'uVideo'),
-  uHeight:   gl.getUniformLocation(renderProg, 'uHeight'),
-  uRes:      gl.getUniformLocation(renderProg, 'uRes'),
-  uScroll:   gl.getUniformLocation(renderProg, 'uScroll'),
-  uCursor:   gl.getUniformLocation(renderProg, 'uCursor'),
-  uCursorOn: gl.getUniformLocation(renderProg, 'uCursorOn')
+  uVideo:gl.getUniformLocation(renProg,'uVideo'),
+  uHeight:gl.getUniformLocation(renProg,'uHeight'),
+  uRes:gl.getUniformLocation(renProg,'uRes'),
+  uScroll:gl.getUniformLocation(renProg,'uScroll'),
+  uCursor:gl.getUniformLocation(renProg,'uCursor'),
+  uCursorOn:gl.getUniformLocation(renProg,'uCursorOn')
 };
 
-/* ── Loop ── */
+/* Render loop */
 function render(){
   requestAnimationFrame(render);
 
-  /* Suavizar cursor — sigue lentamente al mouse */
-  var lerp = 0.055;
-  curX += (tgtX - curX) * lerp;
-  curY += (tgtY - curY) * lerp;
-  cursorOn += (cursorOnTarget - cursorOn) * 0.08;
+  var lp = 0.07;
+  sCurX += (tX   - sCurX) * lp;  sCurY += (tYgl - sCurY) * lp;
+  rCurX += (tX   - rCurX) * lp;  rCurY += (tYsc - rCurY) * lp;
+  cOn   += (cOnT - cOn)   * 0.09;
 
-  /* Subir frame del video */
+  /* Upload video frame to GPU */
   if(vid.readyState >= 2){
     try{
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, vidTex);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, vid);
+      if(!vidReady){
+        vidReady = true;
+        cvs.style.opacity = '1'; /* fade in canvas over CSS video */
+      }
     }catch(e){}
   }
 
-  /* ── Simulation pass → fboC ── */
+  if(!vidReady || !fboOk) return; /* CSS video handles display */
+
+  /* Simulation pass: FBO (A=prev, B=curr) -> C */
   gl.useProgram(simProg);
-  bindQuad(simProg);
+  bindQ(simProg);
   gl.viewport(0, 0, SW, SH);
   gl.bindFramebuffer(gl.FRAMEBUFFER, fboC.fb);
-
-  gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(gl.TEXTURE_2D, fboA.tex);
-  gl.uniform1i(simU.uPrev, 0);
-
-  gl.activeTexture(gl.TEXTURE1);
-  gl.bindTexture(gl.TEXTURE_2D, fboB.tex);
-  gl.uniform1i(simU.uCurr, 1);
-
-  gl.uniform2f(simU.uInvSim, 1.0/SW, 1.0/SH);
-  gl.uniform2f(simU.uCursor, curX, curY);   /* GL coords: y desde abajo */
-  gl.uniform1f(simU.uCursorOn, cursorOn);
-
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, fboA.tex); gl.uniform1i(simU.uPrev, 0);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, fboB.tex); gl.uniform1i(simU.uCurr, 1);
+  gl.uniform2f(simU.uInv, 1.0/SW, 1.0/SH);
+  gl.uniform2f(simU.uCursor, sCurX, sCurY);
+  gl.uniform1f(simU.uCursorOn, cOn);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  var tmp = fboA; fboA = fboB; fboB = fboC; fboC = tmp; /* rotate */
 
-  /* Rotar: A=prev → B=curr → C=next */
-  var tmp = fboA; fboA = fboB; fboB = fboC; fboC = tmp;
-
-  /* ── Render pass → pantalla ── */
-  gl.useProgram(renderProg);
-  bindQuad(renderProg);
+  /* Render pass: distorted video -> screen */
+  gl.useProgram(renProg);
+  bindQ(renProg);
   gl.viewport(0, 0, W, H);
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-  gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(gl.TEXTURE_2D, vidTex);
-  gl.uniform1i(renU.uVideo, 0);
-
-  gl.activeTexture(gl.TEXTURE1);
-  gl.bindTexture(gl.TEXTURE_2D, fboB.tex);
-  gl.uniform1i(renU.uHeight, 1);
-
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, vidTex);  gl.uniform1i(renU.uVideo, 0);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, fboB.tex); gl.uniform1i(renU.uHeight, 1);
   gl.uniform2f(renU.uRes, W, H);
   gl.uniform1f(renU.uScroll, scrollPct);
-  /* Render shader usa coords de pantalla: y desde arriba */
-  gl.uniform2f(renU.uCursor, curX, 1.0 - curY);
-  gl.uniform1f(renU.uCursorOn, cursorOn);
-
+  gl.uniform2f(renU.uCursor, rCurX, rCurY);
+  gl.uniform1f(renU.uCursorOn, cOn);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 }
 
 render();
-console.log('CuyoPool — Desborde Infinito v3 ✅');
+console.log('CuyoPool — Desborde Infinito v4 ready');
 })();
 </script>
 <div class="vignette" aria-hidden="true"></div>
