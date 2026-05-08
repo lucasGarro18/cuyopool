@@ -16,8 +16,8 @@
 <style>
 
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html{font-size:16px;-webkit-text-size-adjust:100%;scroll-behavior:smooth}
-body{background:#111111;color:#e8e2d6;font-family:'DM Sans',sans-serif;font-weight:300;overflow-x:hidden;cursor:none}
+html{font-size:16px;-webkit-text-size-adjust:100%;scroll-behavior:smooth;background:#07080f}
+body{background:transparent;color:#e8e2d6;font-family:'DM Sans',sans-serif;font-weight:300;overflow-x:hidden;cursor:none}
 h1,h2,h3,h4,h5,p,.sdesc,.stag,.hero-desc,.hero-badge,.arch-txt,.sb-n,.sb-l{text-shadow:0px 4px 10px rgba(0,0,0,0.5)}
 @media(pointer:coarse){body{cursor:auto}}
 a{text-decoration:none;color:inherit}
@@ -1900,7 +1900,7 @@ document.getElementById('cForm').addEventListener('submit',e=>{
 // PARALLAX HERO
 if(matchMedia('(min-width:1024px) and (prefers-reduced-motion:no-preference)').matches){
   const hw=document.querySelector('.hero-vid-wrap');
-  window.addEventListener('scroll',()=>{if(pageYOffset<innerHeight)hw.style.transform='translateY('+pageYOffset*.12+'px)';},{passive:true});
+  if(hw){window.addEventListener('scroll',()=>{if(pageYOffset<innerHeight)hw.style.transform='translateY('+pageYOffset*.12+'px)';},{passive:true});}
 }
 })();
 </script>
