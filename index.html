@@ -2368,12 +2368,17 @@ var FS_RENDER = [
   'varying vec2 v;',
   'void main(){',
   '  vec2 uv = v;',
+
+  /* Wave displacement from ping-pong FBO (y-flipped) */
   '  vec2 hc = vec2(uv.x, 1.0 - uv.y);',
   '  float hL = texture2D(uHeight, hc - vec2(0.0078, 0.0)).r;',
   '  float hR = texture2D(uHeight, hc + vec2(0.0078, 0.0)).r;',
   '  float hU = texture2D(uHeight, hc + vec2(0.0, 0.0078)).r;',
   '  float hD = texture2D(uHeight, hc - vec2(0.0, 0.0078)).r;',
+  '  float hC = texture2D(uHeight, hc).r;',
   '  vec2 wOff = vec2(hR - hL, hU - hD) * 0.44;',
+
+  /* Cursor water-parting effect */
   '  vec2 fOff = vec2(0.0);',
   '  if(uCursorOn > 0.001){',
   '    vec2 d = (uv - uCursor) * vec2(uRes.x / uRes.y, 1.0);',
@@ -2382,6 +2387,8 @@ var FS_RENDER = [
   '      fOff = normalize(d) * vec2(1.8, 1.0) * exp(-dist*dist*11.0) * uCursorOn * 0.034;',
   '    }',
   '  }',
+
+  /* Portrait video UV mapping — 720x1280 on any screen */
   '  float sA = uRes.x / uRes.y;',
   '  float vh = 0.5625 / sA;',
   '  float mO = max(0.0, 0.82 - vh);',
@@ -2390,19 +2397,50 @@ var FS_RENDER = [
   '    clamp(uv.x + off.x, 0.001, 0.999),',
   '    clamp(uScroll * mO + (uv.y + off.y) * vh, 0.001, 0.999)',
   '  );',
+
+  /* Sample video + multi-tap sharpening */
   '  vec4 col = texture2D(uVideo, vuv);',
-  '  vec2 tx = vec2(1.0/720.0, 1.0/1280.0);',
-  '  vec3 b = (texture2D(uVideo,vuv+vec2(tx.x,0.0)).rgb +',
-  '            texture2D(uVideo,vuv-vec2(tx.x,0.0)).rgb +',
-  '            texture2D(uVideo,vuv+vec2(0.0,tx.y)).rgb +',
-  '            texture2D(uVideo,vuv-vec2(0.0,tx.y)).rgb) * 0.25;',
-  '  col.rgb = clamp(col.rgb + (col.rgb - b) * 0.6, 0.0, 1.0);',
+  '  vec2 tx = vec2(1.3/720.0, 1.3/1280.0);',
+  '  vec3 blur = (',
+  '    texture2D(uVideo,vuv+vec2(tx.x, 0.0)).rgb +',
+  '    texture2D(uVideo,vuv-vec2(tx.x, 0.0)).rgb +',
+  '    texture2D(uVideo,vuv+vec2(0.0, tx.y)).rgb +',
+  '    texture2D(uVideo,vuv-vec2(0.0, tx.y)).rgb +',
+  '    texture2D(uVideo,vuv+tx*0.7).rgb * 0.5 +',
+  '    texture2D(uVideo,vuv-tx*0.7).rgb * 0.5 +',
+  '    texture2D(uVideo,vuv+vec2(tx.x,-tx.y)*0.7).rgb * 0.5 +',
+  '    texture2D(uVideo,vuv+vec2(-tx.x,tx.y)*0.7).rgb * 0.5',
+  '  ) * 0.2;',
+  '  col.rgb = clamp(col.rgb + (col.rgb - blur) * 0.75, 0.0, 1.0);',
+
+  /* Saturation */
   '  float lum = dot(col.rgb, vec3(0.2126, 0.7152, 0.0722));',
-  '  col.rgb = mix(vec3(lum), col.rgb, 1.30);',
-  '  col.rgb = clamp((col.rgb - 0.5) * 1.18 + 0.5, 0.0, 1.0);',
-  '  col.rgb = pow(col.rgb, vec3(0.90));',
-  '  float dark = 0.78 - uScroll * 0.08;',
-  '  col.rgb *= dark + smoothstep(0.0, 0.15, uv.y) * 0.10;',
+  '  col.rgb = mix(vec3(lum), col.rgb, 1.18);',
+
+  /* Cinematic S-curve: lift blacks slightly, push mids up */
+  '  col.rgb = col.rgb * (1.0 + col.rgb * (0.12 - col.rgb * 0.10));',
+
+  /* Subtle warm highlights / cooler shadows grade */
+  '  col.r += lum * 0.018;',
+  '  col.b -= lum * 0.012;',
+
+  /* Contrast */
+  '  col.rgb = clamp((col.rgb - 0.5) * 1.10 + 0.5, 0.0, 1.0);',
+
+  /* Gamma */
+  '  col.rgb = pow(max(col.rgb, vec3(0.0)), vec3(0.93));',
+
+  /* Water specular sparkle from wave peaks */
+  '  float spec = smoothstep(0.08, 0.45, hC);',
+  '  col.rgb = min(col.rgb + vec3(0.06, 0.07, 0.06) * spec, vec3(1.0));',
+
+  /* Cinematic vignette — corners + top edge darker */
+  '  float vigX = smoothstep(0.0, 0.32, uv.x) * smoothstep(1.0, 0.68, uv.x);',
+  '  float vigY = smoothstep(0.0, 0.18, uv.y) * smoothstep(1.0, 0.55, uv.y);',
+  '  float vig = mix(0.60, 1.0, vigX * vigY);',
+  '  float dark = 0.80 - uScroll * 0.08;',
+  '  col.rgb *= (dark + smoothstep(0.0, 0.14, uv.y) * 0.10) * vig;',
+
   '  gl_FragColor = vec4(col.rgb, 1.0);',
   '}'
 ].join('\n');
