@@ -2371,11 +2371,13 @@ var FS_RENDER = [
   'void main(){',
   '  vec2 uv = v;',
 
-  /* Portrait 9:16 video — todo es cascada, scroll revela de arriba a abajo */
+  /* Portrait 9:16 pool video — centrado verticalmente, suave parallax con scroll */
   '  float sA = uRes.x / uRes.y;',
   '  float vh = 0.5625 / sA;',
-  '  float scrollRange = max(0.0, 1.0 - vh);',
-  '  vec2 vuvBase = vec2(uv.x, uScroll * scrollRange + uv.y * vh);',
+  /* center offset: start in the middle of the video (0.3) so pool water is visible on all ratios */
+  '  float vStart = clamp(0.5 - vh * 0.5, 0.0, 1.0 - vh);',
+  '  float scrollRange = max(0.0, 1.0 - vh) * 0.35;',
+  '  vec2 vuvBase = vec2(uv.x, vStart + uScroll * scrollRange + uv.y * vh);',
 
   /* Desplazamiento por ondas del heightfield — toda la pantalla reacciona al agua */
   '  vec2 hc = vec2(uv.x, 1.0 - uv.y);',
