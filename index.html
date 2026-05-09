@@ -95,7 +95,10 @@ body.ch #cdot{opacity:.4;width:5px;height:5px}
 /* ── VIGNETTE: solo sombra superior para nav ─────────── */
 .vignette{position:fixed;top:0;left:0;width:100%;height:38vh;z-index:1;background:linear-gradient(to bottom,rgba(0,0,0,0.58) 0%,transparent 100%);pointer-events:none}
 /* ── SECCIONES: completamente transparentes ──────────── */
-.arch-band,.quienes,.stats-band,.lineas,.porcela,.proceso,.proyectos,.test,.contacto,footer{background:transparent !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important}
+.arch-band,.quienes,.stats-band,.lineas,.porcela,.proceso,.proyectos,.test{background:transparent !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important}
+/* contacto y footer mantienen su propio fondo oscuro semitransparente */
+.contacto{background:rgba(5,7,14,0.72) !important;backdrop-filter:blur(6px) !important;-webkit-backdrop-filter:blur(6px) !important}
+footer{background:rgba(5,7,14,0.88) !important}
 /* ── TODAS LAS CAJAS SIN FONDO — texto flotando sobre el agua ── */
 .q-text,.mv-card,.ti,.proc-full,.por-feat,.por-img-badge,.tc,.cl,.agent-card,
 .ct-l,.sb-item,.arch-item,.contacts-agents,.ct-links{
@@ -325,8 +328,8 @@ p,li,.muted,.muted2{text-shadow:0 1px 5px rgba(0,0,0,0.9)}
 .tc-name{font-size:.7rem;font-weight:400;margin-bottom:2px}
 .tc-loc{font-size:.46rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);opacity:.7;display:block}
 /* CONTACTO */
-.contacto{display:grid;grid-template-columns:55fr 45fr;background:rgba(7,8,12,0.84);min-height:90vh}
-.ct-l{padding:78px 62px;display:flex;flex-direction:column;justify-content:center}
+.contacto{display:block;background:rgba(7,8,12,0.84);min-height:auto}
+.ct-l{padding:68px 10% 72px;max-width:860px;margin:0 auto;display:flex;flex-direction:column;justify-content:center}
 .ct-l .srule{margin:15px 0 21px}
 .ct-sub{font-size:.74rem;line-height:2;color:var(--muted);margin-bottom:24px;max-width:400px}
 /* CONTACTOS GRID */
@@ -369,10 +372,8 @@ p,li,.muted,.muted2{text-shadow:0 1px 5px rgba(0,0,0,0.9)}
 .fok-tit{font-family:'Bodoni Moda',serif;font-size:1.05rem;color:var(--green);margin-bottom:5px}
 .fok-txt{font-size:.66rem;line-height:1.8;color:var(--muted)}
 .fok-txt a{color:var(--gold);text-decoration:underline}
-.ct-r{position:relative;overflow:hidden}
-.ct-r img{width:100%;height:100%;object-fit:cover;filter:brightness(.42) saturate(.62);transition:transform 1.2s ease}
-.contacto:hover .ct-r img{transform:scale(1.03)}
-.ct-r-grad{position:absolute;inset:0;background:linear-gradient(to right,var(--bg3) 0%,transparent 30%),linear-gradient(to top,var(--bg3) 0%,transparent 32%)}
+.ct-r{display:none}  /* video de cascada ya es el fondo — imagen decorativa innecesaria */
+.ct-r-grad{display:none}
 .ct-watermark{position:absolute;bottom:28px;right:28px;font-family:'Bodoni Moda',serif;font-size:1.3rem;font-weight:300;letter-spacing:.2em;color:rgba(232,226,214,.06);text-align:right;line-height:1.2}
 /* FOOTER */
 footer{background:rgba(7,8,12,0.88);padding:54px 52px 24px;border-top:1px solid rgba(197,165,90,.12)}
