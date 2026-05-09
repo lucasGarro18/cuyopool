@@ -2331,6 +2331,7 @@ var VS_DISP = [
 ].join('\n');
 
 /* ── Wave simulation: finite difference + cursor depression ── */
+/* uWaterGLY: GL y coord (0=bottom,1=top) below which is the water zone */
 var FS_SIM = [
   'precision highp float;',
   'uniform sampler2D uPrev;',
@@ -2338,17 +2339,18 @@ var FS_SIM = [
   'uniform vec2 uInv;',
   'uniform vec2 uCursor;',
   'uniform float uCursorOn;',
+  'uniform float uWaterGLY;',
   'varying vec2 v;',
   'void main(){',
-  '  float c = texture2D(uCurr, v).r;',
   '  float p = texture2D(uPrev, v).r;',
   '  float L = texture2D(uCurr, v - vec2(uInv.x, 0.0)).r;',
   '  float R = texture2D(uCurr, v + vec2(uInv.x, 0.0)).r;',
   '  float U = texture2D(uCurr, v + vec2(0.0, uInv.y)).r;',
   '  float D = texture2D(uCurr, v - vec2(0.0, uInv.y)).r;',
   '  float n = (L + R + U + D) * 0.5 - p;',
-  '  n *= 0.986;',
-  '  if(uCursorOn > 0.001){',
+  '  float heroMask = step(uWaterGLY, v.y);',
+  '  n *= 0.986 - heroMask * 0.780;',
+  '  if(uCursorOn > 0.001 && uCursor.y < uWaterGLY){',
   '    float d = distance(v, uCursor);',
   '    n = mix(n, -0.5, exp(-d*d*90.0) * uCursorOn * 0.55);',
   '  }',
@@ -2356,42 +2358,65 @@ var FS_SIM = [
   '}'
 ].join('\n');
 
-/* ── Render: video + FBO refraction + finger deflection + grading ── */
+/* ── Render: video + FBO refraction maskeado solo en zona de agua ── */
+/* uWaterScrY: screen UV y (0=top,1=bottom) donde empieza la cascada */
 var FS_RENDER = [
   'precision highp float;',
   'uniform sampler2D uVideo;','uniform sampler2D uHeight;','uniform vec2 uRes;',
-  'uniform float uScroll;','uniform vec2 uCursor;','uniform float uCursorOn;','varying vec2 v;',
+  'uniform float uScroll;','uniform vec2 uCursor;','uniform float uCursorOn;',
+  'uniform float uWaterScrY;',
+  'varying vec2 v;',
   'void main(){',
   '  vec2 uv = v;',
+
+  /* Portrait video UV */
+  '  float sA = uRes.x / uRes.y;',
+  '  float vh = 0.5625 / sA;',
+  '  float mO = max(0.0, 0.82 - vh);',
+  '  vec2 vuvBase = vec2(uv.x, uScroll * mO + uv.y * vh);',
+
+  /* Water mask: 0=hero area  1=cascada — transicion suave 4% */
+  '  float waterMask = smoothstep(uWaterScrY - 0.04, uWaterScrY + 0.04, uv.y);',
+
+  /* Desplazamiento por ondas — solo en zona de agua */
   '  vec2 hc = vec2(uv.x, 1.0 - uv.y);',
   '  float hL = texture2D(uHeight, hc - vec2(0.0078, 0.0)).r;',
   '  float hR = texture2D(uHeight, hc + vec2(0.0078, 0.0)).r;',
   '  float hU = texture2D(uHeight, hc + vec2(0.0, 0.0078)).r;',
   '  float hD = texture2D(uHeight, hc - vec2(0.0, 0.0078)).r;',
-  '  vec2 wOff = vec2(hR - hL, hU - hD) * 0.44;',
+  '  vec2 wOff = vec2(hR - hL, hU - hD) * 0.44 * waterMask;',
+
+  /* Cursor — "dedo en el agua" — solo en zona de cascada */
   '  vec2 fOff = vec2(0.0);',
   '  if(uCursorOn > 0.001){',
   '    vec2 d = (uv - uCursor) * vec2(uRes.x / uRes.y, 1.0);',
   '    float dist = length(d);',
   '    if(dist > 0.001){',
-  '      fOff = normalize(d) * vec2(1.8, 1.0) * exp(-dist*dist*11.0) * uCursorOn * 0.034;',
+  '      fOff = normalize(d) * vec2(1.8, 1.0) * exp(-dist*dist*11.0) * uCursorOn * 0.034 * waterMask;',
   '    }',
   '  }',
-  '  float sA = uRes.x / uRes.y;',
-  '  float vh = 0.5625 / sA;',
-  '  float mO = max(0.0, 0.82 - vh);',
-  '  vec2 off = wOff + fOff;',
-  '  vec2 vuv = vec2(clamp(uv.x + off.x, 0.001, 0.999), clamp(uScroll * mO + (uv.y + off.y) * vh, 0.001, 0.999));',
+
+  /* UV final */
+  '  vec2 vuv = vec2(',
+  '    clamp(vuvBase.x + wOff.x + fOff.x, 0.001, 0.999),',
+  '    clamp(vuvBase.y + wOff.y + fOff.y, 0.001, 0.999)',
+  '  );',
+
+  /* Sample + sharpening */
   '  vec4 col = texture2D(uVideo, vuv);',
   '  vec2 tx = vec2(1.0/720.0, 1.0/1280.0);',
   '  vec3 b = (texture2D(uVideo,vuv+vec2(tx.x,0.0)).rgb + texture2D(uVideo,vuv-vec2(tx.x,0.0)).rgb + texture2D(uVideo,vuv+vec2(0.0,tx.y)).rgb + texture2D(uVideo,vuv-vec2(0.0,tx.y)).rgb) * 0.25;',
-  '  col.rgb = clamp(col.rgb + (col.rgb - b) * 0.6, 0.0, 1.0);',
+  '  col.rgb = clamp(col.rgb + (col.rgb - b) * 0.5, 0.0, 1.0);',
+
+  /* Color grading — suave para preservar el atardecer */
   '  float lum = dot(col.rgb, vec3(0.2126, 0.7152, 0.0722));',
-  '  col.rgb = mix(vec3(lum), col.rgb, 1.30);',
-  '  col.rgb = clamp((col.rgb - 0.5) * 1.18 + 0.5, 0.0, 1.0);',
-  '  col.rgb = pow(col.rgb, vec3(0.90));',
-  '  float dark = 0.78 - uScroll * 0.08;',
-  '  col.rgb *= dark + smoothstep(0.0, 0.15, uv.y) * 0.10;',
+  '  col.rgb = mix(vec3(lum), col.rgb, 1.15);',
+  '  col.rgb = clamp((col.rgb - 0.5) * 1.10 + 0.5, 0.0, 1.0);',
+  '  col.rgb = pow(col.rgb, vec3(0.93));',
+
+  /* Vignette suave — preserva la atmosfera de lujo */
+  '  float dark = 0.88 - uScroll * 0.06;',
+  '  col.rgb *= dark + smoothstep(0.0, 0.18, uv.y) * 0.08;',
   '  gl_FragColor = vec4(col.rgb, 1.0);',
   '}'
 ].join('\n');
@@ -2517,13 +2542,26 @@ window.addEventListener('scroll', function(){
   if(m > 0) onScroll(window.pageYOffset / m);
 }, {passive:true});
 
+/* Video UV threshold donde empieza la cascada (~42% desde arriba del portrait) */
+var WATER_VID_Y = 0.42;
+
+/* Computa en que Y de pantalla (0=top,1=bottom) aparece la cascada */
+function computeWaterScrY(){
+  var sA = W / H;
+  var vh = 0.5625 / sA;
+  var mO = Math.max(0, 0.82 - vh);
+  var y = (WATER_VID_Y - scrollPct * mO) / vh;
+  return Math.max(0, Math.min(1, y));
+}
+
 /* Uniform locations */
 var simU = {
   uPrev:gl.getUniformLocation(simProg,'uPrev'),
   uCurr:gl.getUniformLocation(simProg,'uCurr'),
   uInv:gl.getUniformLocation(simProg,'uInv'),
   uCursor:gl.getUniformLocation(simProg,'uCursor'),
-  uCursorOn:gl.getUniformLocation(simProg,'uCursorOn')
+  uCursorOn:gl.getUniformLocation(simProg,'uCursorOn'),
+  uWaterGLY:gl.getUniformLocation(simProg,'uWaterGLY')
 };
 var renU = {
   uVideo:gl.getUniformLocation(renProg,'uVideo'),
@@ -2531,7 +2569,8 @@ var renU = {
   uRes:gl.getUniformLocation(renProg,'uRes'),
   uScroll:gl.getUniformLocation(renProg,'uScroll'),
   uCursor:gl.getUniformLocation(renProg,'uCursor'),
-  uCursorOn:gl.getUniformLocation(renProg,'uCursorOn')
+  uCursorOn:gl.getUniformLocation(renProg,'uCursorOn'),
+  uWaterScrY:gl.getUniformLocation(renProg,'uWaterScrY')
 };
 
 /* Render loop */
@@ -2543,6 +2582,10 @@ function render(){
   rCurX += (tX   - rCurX) * lp;  rCurY += (tYsc - rCurY) * lp;
   cOn   += (cOnT - cOn)   * 0.09;
 
+  /* Water zone thresholds — actualizan cada frame con el scroll */
+  var waterScrY = computeWaterScrY();
+  var waterGLY  = 1.0 - waterScrY; /* GL y (0=bottom) equivalente */
+
   /* Upload video frame to GPU */
   if(vid.readyState >= 2){
     try{
@@ -2551,14 +2594,14 @@ function render(){
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, vid);
       if(!vidReady){
         vidReady = true;
-        cvs.style.opacity = '1'; /* fade in canvas over CSS video */
+        cvs.style.opacity = '1';
       }
     }catch(e){}
   }
 
-  if(!vidReady || !fboOk) return; /* CSS video handles display */
+  if(!vidReady || !fboOk) return;
 
-  /* Simulation pass: FBO (A=prev, B=curr) -> C */
+  /* Simulation pass */
   gl.useProgram(simProg);
   bindQ(simProg);
   gl.viewport(0, 0, SW, SH);
@@ -2568,10 +2611,11 @@ function render(){
   gl.uniform2f(simU.uInv, 1.0/SW, 1.0/SH);
   gl.uniform2f(simU.uCursor, sCurX, sCurY);
   gl.uniform1f(simU.uCursorOn, cOn);
+  gl.uniform1f(simU.uWaterGLY, waterGLY);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-  var tmp = fboA; fboA = fboB; fboB = fboC; fboC = tmp; /* rotate */
+  var tmp = fboA; fboA = fboB; fboB = fboC; fboC = tmp;
 
-  /* Render pass: distorted video -> screen */
+  /* Render pass */
   gl.useProgram(renProg);
   bindQ(renProg);
   gl.viewport(0, 0, W, H);
@@ -2582,11 +2626,12 @@ function render(){
   gl.uniform1f(renU.uScroll, scrollPct);
   gl.uniform2f(renU.uCursor, rCurX, rCurY);
   gl.uniform1f(renU.uCursorOn, cOn);
+  gl.uniform1f(renU.uWaterScrY, waterScrY);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 }
 
 render();
-console.log('CuyoPool — Desborde Infinito v4 ready');
+console.log('CuyoPool — Desborde Infinito v5 — water mask activo');
 })();
 </script>
 <div class="vignette" aria-hidden="true"></div>
