@@ -89,7 +89,7 @@ body.ch #cdot{opacity:.4;width:5px;height:5px}
 .mnav-soc{display:flex;gap:18px;margin-top:6px}
 .mnav-soc a{font-size:.48rem !important;letter-spacing:.2em;text-transform:uppercase;color:var(--muted2) !important;font-family:'DM Sans',sans-serif !important}
 /* ── VIDEO: oculto, fuente de textura para WebGL ────── */
-#hero-video{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 56%;pointer-events:none;z-index:-2}
+#hero-video{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 0%;pointer-events:none;z-index:-2}
 /* ── CANVAS WebGL: fondo interactivo real ────────────── */
 #water-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none;display:block}
 /* ── VIGNETTE: solo sombra superior para nav ─────────── */
@@ -2286,10 +2286,9 @@ window.addEventListener('load', function(){
 var vid = document.getElementById('hero-video');
 if(!vid) return;
 
-/* CSS video fallback — ancla en la cascada (video UV 0.38 ≈ 56% CSS) */
+/* CSS video fallback — todo es cascada, scroll de arriba a abajo */
 function panVideo(p){
-  var yPct = 56 + p * 44;
-  vid.style.objectPosition = 'center ' + yPct.toFixed(1) + '%';
+  vid.style.objectPosition = 'center ' + (p * 100).toFixed(1) + '%';
 }
 panVideo(0);
 
@@ -2366,12 +2365,11 @@ var FS_RENDER = [
   'void main(){',
   '  vec2 uv = v;',
 
-  /* Portrait 9:16 video — anclar en la cascada (video UV 0.38), scroll baja */
+  /* Portrait 9:16 video — todo es cascada, scroll revela de arriba a abajo */
   '  float sA = uRes.x / uRes.y;',
   '  float vh = 0.5625 / sA;',
-  '  float vidStart = 0.38;',
-  '  float scrollRange = max(0.0, 1.0 - vidStart - vh);',
-  '  vec2 vuvBase = vec2(uv.x, vidStart + uScroll * scrollRange + uv.y * vh);',
+  '  float scrollRange = max(0.0, 1.0 - vh);',
+  '  vec2 vuvBase = vec2(uv.x, uScroll * scrollRange + uv.y * vh);',
 
   /* Desplazamiento por ondas — toda la pantalla es agua */
   '  vec2 hc = vec2(uv.x, 1.0 - uv.y);',
@@ -2592,7 +2590,7 @@ function render(){
 }
 
 render();
-console.log('CuyoPool — Desborde Infinito v6 — colores originales, cascada anclada');
+console.log('CuyoPool — Desborde Infinito v7 — video cascada puro, CRF-16, sin grading');
 })();
 </script>
 <div class="vignette" aria-hidden="true"></div>
