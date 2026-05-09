@@ -2408,15 +2408,17 @@ var FS_RENDER = [
   '  vec3 b = (texture2D(uVideo,vuv+vec2(tx.x,0.0)).rgb + texture2D(uVideo,vuv-vec2(tx.x,0.0)).rgb + texture2D(uVideo,vuv+vec2(0.0,tx.y)).rgb + texture2D(uVideo,vuv-vec2(0.0,tx.y)).rgb) * 0.25;',
   '  col.rgb = clamp(col.rgb + (col.rgb - b) * 0.5, 0.0, 1.0);',
 
-  /* Color grading — suave para preservar el atardecer */
+  /* Color grading cinematografico — luxury dark sunset */
   '  float lum = dot(col.rgb, vec3(0.2126, 0.7152, 0.0722));',
-  '  col.rgb = mix(vec3(lum), col.rgb, 1.15);',
-  '  col.rgb = clamp((col.rgb - 0.5) * 1.10 + 0.5, 0.0, 1.0);',
-  '  col.rgb = pow(col.rgb, vec3(0.93));',
+  '  col.rgb = mix(vec3(lum), col.rgb, 1.22);',
+  '  col.rgb = clamp((col.rgb - 0.5) * 1.15 + 0.5, 0.0, 1.0);',
+  '  col.rgb = pow(col.rgb, vec3(0.96));',
+  /* Warm golden tones en highlights, profundidad en sombras */
+  '  col.rgb += vec3(0.012, 0.005, -0.008) * lum;',
 
-  /* Vignette suave — preserva la atmosfera de lujo */
-  '  float dark = 0.88 - uScroll * 0.06;',
-  '  col.rgb *= dark + smoothstep(0.0, 0.18, uv.y) * 0.08;',
+  /* Vignette cinematografica oscura — hero opaco, agua revelada */
+  '  float dark = 0.72 - uScroll * 0.04;',
+  '  col.rgb *= dark + smoothstep(0.0, 0.20, uv.y) * 0.14;',
   '  gl_FragColor = vec4(col.rgb, 1.0);',
   '}'
 ].join('\n');
