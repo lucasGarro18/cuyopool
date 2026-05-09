@@ -89,7 +89,7 @@ body.ch #cdot{opacity:.4;width:5px;height:5px}
 .mnav-soc{display:flex;gap:18px;margin-top:6px}
 .mnav-soc a{font-size:.48rem !important;letter-spacing:.2em;text-transform:uppercase;color:var(--muted2) !important;font-family:'DM Sans',sans-serif !important}
 /* ── VIDEO: oculto, fuente de textura para WebGL ────── */
-#hero-video{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 0%;pointer-events:none;z-index:-2}
+#hero-video{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 56%;pointer-events:none;z-index:-2}
 /* ── CANVAS WebGL: fondo interactivo real ────────────── */
 #water-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none;display:block}
 /* ── VIGNETTE: solo sombra superior para nav ─────────── */
@@ -2286,10 +2286,12 @@ window.addEventListener('load', function(){
 var vid = document.getElementById('hero-video');
 if(!vid) return;
 
-/* CSS video scroll pan — works with or without WebGL */
+/* CSS video fallback — ancla en la cascada (video UV 0.38 ≈ 56% CSS) */
 function panVideo(p){
-  vid.style.objectPosition = 'center ' + (p * 82).toFixed(1) + '%';
+  var yPct = 56 + p * 44;
+  vid.style.objectPosition = 'center ' + yPct.toFixed(1) + '%';
 }
+panVideo(0);
 
 /* Canvas — starts invisible, fades in when WebGL is rendering */
 var cvs = document.createElement('canvas');
@@ -2331,7 +2333,6 @@ var VS_DISP = [
 ].join('\n');
 
 /* ── Wave simulation: finite difference + cursor depression ── */
-/* uWaterGLY: GL y coord (0=bottom,1=top) below which is the water zone */
 var FS_SIM = [
   'precision highp float;',
   'uniform sampler2D uPrev;',
@@ -2339,7 +2340,6 @@ var FS_SIM = [
   'uniform vec2 uInv;',
   'uniform vec2 uCursor;',
   'uniform float uCursorOn;',
-  'uniform float uWaterGLY;',
   'varying vec2 v;',
   'void main(){',
   '  float p = texture2D(uPrev, v).r;',
@@ -2348,9 +2348,8 @@ var FS_SIM = [
   '  float U = texture2D(uCurr, v + vec2(0.0, uInv.y)).r;',
   '  float D = texture2D(uCurr, v - vec2(0.0, uInv.y)).r;',
   '  float n = (L + R + U + D) * 0.5 - p;',
-  '  float heroMask = step(uWaterGLY, v.y);',
-  '  n *= 0.986 - heroMask * 0.780;',
-  '  if(uCursorOn > 0.001 && uCursor.y < uWaterGLY){',
+  '  n *= 0.986;',
+  '  if(uCursorOn > 0.001){',
   '    float d = distance(v, uCursor);',
   '    n = mix(n, -0.5, exp(-d*d*90.0) * uCursorOn * 0.55);',
   '  }',
@@ -2358,41 +2357,37 @@ var FS_SIM = [
   '}'
 ].join('\n');
 
-/* ── Render: video + FBO refraction maskeado solo en zona de agua ── */
-/* uWaterScrY: screen UV y (0=top,1=bottom) donde empieza la cascada */
+/* ── Render: video + FBO refraction — colores originales sin grading ── */
 var FS_RENDER = [
   'precision highp float;',
   'uniform sampler2D uVideo;','uniform sampler2D uHeight;','uniform vec2 uRes;',
   'uniform float uScroll;','uniform vec2 uCursor;','uniform float uCursorOn;',
-  'uniform float uWaterScrY;',
   'varying vec2 v;',
   'void main(){',
   '  vec2 uv = v;',
 
-  /* Portrait video UV */
+  /* Portrait 9:16 video — anclar en la cascada (video UV 0.38), scroll baja */
   '  float sA = uRes.x / uRes.y;',
   '  float vh = 0.5625 / sA;',
-  '  float mO = max(0.0, 0.82 - vh);',
-  '  vec2 vuvBase = vec2(uv.x, uScroll * mO + uv.y * vh);',
+  '  float vidStart = 0.38;',
+  '  float scrollRange = max(0.0, 1.0 - vidStart - vh);',
+  '  vec2 vuvBase = vec2(uv.x, vidStart + uScroll * scrollRange + uv.y * vh);',
 
-  /* Water mask: 0=hero area  1=cascada — transicion suave 4% */
-  '  float waterMask = smoothstep(uWaterScrY - 0.04, uWaterScrY + 0.04, uv.y);',
-
-  /* Desplazamiento por ondas — solo en zona de agua */
+  /* Desplazamiento por ondas — toda la pantalla es agua */
   '  vec2 hc = vec2(uv.x, 1.0 - uv.y);',
   '  float hL = texture2D(uHeight, hc - vec2(0.0078, 0.0)).r;',
   '  float hR = texture2D(uHeight, hc + vec2(0.0078, 0.0)).r;',
   '  float hU = texture2D(uHeight, hc + vec2(0.0, 0.0078)).r;',
   '  float hD = texture2D(uHeight, hc - vec2(0.0, 0.0078)).r;',
-  '  vec2 wOff = vec2(hR - hL, hU - hD) * 0.44 * waterMask;',
+  '  vec2 wOff = vec2(hR - hL, hU - hD) * 0.44;',
 
-  /* Cursor — "dedo en el agua" — solo en zona de cascada */
+  /* Cursor — "dedo en el agua" */
   '  vec2 fOff = vec2(0.0);',
   '  if(uCursorOn > 0.001){',
   '    vec2 d = (uv - uCursor) * vec2(uRes.x / uRes.y, 1.0);',
   '    float dist = length(d);',
   '    if(dist > 0.001){',
-  '      fOff = normalize(d) * vec2(1.8, 1.0) * exp(-dist*dist*11.0) * uCursorOn * 0.034 * waterMask;',
+  '      fOff = normalize(d) * vec2(1.8, 1.0) * exp(-dist*dist*11.0) * uCursorOn * 0.034;',
   '    }',
   '  }',
 
@@ -2402,27 +2397,8 @@ var FS_RENDER = [
   '    clamp(vuvBase.y + wOff.y + fOff.y, 0.001, 0.999)',
   '  );',
 
-  /* Sample + sharpening */
-  '  vec4 col = texture2D(uVideo, vuv);',
-  '  vec2 tx = vec2(1.0/720.0, 1.0/1280.0);',
-  '  vec3 b = (texture2D(uVideo,vuv+vec2(tx.x,0.0)).rgb + texture2D(uVideo,vuv-vec2(tx.x,0.0)).rgb + texture2D(uVideo,vuv+vec2(0.0,tx.y)).rgb + texture2D(uVideo,vuv-vec2(0.0,tx.y)).rgb) * 0.25;',
-  '  col.rgb = clamp(col.rgb + (col.rgb - b) * 0.5, 0.0, 1.0);',
-
-  /* Color grading — preservar colores naturales del atardecer */
-  '  float lum = dot(col.rgb, vec3(0.2126, 0.7152, 0.0722));',
-  '  col.rgb = mix(vec3(lum), col.rgb, 1.18);',
-  '  col.rgb = clamp((col.rgb - 0.5) * 1.10 + 0.5, 0.0, 1.0);',
-  '  col.rgb = pow(col.rgb, vec3(0.95));',
-  /* Warm gold tones — lujo */
-  '  col.rgb += vec3(0.010, 0.004, -0.006) * lum;',
-
-  /* Vignette diferenciada: hero visible (piscina/casa), cascada con profundidad */
-  '  float heroZone = 1.0 - waterMask;',
-  '  float heroBright = 0.90;',
-  '  float waterBright = 0.78 - uScroll * 0.05;',
-  '  float zoneBright = mix(waterBright, heroBright, heroZone);',
-  '  col.rgb *= zoneBright + smoothstep(0.0, 0.22, uv.y) * 0.08;',
-  '  gl_FragColor = vec4(col.rgb, 1.0);',
+  /* Muestra el video sin ningun grading — colores 100% originales */
+  '  gl_FragColor = texture2D(uVideo, vuv);',
   '}'
 ].join('\n');
 
@@ -2547,26 +2523,13 @@ window.addEventListener('scroll', function(){
   if(m > 0) onScroll(window.pageYOffset / m);
 }, {passive:true});
 
-/* Video UV threshold — en la imagen Flova la cascada empieza al ~38% */
-var WATER_VID_Y = 0.38;
-
-/* Computa en que Y de pantalla (0=top,1=bottom) aparece la cascada */
-function computeWaterScrY(){
-  var sA = W / H;
-  var vh = 0.5625 / sA;
-  var mO = Math.max(0, 0.82 - vh);
-  var y = (WATER_VID_Y - scrollPct * mO) / vh;
-  return Math.max(0, Math.min(1, y));
-}
-
 /* Uniform locations */
 var simU = {
   uPrev:gl.getUniformLocation(simProg,'uPrev'),
   uCurr:gl.getUniformLocation(simProg,'uCurr'),
   uInv:gl.getUniformLocation(simProg,'uInv'),
   uCursor:gl.getUniformLocation(simProg,'uCursor'),
-  uCursorOn:gl.getUniformLocation(simProg,'uCursorOn'),
-  uWaterGLY:gl.getUniformLocation(simProg,'uWaterGLY')
+  uCursorOn:gl.getUniformLocation(simProg,'uCursorOn')
 };
 var renU = {
   uVideo:gl.getUniformLocation(renProg,'uVideo'),
@@ -2574,8 +2537,7 @@ var renU = {
   uRes:gl.getUniformLocation(renProg,'uRes'),
   uScroll:gl.getUniformLocation(renProg,'uScroll'),
   uCursor:gl.getUniformLocation(renProg,'uCursor'),
-  uCursorOn:gl.getUniformLocation(renProg,'uCursorOn'),
-  uWaterScrY:gl.getUniformLocation(renProg,'uWaterScrY')
+  uCursorOn:gl.getUniformLocation(renProg,'uCursorOn')
 };
 
 /* Render loop */
@@ -2586,10 +2548,6 @@ function render(){
   sCurX += (tX   - sCurX) * lp;  sCurY += (tYgl - sCurY) * lp;
   rCurX += (tX   - rCurX) * lp;  rCurY += (tYsc - rCurY) * lp;
   cOn   += (cOnT - cOn)   * 0.09;
-
-  /* Water zone thresholds — actualizan cada frame con el scroll */
-  var waterScrY = computeWaterScrY();
-  var waterGLY  = 1.0 - waterScrY; /* GL y (0=bottom) equivalente */
 
   /* Upload video frame to GPU */
   if(vid.readyState >= 2){
@@ -2616,7 +2574,6 @@ function render(){
   gl.uniform2f(simU.uInv, 1.0/SW, 1.0/SH);
   gl.uniform2f(simU.uCursor, sCurX, sCurY);
   gl.uniform1f(simU.uCursorOn, cOn);
-  gl.uniform1f(simU.uWaterGLY, waterGLY);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   var tmp = fboA; fboA = fboB; fboB = fboC; fboC = tmp;
 
@@ -2631,12 +2588,11 @@ function render(){
   gl.uniform1f(renU.uScroll, scrollPct);
   gl.uniform2f(renU.uCursor, rCurX, rCurY);
   gl.uniform1f(renU.uCursorOn, cOn);
-  gl.uniform1f(renU.uWaterScrY, waterScrY);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 }
 
 render();
-console.log('CuyoPool — Desborde Infinito v5 — water mask activo');
+console.log('CuyoPool — Desborde Infinito v6 — colores originales, cascada anclada');
 })();
 </script>
 <div class="vignette" aria-hidden="true"></div>
