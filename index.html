@@ -193,14 +193,18 @@ html, body { position: relative; }
   align-items: center;
 }
 
-/* CUYO v24 — Pool frame FILL TOTAL: ancho 100vw, altura mantiene aspect (overflow vertical recortado)
-   Resultado: el foliage + agua llenan TODO el viewport, el pool tile queda visible al centro */
+/* CUYO v25 — Pool frame FILL COMPLETO: 100vw × 100vh, imágenes estiradas para mostrar TODO
+   El aspect se rompe pero el pool completo se ve (top con foliage + tiles + bottom con foliage) */
 .pool-frame {
-  --aspect: 3.583333;
   position: relative;
   width: 100vw;
-  aspect-ratio: 768 / 2752;
+  height: 100vh;
   background: #000;
+}
+.pool-img-half {
+  width: 100%;
+  height: 50%;
+  object-fit: fill;  /* estira para llenar */
 }
 
 .pool-img-half {
