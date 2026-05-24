@@ -205,12 +205,13 @@ html, body { position: relative; }
   image-rendering: -webkit-optimize-contrast;
 }
 
-/* Container del ripple — alineado al mosaico verde central (medido sobre las imágenes Gemini) */
+/* Container del ripple — calibrado visualmente con la imagen Gemini
+   Piscina (tile verde central): 30%→65% horizontal, 5%→97% vertical del layout */
 .water-mask-container {
   position: absolute;
-  left: 28%;
-  top: 4%;
-  width: 37%;
+  left: 30%;
+  top: 5%;
+  width: 35%;
   height: 92%;
   pointer-events: none;
   overflow: hidden;
