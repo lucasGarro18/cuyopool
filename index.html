@@ -164,8 +164,8 @@ button{font-family:inherit;border:none;background:none;cursor:pointer}
    - Water layer absoluta delimitada por % exactos
    ══════════════════════════════════════════════════════════════════ */
 
-/* CUYO v20 — Fondo fijo: la foto Pexels queda visible mientras el contenido scrollea encima
-   Cubre todo el viewport, parallax effect natural */
+/* CUYO v21 — Fondo Claude Design: piscina vertical + foliage + WebGL ripples
+   Basado en handoff "fondo pagina web cuyopool" exportado de Claude Design */
 html, body { position: relative; }
 
 .cuyo-pool-layout {
@@ -176,17 +176,63 @@ html, body { position: relative; }
   z-index: -3;
   pointer-events: none;
   overflow: hidden;
-  background-color: #0a0f14;
+  /* Gradiente foliage-extracted del handoff */
+  background: radial-gradient(ellipse at 50% 30%, #122019 0%, #0a1410 70%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-/* CUYO v20 — Una sola foto Pexels como fondo, sin animación */
-.pool-stack {
+/* Pool stage — sigue la composición del handoff */
+.pool-stage {
+  position: relative;
   width: 100%;
   height: 100%;
-  background: url('pool-hero.jpg') center center / cover no-repeat;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-/* Hidden — assets viejos eliminados */
+/* Pool frame — vertical aspect 768:2752 = 3.5833
+   Width = min(100vw, viewport-height ÷ aspect) — en desktop queda angosto y centrado */
+.pool-frame {
+  --aspect: 3.583333;
+  position: relative;
+  width: min(100vw, calc(100vh / var(--aspect)));
+  width: min(100vw, calc(100dvh / var(--aspect)));
+  aspect-ratio: 768 / 2752;
+  background: #000;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(0,0,0,0.4);
+}
+
+.pool-img-half {
+  display: block;
+  width: 100%;
+  height: 50%;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Water canvas — cubre exactamente el rectángulo de tile verde
+   Posiciones medidas del handoff (composición 768×2752) */
+#water {
+  position: absolute;
+  left: 25.91%;
+  top: 10.32%;
+  width: 48.18%;
+  height: 82.23%;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+/* Reduced motion: oculta el canvas */
+@media (prefers-reduced-motion: reduce) {
+  #water { display: none; }
+}
+
+/* Hidden — assets/clases viejas eliminadas */
+.pool-stack,
 .water-mask-container,
 .water-animation-layer,
 .pool-water-effect,
@@ -1007,9 +1053,15 @@ footer{background:rgba(7,8,12,0.88);padding:54px 52px 24px;border-top:1px solid 
 </head>
 <body>
 
-<!-- CUYO v20 — Piscina como fondo (foto Pexels, sin animación) -->
+<!-- CUYO v21 — Fondo Claude Design: piscina vertical + WebGL ripples interactivos -->
 <section class="cuyo-pool-layout" aria-label="Piscina Cuyo Pool">
-  <div class="pool-stack"></div>
+  <div class="pool-stage">
+    <div class="pool-frame" id="frame">
+      <img class="pool-img-half" src="pool-top.png" alt="" />
+      <img class="pool-img-half" src="pool-bottom.png" alt="" />
+      <canvas id="water" aria-hidden="true"></canvas>
+    </div>
+  </div>
 </section>
 <div id="grain" aria-hidden="true"></div>
 <div id="prog" aria-hidden="true"></div>
@@ -2434,6 +2486,8 @@ window.addEventListener('load', function(){
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="jquery.ripples.js?v=20260521CC-autocalibrate"></script>
+<!-- CUYO v21 — WebGL water sim del handoff de Claude Design -->
+<script src="pool-water.js?v=1"></script>
 <script>
 /* CuyoPool — Enhanced jQuery Ripples (GGX PBR + SSR + custom physics)
    - Patched library: damping 0.998 (was 0.97) — ondas viven 4× más
