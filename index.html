@@ -193,16 +193,14 @@ html, body { position: relative; }
   align-items: center;
 }
 
-/* Pool frame — vertical aspect 768:2752 = 3.5833 (idéntico al handoff de Claude Design)
-   width: min(100vw, vh/aspect) — el handoff define la composición exacta */
+/* CUYO v24 — Pool frame FILL TOTAL: ancho 100vw, altura mantiene aspect (overflow vertical recortado)
+   Resultado: el foliage + agua llenan TODO el viewport, el pool tile queda visible al centro */
 .pool-frame {
   --aspect: 3.583333;
   position: relative;
-  width: min(100vw, calc(100vh / var(--aspect)));
-  width: min(100vw, calc(100dvh / var(--aspect)));
+  width: 100vw;
   aspect-ratio: 768 / 2752;
   background: #000;
-  box-shadow: 0 30px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(0,0,0,0.4);
 }
 
 .pool-img-half {
