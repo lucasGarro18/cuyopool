@@ -205,13 +205,13 @@ html, body { position: relative; }
   image-rendering: -webkit-optimize-contrast;
 }
 
-/* Container del ripple — SOLO sobre el agua (mosaico verde central) */
+/* Container del ripple — alineado al mosaico verde central (medido sobre las imágenes Gemini) */
 .water-mask-container {
   position: absolute;
-  left: 22%;
-  top: 8%;
-  width: 49%;
-  height: 84%;
+  left: 28%;
+  top: 4%;
+  width: 37%;
+  height: 92%;
   pointer-events: none;
   overflow: hidden;
   z-index: 5;
@@ -2446,8 +2446,8 @@ $(window).on('load', function(){
     $bg.ripples({
       resolution: 1024,
       imageUrl: 'pool-water-mask-src.jpg',
-      dropRadius: 30,
-      perturbance: 0.056,
+      dropRadius: 18,        // v17: -40% (era 30)
+      perturbance: 0.024,    // v17: -57% (era 0.056) — efecto agua mucho más sutil
       interactive: false,
       crossOrigin: ''
     });
@@ -2463,8 +2463,8 @@ $(window).on('load', function(){
       var dx = cx - lastX, dy = cy - lastY;
       var speed = Math.sqrt(dx*dx + dy*dy);
       lastX = cx; lastY = cy; lastMove = now;
-      var radius = 11 + Math.min(speed * 0.22, 13);
-      var strength = 0.018 + Math.min(speed * 0.0005, 0.022);
+      var radius = 7 + Math.min(speed * 0.14, 7);     // v17: gotas más chicas
+      var strength = 0.007 + Math.min(speed * 0.0003, 0.011); // v17: menos fuerza
       $bg.ripples('drop', cx, cy, radius, strength);
       var inst = $bg.data('ripples');
       if (inst) {
@@ -2473,15 +2473,15 @@ $(window).on('load', function(){
       }
     });
     $(document).on('click.cuyo', function(e){
-      $bg.ripples('drop', e.clientX, e.clientY, 48, 0.18);
-      setTimeout(function(){ $bg.ripples('drop', e.clientX, e.clientY, 22, 0.08); }, 60);
+      $bg.ripples('drop', e.clientX, e.clientY, 28, 0.09);   // v17: click más suave
+      setTimeout(function(){ $bg.ripples('drop', e.clientX, e.clientY, 14, 0.04); }, 60);
     });
 
     // (scroll sync no longer needed — ripple-bg is fixed, bg is the same fixed image)
 
     /* Single initial drop so user sees an immediate signal of life on the surface (subtle) */
     setTimeout(function(){
-      $bg.ripples('drop', window.innerWidth * 0.5, window.innerHeight * 0.4, 32, 0.10);
+      $bg.ripples('drop', window.innerWidth * 0.5, window.innerHeight * 0.4, 18, 0.05);  // v17: drop inicial sutil
     }, 250);
 
     /* Manually kick off rain on init (library normally waits 1s of no-mousemove) */
