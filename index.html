@@ -193,18 +193,16 @@ html, body { position: relative; }
   align-items: center;
 }
 
-/* Pool frame — vertical aspect 768:2752 = 3.5833
-   v22: frame más ancho (40vw en desktop) — foliage se extiende, exceso vertical clipea */
+/* Pool frame — vertical aspect 768:2752 = 3.5833 (idéntico al handoff de Claude Design)
+   width: min(100vw, vh/aspect) — el handoff define la composición exacta */
 .pool-frame {
   --aspect: 3.583333;
   position: relative;
-  width: min(100vw, 40vw);  /* desktop: 40% del viewport; mobile: full width */
+  width: min(100vw, calc(100vh / var(--aspect)));
+  width: min(100vw, calc(100dvh / var(--aspect)));
   aspect-ratio: 768 / 2752;
   background: #000;
   box-shadow: 0 30px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(0,0,0,0.4);
-}
-@media (max-width: 768px) {
-  .pool-frame { width: min(100vw, calc(100vh / var(--aspect))); }
 }
 
 .pool-img-half {
