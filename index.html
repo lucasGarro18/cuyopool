@@ -205,26 +205,105 @@ html, body { position: relative; }
   image-rendering: -webkit-optimize-contrast;
 }
 
-/* Container del ripple — calibrado visualmente con la imagen Gemini
-   Piscina (tile verde central): 30%→65% horizontal, 5%→97% vertical del layout */
-.water-mask-container {
+/* CUYO v19 — AGUA REAL: duplicado de la piscina con filtro SVG aplicado SOLO al área de agua
+   La piscina original queda intacta; el clon distorsionado se muestra solo donde hay agua */
+.pool-water-effect {
   position: absolute;
-  left: 30%;
-  top: 5%;
-  width: 35%;
-  height: 92%;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 5;
-}
-
-/* Ripple animation — fill 100% del container */
-.water-animation-layer {
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  mix-blend-mode: overlay;
-  background: url('pool-water-mask-src.jpg') center center / cover no-repeat;
+  pointer-events: none;
+  /* clip-path inset(top right bottom left) — muestra solo el área de la piscina */
+  clip-path: inset(5% 35% 3% 28%);
+  filter: url(#cuyo-water);
+  -webkit-filter: url(#cuyo-water);
 }
+.pool-water-effect .pool-img,
+.pool-water-effect .pool-middle {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.pool-water-effect .pool-middle {
+  height: 3489px;
+  background-image: url('Gemini_Generated_Image_6cxphd6cxphd6cxp.png');
+  background-size: 100% 100%;
+}
+
+/* Caustics dinámicos — luz que baila sobre el agua */
+.water-caustics {
+  position: absolute;
+  left: 28%;
+  top: 5%;
+  width: 37%;
+  height: 92%;
+  pointer-events: none;
+  z-index: 5;
+  mix-blend-mode: screen;
+  opacity: 0.35;
+  background-image:
+    radial-gradient(ellipse at 20% 30%, rgba(180,255,220,0.25) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 60%, rgba(150,220,200,0.20) 0%, transparent 55%),
+    radial-gradient(ellipse at 40% 80%, rgba(200,255,235,0.15) 0%, transparent 60%);
+  background-size: 60% 30%, 80% 40%, 70% 35%;
+  animation: causticsMove 18s ease-in-out infinite;
+}
+@keyframes causticsMove {
+  0%, 100% { background-position: 0% 0%, 100% 100%, 50% 0%; transform: scale(1); }
+  50% { background-position: 30% 40%, 70% 60%, 20% 60%; transform: scale(1.05); }
+}
+
+/* Ripple legacy hidden — reemplazado por filtro SVG */
+.water-mask-container { display: none; }
+
+/* PANEL DE CONTROLES — solo visible con ?debug=1 en URL */
+#ripple-controls {
+  display: none;
+  position: fixed;
+  top: 80px;
+  right: 14px;
+  z-index: 9999;
+  background: rgba(7,8,15,0.92);
+  border: 1px solid rgba(197,165,90,0.4);
+  padding: 14px 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  color: #e8e2d6;
+  border-radius: 4px;
+  min-width: 260px;
+}
+#ripple-controls.show { display: block; }
+#ripple-controls h4 {
+  font-family: 'Fraunces', serif;
+  font-size: 13px;
+  color: #c5a55a;
+  margin-bottom: 10px;
+  letter-spacing: 0.1em;
+}
+#ripple-controls .rc-row {
+  margin: 6px 0;
+  display: grid;
+  grid-template-columns: 90px 1fr 45px;
+  gap: 8px;
+  align-items: center;
+}
+#ripple-controls label { color: #b9b1a0; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+#ripple-controls input[type=range] { width: 100%; }
+#ripple-controls .rc-val { color: #c5a55a; font-variant-numeric: tabular-nums; text-align: right; }
+#ripple-controls .rc-btn {
+  margin-top: 10px;
+  background: rgba(197,165,90,0.15);
+  border: 1px solid rgba(197,165,90,0.4);
+  color: #c5a55a;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  width: 100%;
+}
+#ripple-controls .rc-btn:hover { background: rgba(197,165,90,0.25); }
 
 /* Legacy bg-static — desactivado */
 #bg-static { display: none !important; }
@@ -989,16 +1068,36 @@ footer{background:rgba(7,8,12,0.88);padding:54px 52px 24px;border-top:1px solid 
 </head>
 <body>
 
-<!-- CUYO POOL — Piscina centrada (3 imágenes apiladas) + ripple sobre el agua -->
+<!-- CUYO v19 — SVG con filtro de agua (sin región: clip-path en CSS limita el efecto) -->
+<svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+  <defs>
+    <filter id="cuyo-water">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012 0.018" numOctaves="2" seed="2" stitchTiles="stitch" result="turb">
+        <animate attributeName="baseFrequency"
+                 values="0.010 0.016;0.018 0.022;0.012 0.018;0.010 0.016"
+                 dur="22s"
+                 repeatCount="indefinite"/>
+        <animate attributeName="seed" values="2;5;8;3;2" dur="18s" repeatCount="indefinite"/>
+      </feTurbulence>
+      <feDisplacementMap id="cuyo-water-disp" in="SourceGraphic" in2="turb" scale="14" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
+
+<!-- CUYO v19 — Piscina + duplicado con agua + caustics de luz -->
 <section class="cuyo-pool-layout" aria-label="Piscina Cuyo Pool">
   <div class="pool-stack">
     <img src="Gemini_Generated_Image_195ria195ria195r.png" class="pool-img pool-top" alt="Borde superior piscina">
     <div class="pool-middle"></div>
     <img src="Gemini_Generated_Image_ecirwdecirwdecir.png" class="pool-img pool-bottom" alt="Borde inferior piscina">
   </div>
-  <div class="water-mask-container">
-    <div class="water-animation-layer" id="ripple-bg"></div>
+  <!-- Duplicado solo para efecto de agua (clip-path muestra solo el área de la piscina) -->
+  <div class="pool-water-effect" aria-hidden="true">
+    <img src="Gemini_Generated_Image_195ria195ria195r.png" class="pool-img pool-top" alt="">
+    <div class="pool-middle"></div>
+    <img src="Gemini_Generated_Image_ecirwdecirwdecir.png" class="pool-img pool-bottom" alt="">
   </div>
+  <div class="water-caustics" aria-hidden="true"></div>
 </section>
 <div id="grain" aria-hidden="true"></div>
 <div id="prog" aria-hidden="true"></div>
@@ -2430,8 +2529,7 @@ window.addEventListener('load', function(){
    - Patched library: 3D tilt reduced 30°→3° — efecto sutil, no card flip
    - CUYO v15: window.load para que las imágenes de la piscina estén medidas antes del init */
 $(window).on('load', function(){
-  /* CUYO v16: ajusta dinámicamente la altura del pool layout al final de #testimonios
-     dejando contacto + footer oscuros */
+  /* CUYO v18: ajusta altura del pool al final de #testimonios */
   function adjustPoolHeight(){
     var lastSec = document.getElementById('testimonios');
     var pool = document.querySelector('.cuyo-pool-layout');
@@ -2442,13 +2540,25 @@ $(window).on('load', function(){
   adjustPoolHeight();
   window.addEventListener('resize', adjustPoolHeight);
 
+  /* CUYO v18 — Configuración inicial del ripple
+     Textura: pool-tile-texture.jpg (tile real recortado) */
+  var rippleConfig = {
+    perturbance: 0.04,
+    dropRadius: 20,
+    moveRadius: 12,
+    moveStrength: 0.012,
+    clickRadius: 35,
+    clickStrength: 0.12,
+    rainInterval: 650
+  };
+
   var $bg = $('#ripple-bg');
   try {
     $bg.ripples({
       resolution: 1024,
-      imageUrl: 'pool-water-mask-src.jpg',
-      dropRadius: 18,        // v17: -40% (era 30)
-      perturbance: 0.024,    // v17: -57% (era 0.056) — efecto agua mucho más sutil
+      imageUrl: 'pool-tile-texture.jpg',
+      dropRadius: rippleConfig.dropRadius,
+      perturbance: rippleConfig.perturbance,
       interactive: false,
       crossOrigin: ''
     });
@@ -2464,8 +2574,8 @@ $(window).on('load', function(){
       var dx = cx - lastX, dy = cy - lastY;
       var speed = Math.sqrt(dx*dx + dy*dy);
       lastX = cx; lastY = cy; lastMove = now;
-      var radius = 7 + Math.min(speed * 0.14, 7);     // v17: gotas más chicas
-      var strength = 0.007 + Math.min(speed * 0.0003, 0.011); // v17: menos fuerza
+      var radius = rippleConfig.moveRadius + Math.min(speed * 0.18, 10);
+      var strength = rippleConfig.moveStrength + Math.min(speed * 0.0004, 0.015);
       $bg.ripples('drop', cx, cy, radius, strength);
       var inst = $bg.data('ripples');
       if (inst) {
@@ -2474,8 +2584,8 @@ $(window).on('load', function(){
       }
     });
     $(document).on('click.cuyo', function(e){
-      $bg.ripples('drop', e.clientX, e.clientY, 28, 0.09);   // v17: click más suave
-      setTimeout(function(){ $bg.ripples('drop', e.clientX, e.clientY, 14, 0.04); }, 60);
+      $bg.ripples('drop', e.clientX, e.clientY, rippleConfig.clickRadius, rippleConfig.clickStrength);
+      setTimeout(function(){ $bg.ripples('drop', e.clientX, e.clientY, rippleConfig.clickRadius/2, rippleConfig.clickStrength/2); }, 60);
     });
 
     // (scroll sync no longer needed — ripple-bg is fixed, bg is the same fixed image)
@@ -2492,6 +2602,85 @@ $(window).on('load', function(){
     }, 1500);
 
     console.log('CuyoPool — Enhanced Ripples ready (res 1024 · damping 0.998 · GGX+SSR+Fresnel)');
+
+    /* CUYO v19 — PANEL DE CONTROLES (?debug=1) — controla el filtro SVG y caustics */
+    if (window.location.search.indexOf('debug=1') !== -1) {
+      var disp = document.getElementById('cuyo-water-disp');
+      var turb = document.querySelector('#cuyo-water feTurbulence');
+      var caustics = document.querySelector('.water-caustics');
+      var filterEl = document.querySelector('#cuyo-water');
+
+      var waterConfig = {
+        scale: parseFloat(disp.getAttribute('scale')),
+        freqX: 0.012,
+        freqY: 0.018,
+        octaves: parseInt(turb.getAttribute('numOctaves')),
+        causticsOpacity: 0.35,
+        regionLeft: 28,
+        regionTop: 5,
+        regionWidth: 37,
+        regionHeight: 92
+      };
+
+      var panel = document.createElement('div');
+      panel.id = 'ripple-controls';
+      panel.className = 'show';
+      panel.innerHTML =
+        '<h4>🌊 Water Controls</h4>' +
+        '<div class="rc-row"><label>Distorsión</label><input type="range" id="rc-scale" min="0" max="40" step="1" value="' + waterConfig.scale + '"><span class="rc-val" id="rc-scale-v">' + waterConfig.scale + '</span></div>' +
+        '<div class="rc-row"><label>Ondas horiz</label><input type="range" id="rc-freqX" min="0.005" max="0.05" step="0.001" value="' + waterConfig.freqX + '"><span class="rc-val" id="rc-freqX-v">' + waterConfig.freqX + '</span></div>' +
+        '<div class="rc-row"><label>Ondas vert</label><input type="range" id="rc-freqY" min="0.005" max="0.05" step="0.001" value="' + waterConfig.freqY + '"><span class="rc-val" id="rc-freqY-v">' + waterConfig.freqY + '</span></div>' +
+        '<div class="rc-row"><label>Detalle</label><input type="range" id="rc-octaves" min="1" max="4" step="1" value="' + waterConfig.octaves + '"><span class="rc-val" id="rc-octaves-v">' + waterConfig.octaves + '</span></div>' +
+        '<div class="rc-row"><label>Brillo agua</label><input type="range" id="rc-causticsOpacity" min="0" max="1" step="0.05" value="' + waterConfig.causticsOpacity + '"><span class="rc-val" id="rc-causticsOpacity-v">' + waterConfig.causticsOpacity + '</span></div>' +
+        '<h4 style="margin-top:14px">📐 Posición del agua</h4>' +
+        '<div class="rc-row"><label>Left %</label><input type="range" id="rc-regionLeft" min="0" max="80" step="1" value="' + waterConfig.regionLeft + '"><span class="rc-val" id="rc-regionLeft-v">' + waterConfig.regionLeft + '%</span></div>' +
+        '<div class="rc-row"><label>Top %</label><input type="range" id="rc-regionTop" min="0" max="20" step="1" value="' + waterConfig.regionTop + '"><span class="rc-val" id="rc-regionTop-v">' + waterConfig.regionTop + '%</span></div>' +
+        '<div class="rc-row"><label>Width %</label><input type="range" id="rc-regionWidth" min="10" max="80" step="1" value="' + waterConfig.regionWidth + '"><span class="rc-val" id="rc-regionWidth-v">' + waterConfig.regionWidth + '%</span></div>' +
+        '<div class="rc-row"><label>Height %</label><input type="range" id="rc-regionHeight" min="50" max="100" step="1" value="' + waterConfig.regionHeight + '"><span class="rc-val" id="rc-regionHeight-v">' + waterConfig.regionHeight + '%</span></div>' +
+        '<button class="rc-btn" id="rc-export">📋 Copiar valores actuales</button>';
+      document.body.appendChild(panel);
+
+      var waterEffect = document.querySelector('.pool-water-effect');
+
+      function updateFilter() {
+        disp.setAttribute('scale', waterConfig.scale);
+        turb.setAttribute('baseFrequency', waterConfig.freqX + ' ' + waterConfig.freqY);
+        turb.setAttribute('numOctaves', waterConfig.octaves);
+        caustics.style.opacity = waterConfig.causticsOpacity;
+        // Posicionamiento via clip-path inset(top right bottom left)
+        var right = 100 - (waterConfig.regionLeft + waterConfig.regionWidth);
+        var bottom = 100 - (waterConfig.regionTop + waterConfig.regionHeight);
+        if (waterEffect) {
+          waterEffect.style.clipPath = 'inset(' + waterConfig.regionTop + '% ' + right + '% ' + bottom + '% ' + waterConfig.regionLeft + '%)';
+          waterEffect.style.webkitClipPath = 'inset(' + waterConfig.regionTop + '% ' + right + '% ' + bottom + '% ' + waterConfig.regionLeft + '%)';
+        }
+        caustics.style.left = waterConfig.regionLeft + '%';
+        caustics.style.top = waterConfig.regionTop + '%';
+        caustics.style.width = waterConfig.regionWidth + '%';
+        caustics.style.height = waterConfig.regionHeight + '%';
+      }
+
+      function bindSlider(k, isPercent) {
+        var el = document.getElementById('rc-' + k);
+        var lbl = document.getElementById('rc-' + k + '-v');
+        el.addEventListener('input', function(e){
+          var val = parseFloat(e.target.value);
+          waterConfig[k] = val;
+          lbl.textContent = (isPercent ? val + '%' : val);
+          updateFilter();
+        });
+      }
+      ['scale', 'freqX', 'freqY', 'octaves', 'causticsOpacity'].forEach(function(k){ bindSlider(k, false); });
+      ['regionLeft', 'regionTop', 'regionWidth', 'regionHeight'].forEach(function(k){ bindSlider(k, true); });
+
+      document.getElementById('rc-export').addEventListener('click', function(){
+        var text = 'waterConfig = ' + JSON.stringify(waterConfig, null, 2);
+        navigator.clipboard.writeText(text).then(function(){
+          document.getElementById('rc-export').textContent = '✓ COPIADO AL PORTAPAPELES';
+        });
+        console.log(text);
+      });
+    }
 
     /* CUYO v14: AUTO-CALIBRATION del clip-path según viewport real.
        La imagen Bali (1696×2528 portrait) con bg-size:cover sobre cualquier viewport.
