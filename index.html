@@ -193,18 +193,26 @@ html, body { position: relative; }
   align-items: center;
 }
 
-/* CUYO v25 — Pool frame FILL COMPLETO: 100vw × 100vh, imágenes estiradas para mostrar TODO
-   El aspect se rompe pero el pool completo se ve (top con foliage + tiles + bottom con foliage) */
+/* CUYO v26 — Pool frame 100vw × 100vh con object-fit: cover (SIN distorsión)
+   Las variables de abajo se controlan por sliders cuando ?debug=1 */
+:root {
+  --pool-pos-y: 50%;   /* 0% = muestra el top, 100% = muestra el bottom */
+  --pool-scale: 1;     /* zoom — 0.8 más chico, 2 más grande */
+  --pool-frame-h: 100vh;
+}
 .pool-frame {
   position: relative;
   width: 100vw;
-  height: 100vh;
+  height: var(--pool-frame-h);
   background: #000;
 }
 .pool-img-half {
   width: 100%;
   height: 50%;
-  object-fit: fill;  /* estira para llenar */
+  object-fit: cover;          /* SIN distorsión, recorta lo que sobra */
+  object-position: center var(--pool-pos-y);
+  transform: scale(var(--pool-scale));
+  transform-origin: center center;
 }
 
 .pool-img-half {
@@ -2497,7 +2505,47 @@ window.addEventListener('load', function(){
    - Patched library: 3D tilt reduced 30°→3° — efecto sutil, no card flip
    - CUYO v15: window.load para que las imágenes de la piscina estén medidas antes del init */
 $(window).on('load', function(){
-  /* v20: fondo fijo full-viewport — no requiere ajuste dinámico ni animación */
+  /* CUYO v26 — Panel de controles (?debug=1) para ajustar imagen sin distorsión */
+  if (window.location.search.indexOf('debug=1') !== -1) {
+    var cfg = { posY: 50, scale: 1.0, frameH: 100 };
+    var panel = document.createElement('div');
+    panel.id = 'ripple-controls';
+    panel.className = 'show';
+    panel.innerHTML =
+      '<h4>🌊 Ajustar imagen al fondo</h4>' +
+      '<div class="rc-row"><label>Posición vert</label><input type="range" id="rc-posY" min="0" max="100" step="1" value="50"><span class="rc-val" id="rc-posY-v">50%</span></div>' +
+      '<div class="rc-row"><label>Zoom</label><input type="range" id="rc-scale" min="0.7" max="2" step="0.05" value="1"><span class="rc-val" id="rc-scale-v">1.00x</span></div>' +
+      '<div class="rc-row"><label>Alto frame</label><input type="range" id="rc-frameH" min="60" max="200" step="5" value="100"><span class="rc-val" id="rc-frameH-v">100vh</span></div>' +
+      '<button class="rc-btn" id="rc-export">📋 Copiar valores</button>' +
+      '<div style="margin-top:8px;font-size:9px;color:#888">Sin distorsión — usa object-fit: cover</div>';
+    document.body.appendChild(panel);
+
+    var root = document.documentElement;
+    function apply() {
+      root.style.setProperty('--pool-pos-y', cfg.posY + '%');
+      root.style.setProperty('--pool-scale', cfg.scale);
+      root.style.setProperty('--pool-frame-h', cfg.frameH + 'vh');
+    }
+    function bind(k, suffix) {
+      var el = document.getElementById('rc-' + k);
+      var lbl = document.getElementById('rc-' + k + '-v');
+      el.addEventListener('input', function(e){
+        cfg[k] = parseFloat(e.target.value);
+        lbl.textContent = (k === 'scale' ? cfg[k].toFixed(2) + 'x' : cfg[k] + suffix);
+        apply();
+      });
+    }
+    bind('posY', '%'); bind('scale', 'x'); bind('frameH', 'vh');
+    document.getElementById('rc-export').addEventListener('click', function(){
+      var text = 'Ajustes:\n  posY: ' + cfg.posY + '%\n  scale: ' + cfg.scale + '\n  frameH: ' + cfg.frameH + 'vh';
+      navigator.clipboard.writeText(text).then(function(){
+        document.getElementById('rc-export').textContent = '✓ COPIADO';
+        setTimeout(function(){ document.getElementById('rc-export').textContent = '📋 Copiar valores'; }, 1500);
+      });
+      console.log(text);
+    });
+  }
+
   return;
 
   var rippleConfig = {
