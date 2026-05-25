@@ -193,12 +193,14 @@ html, body { position: relative; }
   align-items: center;
 }
 
-/* CUYO v26 — Pool frame 100vw × 100vh con object-fit: cover (SIN distorsión)
-   Las variables de abajo se controlan por sliders cuando ?debug=1 */
+/* CUYO v27 — Pool frame con controles independientes ARRIBA / ABAJO
+   Cada imagen tiene su propia posición Y y zoom */
 :root {
-  --pool-pos-y: 50%;   /* 0% = muestra el top, 100% = muestra el bottom */
-  --pool-scale: 1;     /* zoom — 0.8 más chico, 2 más grande */
   --pool-frame-h: 100vh;
+  --pool-top-pos-y: 50%;
+  --pool-top-scale: 1;
+  --pool-bot-pos-y: 50%;
+  --pool-bot-scale: 1;
 }
 .pool-frame {
   position: relative;
@@ -209,10 +211,16 @@ html, body { position: relative; }
 .pool-img-half {
   width: 100%;
   height: 50%;
-  object-fit: cover;          /* SIN distorsión, recorta lo que sobra */
-  object-position: center var(--pool-pos-y);
-  transform: scale(var(--pool-scale));
+  object-fit: cover;
   transform-origin: center center;
+}
+.pool-img-half:first-of-type {
+  object-position: center var(--pool-top-pos-y);
+  transform: scale(var(--pool-top-scale));
+}
+.pool-img-half:nth-of-type(2) {
+  object-position: center var(--pool-bot-pos-y);
+  transform: scale(var(--pool-bot-scale));
 }
 
 .pool-img-half {
@@ -2505,39 +2513,59 @@ window.addEventListener('load', function(){
    - Patched library: 3D tilt reduced 30°→3° — efecto sutil, no card flip
    - CUYO v15: window.load para que las imágenes de la piscina estén medidas antes del init */
 $(window).on('load', function(){
-  /* CUYO v26 — Panel de controles (?debug=1) para ajustar imagen sin distorsión */
+  /* CUYO v27 — Panel con controles SEPARADOS para imagen ARRIBA y ABAJO */
   if (window.location.search.indexOf('debug=1') !== -1) {
-    var cfg = { posY: 50, scale: 1.0, frameH: 100 };
+    var cfg = {
+      topPosY: 50, topScale: 1.0,
+      botPosY: 50, botScale: 1.0,
+      frameH: 100
+    };
     var panel = document.createElement('div');
     panel.id = 'ripple-controls';
     panel.className = 'show';
     panel.innerHTML =
       '<h4>🌊 Ajustar imagen al fondo</h4>' +
-      '<div class="rc-row"><label>Posición vert</label><input type="range" id="rc-posY" min="0" max="100" step="1" value="50"><span class="rc-val" id="rc-posY-v">50%</span></div>' +
-      '<div class="rc-row"><label>Zoom</label><input type="range" id="rc-scale" min="0.7" max="2" step="0.05" value="1"><span class="rc-val" id="rc-scale-v">1.00x</span></div>' +
-      '<div class="rc-row"><label>Alto frame</label><input type="range" id="rc-frameH" min="60" max="200" step="5" value="100"><span class="rc-val" id="rc-frameH-v">100vh</span></div>' +
+      '<div style="color:#c5a55a;font-size:10px;letter-spacing:0.1em;margin:6px 0 4px">⬆️ ARRIBA</div>' +
+      '<div class="rc-row"><label>Posición Y</label><input type="range" id="rc-topPosY" min="0" max="100" step="1" value="50"><span class="rc-val" id="rc-topPosY-v">50%</span></div>' +
+      '<div class="rc-row"><label>Zoom</label><input type="range" id="rc-topScale" min="0.5" max="3" step="0.05" value="1"><span class="rc-val" id="rc-topScale-v">1.00x</span></div>' +
+      '<div style="color:#c5a55a;font-size:10px;letter-spacing:0.1em;margin:10px 0 4px">⬇️ ABAJO</div>' +
+      '<div class="rc-row"><label>Posición Y</label><input type="range" id="rc-botPosY" min="0" max="100" step="1" value="50"><span class="rc-val" id="rc-botPosY-v">50%</span></div>' +
+      '<div class="rc-row"><label>Zoom</label><input type="range" id="rc-botScale" min="0.5" max="3" step="0.05" value="1"><span class="rc-val" id="rc-botScale-v">1.00x</span></div>' +
+      '<div style="color:#c5a55a;font-size:10px;letter-spacing:0.1em;margin:10px 0 4px">📐 FRAME</div>' +
+      '<div class="rc-row"><label>Alto total</label><input type="range" id="rc-frameH" min="60" max="200" step="5" value="100"><span class="rc-val" id="rc-frameH-v">100vh</span></div>' +
       '<button class="rc-btn" id="rc-export">📋 Copiar valores</button>' +
-      '<div style="margin-top:8px;font-size:9px;color:#888">Sin distorsión — usa object-fit: cover</div>';
+      '<div style="margin-top:8px;font-size:9px;color:#888">Sin distorsión — object-fit: cover</div>';
     document.body.appendChild(panel);
 
     var root = document.documentElement;
     function apply() {
-      root.style.setProperty('--pool-pos-y', cfg.posY + '%');
-      root.style.setProperty('--pool-scale', cfg.scale);
+      root.style.setProperty('--pool-top-pos-y', cfg.topPosY + '%');
+      root.style.setProperty('--pool-top-scale', cfg.topScale);
+      root.style.setProperty('--pool-bot-pos-y', cfg.botPosY + '%');
+      root.style.setProperty('--pool-bot-scale', cfg.botScale);
       root.style.setProperty('--pool-frame-h', cfg.frameH + 'vh');
     }
-    function bind(k, suffix) {
+    function bind(k, suffix, isScale) {
       var el = document.getElementById('rc-' + k);
       var lbl = document.getElementById('rc-' + k + '-v');
       el.addEventListener('input', function(e){
         cfg[k] = parseFloat(e.target.value);
-        lbl.textContent = (k === 'scale' ? cfg[k].toFixed(2) + 'x' : cfg[k] + suffix);
+        lbl.textContent = (isScale ? cfg[k].toFixed(2) + 'x' : cfg[k] + suffix);
         apply();
       });
     }
-    bind('posY', '%'); bind('scale', 'x'); bind('frameH', 'vh');
+    bind('topPosY', '%', false);
+    bind('topScale', '', true);
+    bind('botPosY', '%', false);
+    bind('botScale', '', true);
+    bind('frameH', 'vh', false);
+
     document.getElementById('rc-export').addEventListener('click', function(){
-      var text = 'Ajustes:\n  posY: ' + cfg.posY + '%\n  scale: ' + cfg.scale + '\n  frameH: ' + cfg.frameH + 'vh';
+      var text =
+        'Ajustes Pool:\n' +
+        '  ARRIBA  posY: ' + cfg.topPosY + '%  zoom: ' + cfg.topScale + 'x\n' +
+        '  ABAJO   posY: ' + cfg.botPosY + '%  zoom: ' + cfg.botScale + 'x\n' +
+        '  FRAME   alto: ' + cfg.frameH + 'vh';
       navigator.clipboard.writeText(text).then(function(){
         document.getElementById('rc-export').textContent = '✓ COPIADO';
         setTimeout(function(){ document.getElementById('rc-export').textContent = '📋 Copiar valores'; }, 1500);
