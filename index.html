@@ -193,34 +193,43 @@ html, body { position: relative; }
   align-items: center;
 }
 
-/* CUYO v27 — Pool frame con controles independientes ARRIBA / ABAJO
-   Cada imagen tiene su propia posición Y y zoom */
+/* CUYO v28 — Composición UNIFICADA: 2 imágenes + canvas dentro del mismo contenedor
+   El canvas (animación) SIEMPRE queda alineado con los pool tiles porque escalan juntos */
 :root {
-  --pool-frame-h: 100vh;
-  --pool-top-pos-y: 50%;
-  --pool-top-scale: 1;
-  --pool-bot-pos-y: 50%;
-  --pool-bot-scale: 1;
+  --comp-width: 100vw;       /* ancho de la composición */
+  --comp-offset-y: 0px;      /* desplazamiento vertical */
 }
 .pool-frame {
+  /* este wrapper ya no se usa para sizing — solo centra */
   position: relative;
   width: 100vw;
-  height: var(--pool-frame-h);
-  background: #000;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+.pool-composition {
+  position: relative;
+  width: var(--comp-width);
+  aspect-ratio: 768 / 2752;   /* mantiene proporción original sin distorsión */
+  transform: translateY(var(--comp-offset-y));
 }
 .pool-img-half {
+  display: block;
   width: 100%;
   height: 50%;
   object-fit: cover;
-  transform-origin: center center;
 }
-.pool-img-half:first-of-type {
-  object-position: center var(--pool-top-pos-y);
-  transform: scale(var(--pool-top-scale));
-}
-.pool-img-half:nth-of-type(2) {
-  object-position: center var(--pool-bot-pos-y);
-  transform: scale(var(--pool-bot-scale));
+/* El canvas usa % de la composición — siempre alineado con los pool tiles */
+#water {
+  position: absolute;
+  left: 25.91%;
+  top: 10.32%;
+  width: 48.18%;
+  height: 82.23%;
+  pointer-events: none;
+  mix-blend-mode: screen;
 }
 
 .pool-img-half {
@@ -1071,13 +1080,15 @@ footer{background:rgba(7,8,12,0.88);padding:54px 52px 24px;border-top:1px solid 
 </head>
 <body>
 
-<!-- CUYO v21 — Fondo Claude Design: piscina vertical + WebGL ripples interactivos -->
+<!-- CUYO v28 — Composición unificada: 2 imágenes + canvas escalan JUNTOS -->
 <section class="cuyo-pool-layout" aria-label="Piscina Cuyo Pool">
   <div class="pool-stage">
     <div class="pool-frame" id="frame">
-      <img class="pool-img-half" src="pool-top.png" alt="" />
-      <img class="pool-img-half" src="pool-bottom.png" alt="" />
-      <canvas id="water" aria-hidden="true"></canvas>
+      <div class="pool-composition" id="composition">
+        <img class="pool-img-half" src="pool-top.png" alt="" />
+        <img class="pool-img-half" src="pool-bottom.png" alt="" />
+        <canvas id="water" aria-hidden="true"></canvas>
+      </div>
     </div>
   </div>
 </section>
@@ -2513,59 +2524,43 @@ window.addEventListener('load', function(){
    - Patched library: 3D tilt reduced 30°→3° — efecto sutil, no card flip
    - CUYO v15: window.load para que las imágenes de la piscina estén medidas antes del init */
 $(window).on('load', function(){
-  /* CUYO v27 — Panel con controles SEPARADOS para imagen ARRIBA y ABAJO */
+  /* CUYO v28 — Panel: Ancho + Posición Y mueven TODO junto (imágenes + animación) */
   if (window.location.search.indexOf('debug=1') !== -1) {
-    var cfg = {
-      topPosY: 50, topScale: 1.0,
-      botPosY: 50, botScale: 1.0,
-      frameH: 100
-    };
+    var cfg = { width: 100, offsetY: 0 };
     var panel = document.createElement('div');
     panel.id = 'ripple-controls';
     panel.className = 'show';
     panel.innerHTML =
-      '<h4>🌊 Ajustar imagen al fondo</h4>' +
-      '<div style="color:#c5a55a;font-size:10px;letter-spacing:0.1em;margin:6px 0 4px">⬆️ ARRIBA</div>' +
-      '<div class="rc-row"><label>Posición Y</label><input type="range" id="rc-topPosY" min="0" max="100" step="1" value="50"><span class="rc-val" id="rc-topPosY-v">50%</span></div>' +
-      '<div class="rc-row"><label>Zoom</label><input type="range" id="rc-topScale" min="0.5" max="3" step="0.05" value="1"><span class="rc-val" id="rc-topScale-v">1.00x</span></div>' +
-      '<div style="color:#c5a55a;font-size:10px;letter-spacing:0.1em;margin:10px 0 4px">⬇️ ABAJO</div>' +
-      '<div class="rc-row"><label>Posición Y</label><input type="range" id="rc-botPosY" min="0" max="100" step="1" value="50"><span class="rc-val" id="rc-botPosY-v">50%</span></div>' +
-      '<div class="rc-row"><label>Zoom</label><input type="range" id="rc-botScale" min="0.5" max="3" step="0.05" value="1"><span class="rc-val" id="rc-botScale-v">1.00x</span></div>' +
-      '<div style="color:#c5a55a;font-size:10px;letter-spacing:0.1em;margin:10px 0 4px">📐 FRAME</div>' +
-      '<div class="rc-row"><label>Alto total</label><input type="range" id="rc-frameH" min="60" max="200" step="5" value="100"><span class="rc-val" id="rc-frameH-v">100vh</span></div>' +
+      '<h4>🌊 Acomodar piscina al fondo</h4>' +
+      '<div class="rc-row"><label>Ancho</label><input type="range" id="rc-width" min="20" max="200" step="2" value="100"><span class="rc-val" id="rc-width-v">100vw</span></div>' +
+      '<div class="rc-row"><label>Posición Y</label><input type="range" id="rc-offsetY" min="-100" max="100" step="1" value="0"><span class="rc-val" id="rc-offsetY-v">0vh</span></div>' +
       '<button class="rc-btn" id="rc-export">📋 Copiar valores</button>' +
-      '<div style="margin-top:8px;font-size:9px;color:#888">Sin distorsión — object-fit: cover</div>';
+      '<div style="margin-top:8px;font-size:9px;color:#888;line-height:1.4">' +
+        '<b>Ancho:</b> tamaño de la piscina<br>' +
+        '<b>Posición Y:</b> negativo sube, positivo baja<br>' +
+        'El agua (canvas) se mueve junto con la imagen — siempre alineada.' +
+      '</div>';
     document.body.appendChild(panel);
 
     var root = document.documentElement;
     function apply() {
-      root.style.setProperty('--pool-top-pos-y', cfg.topPosY + '%');
-      root.style.setProperty('--pool-top-scale', cfg.topScale);
-      root.style.setProperty('--pool-bot-pos-y', cfg.botPosY + '%');
-      root.style.setProperty('--pool-bot-scale', cfg.botScale);
-      root.style.setProperty('--pool-frame-h', cfg.frameH + 'vh');
+      root.style.setProperty('--comp-width', cfg.width + 'vw');
+      root.style.setProperty('--comp-offset-y', cfg.offsetY + 'vh');
     }
-    function bind(k, suffix, isScale) {
+    function bind(k, suffix) {
       var el = document.getElementById('rc-' + k);
       var lbl = document.getElementById('rc-' + k + '-v');
       el.addEventListener('input', function(e){
         cfg[k] = parseFloat(e.target.value);
-        lbl.textContent = (isScale ? cfg[k].toFixed(2) + 'x' : cfg[k] + suffix);
+        lbl.textContent = cfg[k] + suffix;
         apply();
       });
     }
-    bind('topPosY', '%', false);
-    bind('topScale', '', true);
-    bind('botPosY', '%', false);
-    bind('botScale', '', true);
-    bind('frameH', 'vh', false);
+    bind('width', 'vw');
+    bind('offsetY', 'vh');
 
     document.getElementById('rc-export').addEventListener('click', function(){
-      var text =
-        'Ajustes Pool:\n' +
-        '  ARRIBA  posY: ' + cfg.topPosY + '%  zoom: ' + cfg.topScale + 'x\n' +
-        '  ABAJO   posY: ' + cfg.botPosY + '%  zoom: ' + cfg.botScale + 'x\n' +
-        '  FRAME   alto: ' + cfg.frameH + 'vh';
+      var text = 'Composición:\n  --comp-width: ' + cfg.width + 'vw;\n  --comp-offset-y: ' + cfg.offsetY + 'vh;';
       navigator.clipboard.writeText(text).then(function(){
         document.getElementById('rc-export').textContent = '✓ COPIADO';
         setTimeout(function(){ document.getElementById('rc-export').textContent = '📋 Copiar valores'; }, 1500);
