@@ -60,10 +60,9 @@ html.has-cursor, html.has-cursor *{cursor:none !important}
   -webkit-backdrop-filter:blur(18px) saturate(140%);
   border-bottom-color:var(--line);
 }
-.nav__mark{display:flex;align-items:baseline;gap:8px;
-           font-family:var(--serif);font-style:italic;font-size:22px;letter-spacing:.01em}
-.nav__mark small{font-family:var(--sans);font-style:normal;font-size:9px;letter-spacing:.36em;
-                 text-transform:uppercase;color:var(--accent-warm);font-weight:500}
+.nav__mark{display:flex;align-items:center;gap:8px}
+.nav__logo{height:44px;width:auto;display:block;transition:opacity .3s}
+.nav__mark:hover .nav__logo{opacity:.82}
 .nav__links{display:flex;gap:36px;justify-self:center;
             font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-dim)}
 .nav__links a{position:relative;padding:6px 0;transition:color .25s}
