@@ -1248,18 +1248,30 @@
     // Margen inferior del canvas (px desde el fondo). Ajustable desde el panel.
     const BOT_MARGIN = o.botMargin != null ? o.botMargin : 1500;
 
-    poolBg.style.width  = vw + 'px';
-    poolBg.style.height = endY + 'px';
+    const isMobile = vw <= 768;
+    let dispW, dispH, offY;
+    const offX = 0;
 
-    // CSS: width:100% height:auto object-fit:cover → escala al ancho del viewport.
-    // Si la altura natural es menor que endY, se estira verticalmente (object-fit:cover).
-    const naturalH = vw * (IMG_H / IMG_W);
-    const scale    = naturalH < endY ? endY / IMG_H : vw / IMG_W;
-    const dispW    = IMG_W * scale;   // = vw (ancho completo)
-    const dispH    = IMG_H * scale;
-    const offX     = 0;               // sin margen lateral — imagen de costado a costado
-    // CSS top:0 — cuando la imagen es más alta que el contenedor empieza en 0, no centrada.
-    const offY     = dispH > endY ? 0 : (endY - dispH) / 2;
+    if (isMobile) {
+      // MOBILE: la imagen se muestra a su ancho natural (= viewport) y SOLO
+      // cubre su alto natural. NO se estira a todo el documento (eso la zoomeaba
+      // y descentraba los azulejos). Debajo de la imagen queda el fondo sólido.
+      const scale = vw / IMG_W;
+      dispW = vw;
+      dispH = IMG_H * scale;
+      offY  = 0;
+      poolBg.style.width  = vw + 'px';
+      poolBg.style.height = Math.round(dispH) + 'px';
+    } else {
+      // DESKTOP: la imagen cubre todo el documento (cover-fit).
+      poolBg.style.width  = vw + 'px';
+      poolBg.style.height = endY + 'px';
+      const naturalH = vw * (IMG_H / IMG_W);
+      const scale    = naturalH < endY ? endY / IMG_H : vw / IMG_W;
+      dispW = IMG_W * scale;
+      dispH = IMG_H * scale;
+      offY  = dispH > endY ? 0 : (endY - dispH) / 2;
+    }
 
     // Pool-tile rect in document/container coords.
     const tileL = offX + dispW * TILE_L;
