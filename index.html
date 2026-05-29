@@ -129,18 +129,19 @@
   }
   #water.is-ready{ opacity: 1; }
 
-  /* MOBILE: el fondo de la pileta queda FIJO cubriendo la pantalla y el
-     contenido scrollea por encima. Así la imagen cubre toda la página
-     (sin huecos) y a su ancho natural (sin zoom). El agua queda fija
-     sobre la columna de azulejos. */
+  /* MOBILE: la pileta se muestra como fondo del HERO a tamaño natural
+     (sin zoom, sin estirar) y el resto de la página va sobre fondo oscuro.
+     El canvas WebGL del agua se desactiva en celular (muchos GPU móviles
+     no soportan texturas float → se rompía); se ve la foto nítida estática.
+     El degradado inferior funde la imagen con el fondo (sin corte duro). */
   @media (max-width:768px){
-    .pool-bg{ position:fixed; top:0; left:0; width:100vw; height:100vh; height:100dvh; }
+    .pool-bg{ position:absolute; }
     .pool-bg__img{
-      top:0; left:0; width:100%; height:100%; min-height:0;
-      object-fit:cover; object-position:center;
+      top:0; left:0; width:100%; height:auto; min-height:0;
+      object-fit:cover; object-position:center top;
     }
-    .pool-bg::before, .pool-bg::after{ display:none; }
-    #water{ position:fixed; }
+    .pool-bg::before{ display:none; }
+    #water{ display:none; }      /* sin WebGL en mobile: foto estática */
   }
 
   /* Reduced motion: keep the still composition, drop the ripples. */
@@ -1266,22 +1267,20 @@
     let dispW, dispH, offX = 0, offY, cL, cT, cR, cB;
 
     if (isMobile) {
-      // MOBILE: fondo FIJO que cubre la pantalla (cover). El contenido pasa
-      // por encima. La imagen se centra mostrando la columna de azulejos;
-      // el agua queda fija sobre esa columna dentro del viewport.
-      const vh = window.innerHeight;
-      const coverScale = Math.max(vw / IMG_W, vh / IMG_H);
-      dispW = IMG_W * coverScale;
-      dispH = IMG_H * coverScale;
-      offX  = (vw - dispW) / 2;
-      offY  = (vh - dispH) / 2;
+      // MOBILE: imagen a tamaño natural (ancho = viewport), cubre el hero;
+      // debajo queda el fondo oscuro. El agua (WebGL) está oculta en mobile
+      // por CSS, así que acá solo importa posicionar bien la imagen.
+      const scale = vw / IMG_W;
+      dispW = vw;
+      dispH = IMG_H * scale;
+      offY  = 0;
       poolBg.style.width  = vw + 'px';
-      poolBg.style.height = vh + 'px';
+      poolBg.style.height = Math.round(dispH) + 'px';
 
       const tileL = offX + dispW * TILE_L, tileT = offY + dispH * TILE_T;
       const tileR = offX + dispW * TILE_R, tileB = offY + dispH * TILE_B;
       cL = Math.max(0, tileL); cT = Math.max(0, tileT);
-      cR = Math.min(vw, tileR); cB = Math.min(vh, tileB);
+      cR = Math.min(vw, tileR); cB = tileB;
     } else {
       // DESKTOP: la imagen cubre todo el documento (cover-fit, scrollea).
       poolBg.style.width  = vw + 'px';
