@@ -129,6 +129,20 @@
   }
   #water.is-ready{ opacity: 1; }
 
+  /* MOBILE: el fondo de la pileta queda FIJO cubriendo la pantalla y el
+     contenido scrollea por encima. Así la imagen cubre toda la página
+     (sin huecos) y a su ancho natural (sin zoom). El agua queda fija
+     sobre la columna de azulejos. */
+  @media (max-width:768px){
+    .pool-bg{ position:fixed; top:0; left:0; width:100vw; height:100vh; height:100dvh; }
+    .pool-bg__img{
+      top:0; left:0; width:100%; height:100%; min-height:0;
+      object-fit:cover; object-position:center;
+    }
+    .pool-bg::before, .pool-bg::after{ display:none; }
+    #water{ position:fixed; }
+  }
+
   /* Reduced motion: keep the still composition, drop the ripples. */
   @media (prefers-reduced-motion: reduce){
     #water{ display: none; }
@@ -1249,21 +1263,27 @@
     const BOT_MARGIN = o.botMargin != null ? o.botMargin : 1500;
 
     const isMobile = vw <= 768;
-    let dispW, dispH, offY;
-    const offX = 0;
+    let dispW, dispH, offX = 0, offY, cL, cT, cR, cB;
 
     if (isMobile) {
-      // MOBILE: la imagen se muestra a su ancho natural (= viewport) y SOLO
-      // cubre su alto natural. NO se estira a todo el documento (eso la zoomeaba
-      // y descentraba los azulejos). Debajo de la imagen queda el fondo sólido.
-      const scale = vw / IMG_W;
-      dispW = vw;
-      dispH = IMG_H * scale;
-      offY  = 0;
+      // MOBILE: fondo FIJO que cubre la pantalla (cover). El contenido pasa
+      // por encima. La imagen se centra mostrando la columna de azulejos;
+      // el agua queda fija sobre esa columna dentro del viewport.
+      const vh = window.innerHeight;
+      const coverScale = Math.max(vw / IMG_W, vh / IMG_H);
+      dispW = IMG_W * coverScale;
+      dispH = IMG_H * coverScale;
+      offX  = (vw - dispW) / 2;
+      offY  = (vh - dispH) / 2;
       poolBg.style.width  = vw + 'px';
-      poolBg.style.height = Math.round(dispH) + 'px';
+      poolBg.style.height = vh + 'px';
+
+      const tileL = offX + dispW * TILE_L, tileT = offY + dispH * TILE_T;
+      const tileR = offX + dispW * TILE_R, tileB = offY + dispH * TILE_B;
+      cL = Math.max(0, tileL); cT = Math.max(0, tileT);
+      cR = Math.min(vw, tileR); cB = Math.min(vh, tileB);
     } else {
-      // DESKTOP: la imagen cubre todo el documento (cover-fit).
+      // DESKTOP: la imagen cubre todo el documento (cover-fit, scrollea).
       poolBg.style.width  = vw + 'px';
       poolBg.style.height = endY + 'px';
       const naturalH = vw * (IMG_H / IMG_W);
@@ -1271,25 +1291,15 @@
       dispW = IMG_W * scale;
       dispH = IMG_H * scale;
       offY  = dispH > endY ? 0 : (endY - dispH) / 2;
+
+      const tileL = offX + dispW * TILE_L, tileT = offY + dispH * TILE_T;
+      const tileR = offX + dispW * TILE_R, tileB = offY + dispH * TILE_B;
+      cL = Math.max(0, tileL); cT = Math.max(0, tileT);
+      cR = Math.min(vw, tileR);
+      // Acota el alto del agua para no degradar la resolución (límite WebGL).
+      const MAX_WATER_H = Math.max(1600, Math.round(window.innerHeight * 2.8));
+      cB = Math.min(endY - BOT_MARGIN, tileB, cT + MAX_WATER_H);
     }
-
-    // Pool-tile rect in document/container coords.
-    const tileL = offX + dispW * TILE_L;
-    const tileT = offY + dispH * TILE_T;
-    const tileR = offX + dispW * TILE_R;
-    const tileB = offY + dispH * TILE_B;
-
-    // Clamp to the pool-bg rect (don't paint outside).
-    // El margen inferior es ajustable desde el panel (default 1500px).
-    const cL = Math.max(0, tileL);
-    const cT = Math.max(0, tileT);
-    const cR = Math.min(vw, tileR);
-    // Altura máxima del agua: la zona del hero donde realmente se ve.
-    // Si el canvas abarca todo el documento (muy alto), el límite de textura
-    // WebGL lo obliga a bajar mucho la resolución → se ve borroso. Acotándolo
-    // a ~2.8 pantallas mantiene la animación nítida donde importa.
-    const MAX_WATER_H = Math.max(1600, Math.round(window.innerHeight * 2.8));
-    const cB = Math.min(endY - BOT_MARGIN, tileB, cT + MAX_WATER_H);
 
     canvas.style.left   = cL + 'px';
     canvas.style.top    = cT + 'px';
