@@ -39,6 +39,23 @@
     });
   }
 
+  // ── Menú mobile (hamburguesa) ──
+  const burger = document.getElementById('nav-burger');
+  if (nav && burger) {
+    const close = () => {
+      nav.classList.remove('is-open');
+      burger.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    };
+    burger.addEventListener('click', () => {
+      const open = nav.classList.toggle('is-open');
+      burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+      document.body.style.overflow = open ? 'hidden' : '';
+    });
+    nav.querySelectorAll('.nav__links a').forEach((a) => a.addEventListener('click', close));
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  }
+
   // ── Reveal on scroll ──
   const io = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {

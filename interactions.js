@@ -198,6 +198,27 @@
     window.addEventListener('scroll', onScroll, { passive: true });
   }
 
+  // ── Menú mobile (hamburguesa) ─────────────────────────────────────────────
+  const burger = document.getElementById('nav-burger');
+  if (nav && burger) {
+    const close = () => {
+      nav.classList.remove('is-open');
+      burger.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    };
+    burger.addEventListener('click', () => {
+      const open = nav.classList.toggle('is-open');
+      burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+      document.body.style.overflow = open ? 'hidden' : '';
+    });
+    // Cerrar al tocar un link del menú
+    nav.querySelectorAll('.nav__links a').forEach((a) => {
+      a.addEventListener('click', close);
+    });
+    // Cerrar con Escape
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  }
+
   // ── Tilt cards ──────────────────────────────────────────────────────────
   // Cards with [data-tilt] tilt subtly toward the cursor for a 3D feel.
   if (!coarse && !reduced) {
