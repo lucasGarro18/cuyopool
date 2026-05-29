@@ -1272,7 +1272,12 @@
     const cL = Math.max(0, tileL);
     const cT = Math.max(0, tileT);
     const cR = Math.min(vw, tileR);
-    const cB = Math.min(endY - BOT_MARGIN, tileB);
+    // Altura máxima del agua: la zona del hero donde realmente se ve.
+    // Si el canvas abarca todo el documento (muy alto), el límite de textura
+    // WebGL lo obliga a bajar mucho la resolución → se ve borroso. Acotándolo
+    // a ~2.8 pantallas mantiene la animación nítida donde importa.
+    const MAX_WATER_H = Math.max(1600, Math.round(window.innerHeight * 2.8));
+    const cB = Math.min(endY - BOT_MARGIN, tileB, cT + MAX_WATER_H);
 
     canvas.style.left   = cL + 'px';
     canvas.style.top    = cT + 'px';
@@ -1299,7 +1304,7 @@
 </script>
 
 <!-- Pool water ripple animation — displacement WebGL sobre TU imagen original -->
-<script src="ripple.js"></script>
+<script src="ripple.js?v=2"></script>
 <script src="interactions.js?v=8"></script>
 <script src="editor.js"></script>
 <!-- ── Pool-area framing controls ──

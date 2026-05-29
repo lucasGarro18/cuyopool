@@ -179,8 +179,12 @@
       simW=baseMax;
       simH=Math.max(48,Math.round(simW*aspect));
     }
+    /* Backing buffer: priorizar resolución de ANCHO (lo que más se nota).
+       Se permite alto hasta el límite de textura (4096). El alto del canvas
+       ya está acotado desde syncLayout para que no se degrade la nitidez. */
     const dpr=Math.min(window.devicePixelRatio||1,1.5);
-    const scale=Math.min(1,2048/Math.max(cw*dpr,ch*dpr));
+    const MAX_DIM=4096;
+    const scale=Math.min(1,MAX_DIM/Math.max(cw*dpr,ch*dpr));
     canvas.width=Math.max(2,Math.floor(cw*dpr*scale));
     canvas.height=Math.max(2,Math.floor(ch*dpr*scale));
     dropRT(rtA);dropRT(rtB);
