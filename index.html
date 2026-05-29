@@ -2,350 +2,1601 @@
 <html lang="es">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>CUYO POOL — Piscinas de Lujo · Mendoza · San Juan · San Luis</title>
-<meta name="description" content="Taller de piscinas a medida en Cuyo. Treinta años, mil obras, ningún catálogo. Cada piscina se dibuja desde cero." />
-
-<meta property="og:title" content="CUYO POOL — Una piscina no se compra. Se dibuja." />
-<meta property="og:description" content="Taller de piscinas a medida en Cuyo. 30 años en Mendoza, San Juan y San Luis." />
-<meta property="og:type" content="website" />
-<meta property="og:locale" content="es_AR" />
-<meta name="theme-color" content="#0a1410" />
-
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Piscinas Cuyo — Diseño y construcción de piscinas | Mendoza · San Juan · San Luis</title>
+<meta name="description" content="Diseño y construcción de piscinas a medida en Mendoza, San Juan y San Luis. Más de mil obras firmadas, treinta años de oficio. Calidad y compromiso como única garantía." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter+Tight:wght@200;300;400;500;600&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="styles.css" />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter+Tight:wght@200;300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --ink:#eaf6f7;
+    --ink-dim:rgba(234,246,247,.68);
+    --ink-faint:rgba(234,246,247,.34);
+    --line:rgba(234,246,247,.12);
+    --line-strong:rgba(234,246,247,.24);
+    --accent:#cfe9e8;
+    --accent-warm:#e0c79a;
+    --bg:#03131e;
+    --bg-fallback:radial-gradient(ellipse at 50% 28%, #1a6878 0%, #0d4759 32%, #062436 70%, #03131e 100%);
+
+    /* Pool tile rectangle inside the 768×2752 composition
+       — left/right/top/bottom as % of the composition.
+       Tuned from a sampling pass of the image. */
+    --pool-left: 25.91%;
+    --pool-top: 10.32%;
+    --pool-w: 48.18%;
+    --pool-h: 82.23%;
+    --pool-aspect: 0.27907; /* 768 / 2752 */
+    --pad:clamp(22px, 4vw, 56px);
+    --serif:'Cormorant Garamond', 'Times New Roman', serif;
+    --sans:'Inter Tight', system-ui, sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  /* overflow-x:hidden lo movemos a <html> para que <body> no se convierta
+     en un contenedor de scroll independiente (provoca que window.scrollY
+     siempre sea 0 y rompe el side rail + cualquier scrollspy). */
+  html{overflow-x:clip}
+  body{min-height:100vh;font-family:var(--sans);color:var(--ink);background:var(--bg);
+       -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+       font-weight:300;
+       position:relative}
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  img{max-width:100%;display:block}
+
+  /* ── Custom cursor ── */
+  html.has-cursor, html.has-cursor *{cursor:none !important}
+  #c-dot,#c-ring{
+    position:fixed;top:0;left:0;pointer-events:none;
+    z-index:9999;border-radius:50%;
+    will-change:transform;
+  }
+  #c-dot{width:6px;height:6px;background:var(--accent);
+         box-shadow:0 0 12px var(--accent), 0 0 24px rgba(207,233,232,.45);
+         transition:width .25s, height .25s, background .25s}
+  #c-ring{width:38px;height:38px;border:1px solid rgba(207,233,232,.35);
+          transition:width .35s cubic-bezier(.2,.7,.2,1),
+                     height .35s cubic-bezier(.2,.7,.2,1),
+                     border-color .35s, background .25s}
+  #c-ring.is-active{width:64px;height:64px;border-color:var(--accent);
+                    background:rgba(207,233,232,.06)}
+  #c-ring.is-down{width:80px;height:80px;border-color:var(--accent-warm)}
+
+  /* ── Pool background ── */
+  .pool-bg{
+    position: absolute;
+    left: 0; top: 0;
+    width: 100vw;
+    height: 100%;
+    z-index: 0;
+    background: var(--bg);
+    pointer-events: none;
+    overflow: hidden;
+  }
+  /* Capa inferior: muestra el FONDO de la imagen (marco + vegetación inferior)
+     anclada al borde inferior, con máscara de degradado para fundir con los mosaicos. */
+  .pool-bg::before{
+    content:'';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 900px;
+    background: url('assets/pool-extended.jpg') center bottom / cover no-repeat;
+    z-index: 1;
+    mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.55) 30%, black 60%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.55) 30%, black 60%);
+    pointer-events: none;
+  }
+  /* Transición muy corta al final — sólo últimos 80px */
+  .pool-bg::after{
+    content:'';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 80px;
+    background: linear-gradient(to bottom, transparent, var(--bg));
+    z-index: 3;
+    pointer-events: none;
+  }
+  .pool-bg__img{
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: none;
+    /* Ancho completo — la imagen cubre de costado a costado */
+    width: 100%;
+    height: auto;
+    min-height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    max-width: none;
+    display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  /* Agua realista (jquery.ripples) — distorsiona su propio background-image,
+     que syncLayout alinea exactamente sobre los mismos píxeles de la foto.
+     Agua en reposo = idéntica a la foto; con ondas = refracción + reflejos. */
+  #water{
+    position: absolute;
+    left: 0; top: 0; width: 0; height: 0;
+    z-index: 2;
+    pointer-events: none;
+    background-image: url('assets/pool-extended.jpg');
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: opacity .8s ease;
+  }
+  #water.is-ready{ opacity: 1; }
+
+  /* Reduced motion: keep the still composition, drop the ripples. */
+  @media (prefers-reduced-motion: reduce){
+    #water{ display: none; }
+  }
+
+  /* ── Loader ── */
+  #loader{
+    position:fixed;inset:0;z-index:9000;
+    background:var(--bg);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;
+    transition:opacity .8s cubic-bezier(.2,.7,.2,1), visibility .8s;
+  }
+  #loader.out{opacity:0;visibility:hidden;pointer-events:none}
+  #loader::before{
+    content:"";position:absolute;inset:0;
+    background:radial-gradient(ellipse at center, rgba(207,233,232,.05) 0%, transparent 60%);
+  }
+  .ld-mark{
+    font-family:var(--serif);font-style:italic;font-weight:300;
+    font-size:clamp(40px, 7vw, 88px);letter-spacing:-.02em;
+    color:var(--accent);
+    animation:ldRise 1.2s cubic-bezier(.2,.7,.2,1) .1s both;
+    position:relative;
+  }
+  .ld-tagline{
+    font-size:11px;letter-spacing:.36em;text-transform:uppercase;color:var(--ink-faint);
+    animation:ldRise 1.2s cubic-bezier(.2,.7,.2,1) .35s both;
+  }
+  .ld-bar{
+    width:120px;height:1px;background:rgba(207,233,232,.12);overflow:hidden;
+    position:relative;
+  }
+  .ld-bar::before{
+    content:"";position:absolute;inset:0;width:0;
+    background:linear-gradient(to right, var(--accent), var(--accent-warm));
+    animation:ldBar 2.2s cubic-bezier(.4,0,.2,1) .4s forwards;
+  }
+  @keyframes ldRise{from{opacity:0;transform:translateY(20px) blur(8px)}to{opacity:1;transform:translateY(0) blur(0)}}
+  @keyframes ldBar{to{width:100%}}
+
+  /* ── Side rail ── */
+  #rail{
+    position:fixed;right:28px;top:50%;transform:translateY(-50%);
+    z-index:25;display:flex;flex-direction:column;gap:14px;
+  }
+  .rail__dot{
+    position:relative;width:8px;height:8px;border-radius:50%;
+    background:rgba(234,246,247,.18);
+    transition:background .3s, transform .3s, width .3s;
+  }
+  .rail__dot.is-active{background:var(--accent);transform:scale(1.4);
+                       box-shadow:0 0 12px var(--accent)}
+  .rail__dot::after{
+    content:attr(data-label);
+    position:absolute;right:calc(100% + 14px);top:50%;transform:translateY(-50%);
+    font-size:10px;letter-spacing:.26em;text-transform:uppercase;
+    color:var(--ink-dim);white-space:nowrap;
+    opacity:0;transition:opacity .25s;pointer-events:none;
+  }
+  .rail__dot:hover::after, .rail__dot.is-active::after{opacity:1}
+  @media (max-width: 900px){ #rail{display:none} }
+
+  /* ── Nav ── */
+  .nav{
+    position:fixed;top:0;left:0;right:0;z-index:30;
+    display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:24px;
+    padding:22px var(--pad);
+    transition:padding .4s ease, background .4s ease, backdrop-filter .4s ease, border-color .4s ease;
+    border-bottom:1px solid transparent;
+  }
+  .nav.is-scrolled{
+    padding:14px var(--pad);
+    background:rgba(3,19,30,.65);
+    backdrop-filter:blur(18px) saturate(140%);
+    -webkit-backdrop-filter:blur(18px) saturate(140%);
+    border-bottom-color:var(--line);
+  }
+  .nav__mark{display:flex;align-items:baseline;gap:8px;
+             font-family:var(--serif);font-style:italic;font-size:22px;letter-spacing:.01em}
+  .nav__mark small{font-family:var(--sans);font-style:normal;font-size:9px;letter-spacing:.36em;
+                   text-transform:uppercase;color:var(--accent-warm);font-weight:500}
+  .nav__links{display:flex;gap:36px;justify-self:center;
+              font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-dim)}
+  .nav__links a{position:relative;padding:6px 0;transition:color .25s}
+  .nav__links a::after{
+    content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--accent);
+    transform:scaleX(0);transform-origin:left;transition:transform .35s cubic-bezier(.2,.7,.2,1);
+  }
+  .nav__links a:hover{color:var(--ink)} .nav__links a:hover::after{transform:scaleX(1)}
+  .nav__cta{justify-self:end;display:inline-flex;align-items:center;gap:10px;
+            padding:10px 18px;border:1px solid var(--line-strong);border-radius:999px;
+            font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;
+            transition:background .3s, color .3s, border-color .3s}
+  .nav__cta:hover{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+
+  /* ── Reveal ── */
+  .reveal{opacity:0;transform:translateY(28px);
+          transition:opacity 1s cubic-bezier(.2,.7,.2,1), transform 1s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:translateY(0)}
+  .reveal-delay-1{transition-delay:.08s} .reveal-delay-2{transition-delay:.16s}
+  .reveal-delay-3{transition-delay:.24s} .reveal-delay-4{transition-delay:.32s}
+
+  /* ── Layout shell ── */
+  main{position:relative;z-index:1}
+  section{padding:140px var(--pad);max-width:1440px;margin:0 auto;position:relative}
+
+  /* ── Hero ── */
+  .hero{min-height:100vh;padding:140px var(--pad) 96px;
+        display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+  .hero__eyebrow{display:inline-flex;align-items:center;gap:14px;
+                 font-size:10.5px;letter-spacing:.36em;text-transform:uppercase;
+                 color:var(--ink-dim);margin-bottom:40px}
+  .hero__eyebrow::before, .hero__eyebrow::after{
+    content:"";width:48px;height:1px;background:linear-gradient(to right, transparent, var(--accent), transparent);
+  }
+  .hero__title{font-family:var(--serif);font-weight:300;
+               font-size:clamp(64px, 13vw, 220px);line-height:.86;letter-spacing:-.03em;text-wrap:balance;
+               text-shadow:0 2px 40px rgba(3,19,30,.55), 0 1px 12px rgba(3,19,30,.4)}
+  .hero__title .l1{display:block;font-style:italic}
+  .hero__title .l2{display:block;font-weight:400;color:var(--accent)}
+  .hero__sub{margin-top:44px;max-width:580px;
+             font-size:17px;line-height:1.55;color:var(--ink-dim);text-wrap:pretty}
+  .hero__cta-row{margin-top:52px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+  .btn{display:inline-flex;align-items:center;gap:12px;padding:18px 30px;
+       font-size:12px;letter-spacing:.22em;text-transform:uppercase;
+       border-radius:999px;border:1px solid transparent;
+       transition:background .35s, color .35s, border-color .35s;
+       backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);will-change:transform}
+  .btn--primary{background:var(--accent);color:var(--bg)}
+  .btn--primary:hover{background:#fff}
+  .btn--ghost{border-color:var(--line-strong);background:rgba(3,19,30,.25);color:var(--ink)}
+  .btn--ghost:hover{border-color:var(--accent);color:var(--accent)}
+  .btn svg{transition:transform .35s}
+  .btn:hover svg{transform:translateX(4px)}
+  .hero__scroll{margin-top:80px;display:inline-flex;flex-direction:column;align-items:center;gap:18px;
+                font-size:10px;letter-spacing:.4em;text-transform:uppercase;color:var(--ink-faint)}
+  .hero__scroll::after{content:"";width:1px;height:56px;
+                       background:linear-gradient(to bottom,var(--accent),transparent);
+                       animation:scrollPulse 2.4s ease-in-out infinite;transform-origin:top}
+  @keyframes scrollPulse{0%,100%{transform:scaleY(.5);opacity:.55} 50%{transform:scaleY(1);opacity:1}}
+
+  /* ── Marquee ── */
+  .marquee{
+    overflow:hidden;
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+    background:rgba(3,19,30,.4);
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  }
+  .marquee__track{
+    display:flex;gap:64px;padding:22px 0;width:max-content;
+    animation:marquee 38s linear infinite;
+  }
+  .marquee__item{
+    display:inline-flex;align-items:center;gap:22px;
+    font-family:var(--serif);font-style:italic;font-weight:300;
+    font-size:clamp(28px, 3.6vw, 48px);
+    color:var(--ink);letter-spacing:-.01em;
+    white-space:nowrap;
+  }
+  .marquee__item span{color:var(--accent-warm);font-style:normal;font-family:var(--sans);
+                      font-size:.4em;letter-spacing:.32em;text-transform:uppercase}
+  @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  .marquee--rev .marquee__track{animation-direction:reverse;animation-duration:28s}
+  .marquee--sm .marquee__item{font-size:clamp(13px,1.4vw,18px);font-style:normal;font-family:var(--sans);
+                               letter-spacing:.22em;text-transform:uppercase;color:var(--ink-dim)}
+  .marquee--sm .marquee__item span{font-size:1em;color:var(--accent)}
+
+  /* ── Stats ── */
+  .stats{padding:80px var(--pad);
+         border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+         background:rgba(3,19,30,.35);
+         backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);max-width:none}
+  .stats__grid{max-width:1440px;margin:0 auto;
+               display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line)}
+  .stat{padding:36px 28px;background:rgba(3,19,30,.6);display:flex;flex-direction:column;gap:10px}
+  .stat__num{font-family:var(--serif);font-weight:300;
+             font-size:clamp(48px, 6.5vw, 88px);line-height:.95;letter-spacing:-.02em;color:var(--accent)}
+  .stat__num sup{font-size:.32em;letter-spacing:0;color:var(--ink-dim);vertical-align:.7em;margin-left:4px}
+  .stat__label{font-size:10.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--ink-faint)}
+  .stat__desc{font-size:13px;line-height:1.45;color:var(--ink-dim);margin-top:6px}
+
+  /* ── Manifesto ── */
+  .manifesto{padding:180px var(--pad)}
+  .manifesto__grid{display:grid;grid-template-columns:1fr 1.4fr;gap:80px;align-items:start}
+  .manifesto__label{font-size:10.5px;letter-spacing:.36em;text-transform:uppercase;color:var(--accent-warm);
+                    padding-top:12px;border-top:1px solid var(--accent-warm);max-width:240px}
+  .manifesto__text{font-family:var(--serif);font-weight:300;font-style:italic;
+                   font-size:clamp(28px,3.4vw,46px);line-height:1.22;letter-spacing:-.005em;text-wrap:balance}
+  .manifesto__text b{font-style:normal;font-weight:400;color:var(--accent)}
+  .manifesto__sign{margin-top:32px;display:flex;gap:16px;align-items:center;
+                   font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--ink-dim)}
+  .manifesto__sign::before{content:"";width:36px;height:1px;background:var(--accent)}
+
+  /* ── Section heads ── */
+  .sec__head{display:grid;grid-template-columns:1fr 2fr;gap:60px;margin-bottom:80px;align-items:end}
+  .sec__eyebrow{font-size:11px;letter-spacing:.36em;text-transform:uppercase;color:var(--accent-warm);display:block}
+  .sec__eyebrow small{display:block;margin-bottom:14px;color:var(--ink-faint);font-size:10px;letter-spacing:.4em}
+  .sec__title{font-family:var(--serif);font-weight:300;
+              font-size:clamp(42px,5.6vw,82px);line-height:1.02;letter-spacing:-.022em;text-wrap:balance}
+  .sec__title em{font-style:italic;color:var(--accent)}
+
+  /* ── Estilos grid ── */
+  .styles__grid{display:grid;grid-template-columns:repeat(12,1fr);gap:1px;
+                background:var(--line);border:1px solid var(--line)}
+  .style-card{
+    background:rgba(3,19,30,.55);
+    backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);
+    padding:36px;display:flex;flex-direction:column;gap:14px;
+    transition:background .45s, transform .35s cubic-bezier(.2,.7,.2,1);
+    min-height:280px;justify-content:flex-end;position:relative;overflow:hidden;
+    transform-style:preserve-3d;
+  }
+  .style-card::before{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(180deg, rgba(207,233,232,0) 0%, rgba(207,233,232,0) 60%, rgba(207,233,232,.07) 100%);
+    opacity:0;transition:opacity .45s;
+  }
+  .style-card::after{
+    content:"";position:absolute;top:0;left:0;right:0;height:1px;
+    background:linear-gradient(to right, transparent, var(--accent), transparent);
+    opacity:0;transition:opacity .45s;
+  }
+  .style-card:hover{background:rgba(3,19,30,.72)}
+  .style-card:hover::before, .style-card:hover::after{opacity:1}
+  .style-card--lg{grid-column:span 6} .style-card--md{grid-column:span 4} .style-card--sm{grid-column:span 4}
+  .style-card--xl{grid-column:span 12;min-height:320px}
+  .style-card__num{position:absolute;top:32px;right:36px;
+                   font-family:var(--serif);font-style:italic;color:var(--accent-warm);
+                   font-size:14px;letter-spacing:.04em}
+  .style-card__name{font-family:var(--serif);font-weight:300;
+                    font-size:clamp(32px,2.8vw,46px);line-height:1;letter-spacing:-.015em;
+                    z-index:1;position:relative}
+  .style-card__name em{font-style:italic;color:var(--accent)}
+  .style-card__desc{font-size:13.5px;line-height:1.55;color:var(--ink-dim);max-width:46ch;z-index:1;position:relative}
+  .style-card__meta{display:flex;gap:18px;flex-wrap:wrap;margin-top:8px;
+                    font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--ink-faint);z-index:1;position:relative}
+  .style-card__meta span::before{content:"·";margin-right:14px;color:var(--accent)}
+  .style-card__meta span:first-child::before{content:"";margin:0}
+
+  /* ── Proceso ── */
+  .proceso .sec__head{margin-bottom:64px}
+  .proc-grid{display:grid;grid-template-columns:repeat(13,1fr);gap:0;position:relative}
+  .proc-grid::before{content:"";position:absolute;left:0;right:0;top:24px;height:1px;
+                     background:linear-gradient(to right, transparent, var(--line-strong), transparent)}
+  .proc-step{position:relative;padding:14px 14px 22px;
+             display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px}
+  .proc-step__dot{width:14px;height:14px;border-radius:50%;border:1px solid var(--accent);
+                  background:var(--bg);position:relative;z-index:2;
+                  box-shadow:0 0 16px rgba(207,233,232,.4);
+                  transition:transform .35s, background .35s, box-shadow .35s}
+  .proc-step:hover .proc-step__dot{background:var(--accent);transform:scale(1.5);
+                                   box-shadow:0 0 28px rgba(207,233,232,.8)}
+  .proc-step__num{font-family:var(--serif);font-style:italic;color:var(--accent-warm);
+                  font-size:11px;letter-spacing:.04em;margin-top:6px}
+  .proc-step__name{font-size:11.5px;letter-spacing:.04em;color:var(--ink);font-weight:400}
+  .proc-step__desc{font-size:10.5px;color:var(--ink-faint);letter-spacing:.06em;line-height:1.4;max-width:140px}
+
+  /* ── Materiales ── */
+  .materiales{padding:160px var(--pad)}
+  .mat-grid{display:grid;grid-template-columns:1.1fr 2fr;gap:80px;align-items:start}
+  .mat-list{display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line)}
+  .mat-row{display:grid;grid-template-columns:80px 1fr auto;gap:24px;align-items:center;
+           padding:22px 26px;background:rgba(3,19,30,.55);
+           backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:background .35s, padding-left .35s}
+  .mat-row:hover{background:rgba(3,19,30,.78);padding-left:34px}
+  .mat-swatch{width:64px;height:64px;border-radius:6px;
+              box-shadow:inset 0 0 24px rgba(0,0,0,.55), 0 8px 24px rgba(0,0,0,.35)}
+  .mat-swatch--porc{background:linear-gradient(135deg,#5b6f78 0%, #b8c9cc 50%, #2d3d44 100%)}
+  .mat-swatch--marm{background:linear-gradient(135deg,#d6cab8 0%, #fffaf0 35%, #a89e88 70%, #c9bda7 100%)}
+  .mat-swatch--piedra{background:linear-gradient(135deg,#3a3530 0%, #6b5e51 50%, #221d18 100%)}
+  .mat-swatch--bronce{background:linear-gradient(135deg,#7a5a35 0%, #c9a777 50%, #4d3820 100%)}
+  .mat-swatch--cristal{background:linear-gradient(135deg,#4ec9c9 0%, rgba(78,201,201,.3) 50%, #0a3d5c 100%);opacity:.85}
+  .mat-info h4{font-family:var(--serif);font-weight:400;font-size:24px;line-height:1.05;letter-spacing:-.01em}
+  .mat-info p{font-size:12.5px;color:var(--ink-dim);margin-top:4px;line-height:1.4;letter-spacing:.01em}
+  .mat-origin{font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--accent-warm)}
+  .mat-aside{display:flex;flex-direction:column;gap:32px;position:sticky;top:120px;align-self:start}
+  .mat-aside .sec__eyebrow{padding-top:16px;border-top:1px solid var(--accent-warm);max-width:200px}
+  .mat-aside h3{font-family:var(--serif);font-weight:300;font-size:clamp(34px,3.6vw,52px);
+                line-height:1.05;letter-spacing:-.02em;text-wrap:balance}
+  .mat-aside h3 em{font-style:italic;color:var(--accent)}
+  .mat-aside p{font-size:15px;line-height:1.55;color:var(--ink-dim);max-width:46ch}
+
+  /* ── Galería (grid editorial asimétrico) ── */
+  .galeria{padding:140px var(--pad);
+           background:linear-gradient(to bottom, transparent, rgba(3,19,30,.55) 12%, rgba(3,19,30,.65) 88%, transparent);
+           position:relative}
+  .galeria__grid{
+    max-width:1440px;margin:0 auto;
+    display:grid;grid-template-columns:repeat(12,1fr);
+    grid-auto-rows:120px;gap:14px;
+  }
+  .gal-item{
+    position:relative;overflow:hidden;border:1px solid var(--line);
+    background:rgba(3,19,30,.5);
+  }
+  .gal-item img{
+    width:100%;height:100%;object-fit:cover;display:block;
+    transition:transform 1.4s cubic-bezier(.2,.7,.2,1), filter .6s;
+    filter:saturate(.92) brightness(.92);
+  }
+  .gal-item:hover img{transform:scale(1.06);filter:saturate(1.05) brightness(1)}
+  .gal-item__cap{
+    position:absolute;left:18px;bottom:14px;right:18px;
+    display:flex;justify-content:space-between;gap:12px;align-items:end;
+    color:var(--ink);font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+    pointer-events:none;z-index:2;
+  }
+  .gal-item__cap::before{
+    content:"";position:absolute;left:-18px;right:-18px;bottom:-14px;height:90px;
+    background:linear-gradient(to top, rgba(3,19,30,.85), transparent);
+    z-index:-1;
+  }
+  .gal-item__name{font-family:var(--serif);font-style:italic;font-size:18px;
+                  letter-spacing:0;text-transform:none;color:var(--ink)}
+  .gal-item__loc{color:var(--accent-warm);font-size:10px}
+  /* Layout asimétrico — diferentes tamaños */
+  .gal-item--hero{grid-column:span 6;grid-row:span 4}
+  .gal-item--tall{grid-column:span 3;grid-row:span 4}
+  .gal-item--wide{grid-column:span 6;grid-row:span 2}
+  .gal-item--md  {grid-column:span 3;grid-row:span 3}
+  .gal-item--sm  {grid-column:span 3;grid-row:span 2}
+
+  /* ── Horizontal obra gallery ── */
+  .obras{padding:160px 0 160px var(--pad)}
+  .obras .sec__head{max-width:1440px;margin:0 auto 80px;padding-right:var(--pad)}
+  .obras__rail{
+    display:flex;gap:28px;overflow-x:auto;padding-right:var(--pad);padding-bottom:24px;
+    scroll-snap-type:x mandatory;scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent;
+  }
+  .obras__rail::-webkit-scrollbar{height:6px}
+  .obras__rail::-webkit-scrollbar-track{background:transparent}
+  .obras__rail::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+  .obra{
+    flex:0 0 clamp(280px, 36vw, 480px);scroll-snap-align:start;
+    display:flex;flex-direction:column;gap:18px;
+  }
+  .obra__media{
+    aspect-ratio:4/5;border:1px solid var(--line);position:relative;overflow:hidden;
+    background:linear-gradient(135deg, rgba(78,201,201,.08) 0%, rgba(3,19,30,.5) 100%);
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  }
+  .obra__media::before{content:"";position:absolute;inset:0;
+    background:
+      repeating-linear-gradient(0deg, rgba(207,233,232,.04) 0 1px, transparent 1px 28px),
+      repeating-linear-gradient(90deg, rgba(207,233,232,.04) 0 1px, transparent 1px 28px);
+    pointer-events:none}
+  .obra__media::after{content:"";position:absolute;inset:0;
+    background:radial-gradient(ellipse 80% 60% at 50% 65%, rgba(207,233,232,.15) 0%, transparent 70%);
+    pointer-events:none}
+  .obra__badge{position:absolute;top:18px;left:18px;
+              font-size:9.5px;letter-spacing:.36em;text-transform:uppercase;color:var(--accent-warm);
+              display:inline-flex;align-items:center;gap:8px;z-index:2}
+  .obra__badge::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent-warm);
+                       box-shadow:0 0 10px var(--accent-warm)}
+  .obra__id{position:absolute;bottom:18px;right:22px;font-family:var(--serif);font-style:italic;
+            color:var(--ink-dim);font-size:14px;z-index:2}
+  .obra__name{font-family:var(--serif);font-weight:300;font-size:26px;line-height:1.05;letter-spacing:-.01em}
+  .obra__name em{font-style:italic;color:var(--accent)}
+  .obra__meta{display:flex;justify-content:space-between;font-size:11px;letter-spacing:.18em;
+              text-transform:uppercase;color:var(--ink-faint)}
+
+  /* ── Featured ── */
+  .featured{padding:160px var(--pad)}
+  .feat-card{position:relative;min-height:620px;border:1px solid var(--line);overflow:hidden;
+             background:linear-gradient(135deg, rgba(78,201,201,.06) 0%, rgba(3,19,30,.4) 100%);
+             backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+             display:grid;grid-template-columns:1fr 1fr}
+  .feat-card__media{position:relative;border-right:1px solid var(--line);
+    background:linear-gradient(135deg, rgba(207,233,232,.06) 0%, transparent 60%),
+               linear-gradient(180deg, rgba(78,201,201,.18) 0%, rgba(10,61,92,.5) 100%);
+    overflow:hidden}
+  .feat-card__media::before{content:"";position:absolute;inset:0;
+    background:repeating-linear-gradient(0deg, rgba(207,233,232,.05) 0 1px, transparent 1px 28px),
+               repeating-linear-gradient(90deg, rgba(207,233,232,.05) 0 1px, transparent 1px 28px)}
+  .feat-card__media::after{content:"";position:absolute;inset:0;
+    background:radial-gradient(ellipse 70% 50% at 50% 65%, rgba(207,233,232,.18) 0%, transparent 70%)}
+  .feat-card__badge{position:absolute;top:24px;left:24px;z-index:2;
+                    font-size:10px;letter-spacing:.36em;text-transform:uppercase;color:var(--accent-warm);
+                    display:inline-flex;align-items:center;gap:10px}
+  .feat-card__badge::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent-warm);
+                            box-shadow:0 0 12px var(--accent-warm)}
+  .feat-card__body{padding:64px 56px;display:flex;flex-direction:column;justify-content:space-between;gap:28px}
+  .feat-card__eye{font-size:10.5px;letter-spacing:.36em;text-transform:uppercase;color:var(--ink-faint)}
+  .feat-card h3{font-family:var(--serif);font-weight:300;
+                font-size:clamp(40px,4.2vw,62px);line-height:1.02;letter-spacing:-.02em;text-wrap:balance}
+  .feat-card h3 em{font-style:italic;color:var(--accent)}
+  .feat-card__lead{font-size:15px;line-height:1.55;color:var(--ink-dim);max-width:46ch}
+  .feat-specs{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;
+              padding-top:24px;border-top:1px solid var(--line)}
+  .feat-specs dt{font-size:9.5px;letter-spacing:.36em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px}
+  .feat-specs dd{font-family:var(--serif);font-weight:300;font-size:22px;line-height:1.1;color:var(--ink)}
+
+  /* ── Testimonial ── */
+  .testi{padding:160px var(--pad)}
+  .testi__inner{max-width:1100px;margin:0 auto;text-align:center}
+  .testi__mark{font-family:var(--serif);font-style:italic;color:var(--accent);
+               font-size:120px;line-height:1;display:block;height:60px}
+  .testi__quote{font-family:var(--serif);font-weight:300;font-style:italic;
+                font-size:clamp(28px,3.6vw,52px);line-height:1.18;letter-spacing:-.012em;
+                text-wrap:balance;margin-top:14px}
+  .testi__by{margin-top:36px;display:inline-flex;flex-direction:column;gap:6px}
+  .testi__by b{font-family:var(--serif);font-weight:400;font-size:18px;font-style:italic}
+  .testi__by span{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--ink-faint)}
+
+  /* ── Contact ── */
+  .contact{padding:160px var(--pad)}
+  .contact__head{display:grid;grid-template-columns:1fr 1.4fr;gap:80px;margin-bottom:48px;align-items:end}
+  .contact__title{font-family:var(--serif);font-weight:300;
+                  font-size:clamp(48px,6.2vw,96px);line-height:.98;letter-spacing:-.022em}
+  .contact__title em{font-style:italic;color:var(--accent)}
+  .contact__lead{font-size:16px;line-height:1.55;color:var(--ink-dim);max-width:46ch;margin-bottom:48px}
+  .agents{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+  .agent{padding:44px;background:rgba(3,19,30,.55);
+         backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+         display:flex;flex-direction:column;gap:18px;transition:background .35s}
+  .agent:hover{background:rgba(3,19,30,.78)}
+  .agent__role{font-size:10.5px;letter-spacing:.36em;text-transform:uppercase;color:var(--accent-warm)}
+  .agent__name{font-family:var(--serif);font-weight:300;font-size:40px;line-height:1;letter-spacing:-.01em;font-style:italic}
+  .agent__phone{font-size:22px;color:var(--ink);font-family:var(--serif);font-weight:300;letter-spacing:.01em;margin-top:6px}
+  .agent__mail{font-size:13px;color:var(--ink-dim)}
+  .agent__cta{margin-top:16px;align-self:flex-start;display:inline-flex;align-items:center;gap:10px;
+              padding:13px 22px;border:1px solid var(--accent);color:var(--accent);
+              font-size:11px;letter-spacing:.22em;text-transform:uppercase;border-radius:999px;
+              transition:background .3s, color .3s;will-change:transform}
+  .agent__cta:hover{background:var(--accent);color:var(--bg)}
+
+  /* ── Footer ── */
+  footer{padding:64px var(--pad) 36px;border-top:1px solid var(--line);
+         background:rgba(3,19,30,.55);
+         backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);margin-top:80px}
+  .foot{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px}
+  .foot__brand h4{font-family:var(--serif);font-weight:300;font-size:42px;line-height:1;letter-spacing:-.01em;font-style:italic;margin-bottom:14px}
+  .foot__brand p{font-size:13px;color:var(--ink-dim);max-width:36ch;line-height:1.55}
+  .foot__col h5{font-size:10px;letter-spacing:.36em;text-transform:uppercase;color:var(--accent-warm);margin-bottom:18px}
+  .foot__col a, .foot__col p{display:block;font-size:13px;color:var(--ink-dim);margin-bottom:8px;line-height:1.5;transition:color .25s}
+  .foot__col a:hover{color:var(--accent)}
+  .foot__bottom{max-width:1440px;margin:48px auto 0;padding-top:28px;border-top:1px solid var(--line);
+                display:flex;justify-content:space-between;align-items:center;
+                font-size:10.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--ink-faint)}
+
+  /* ── Responsive ── */
+  @media (max-width:1100px){
+    .style-card--lg, .style-card--md, .style-card--sm{grid-column:span 6}
+    .style-card--xl{grid-column:span 12}
+    .sec__head{grid-template-columns:1fr;gap:24px;align-items:start}
+    .mat-grid{grid-template-columns:1fr;gap:48px}
+    .mat-aside{position:static}
+    .feat-card{grid-template-columns:1fr}
+    .feat-card__media{min-height:340px;border-right:0;border-bottom:1px solid var(--line)}
+    .feat-card__body{padding:44px 32px}
+    .contact__head{grid-template-columns:1fr;gap:24px}
+    .manifesto__grid{grid-template-columns:1fr;gap:24px}
+    .stats__grid{grid-template-columns:repeat(2,1fr)}
+    .foot{grid-template-columns:1fr 1fr;gap:32px}
+    .proc-grid{grid-template-columns:repeat(7,1fr);row-gap:24px}
+  }
+  @media (max-width:720px){
+    .nav__links{display:none} .nav{grid-template-columns:1fr auto}
+    .agents{grid-template-columns:1fr}
+    .styles__grid > .style-card{grid-column:span 12}
+    .mat-row{grid-template-columns:56px 1fr;gap:18px}
+    .mat-row .mat-origin{display:none}
+    .mat-swatch{width:48px;height:48px}
+    .feat-specs{grid-template-columns:1fr;gap:14px}
+    .foot{grid-template-columns:1fr}
+    .foot__bottom{flex-direction:column;gap:10px;text-align:center}
+    .marquee__item{font-size:24px}
+    /* Galería responsive — todo en 2 columnas */
+    .galeria__grid{grid-template-columns:repeat(6,1fr);grid-auto-rows:90px;gap:8px}
+    .gal-item--hero,.gal-item--tall,.gal-item--wide,.gal-item--md,.gal-item--sm{
+      grid-column:span 6;grid-row:span 3}
+    .gal-item--md{grid-column:span 3}
+    .gal-item--sm{grid-column:span 3;grid-row:span 2}
+    .gal-item__name{font-size:14px}
+  }
+</style>
 </head>
 <body>
 
-<!-- ============ NAVEGACIÓN ============ -->
-<nav class="nav" id="nav">
-  <a href="#" class="nav-brand">Piscinas <em>Cuyo</em></a>
-  <ul class="nav-links">
-    <li><a href="#quienes">Nosotros</a></li>
-    <li><a href="#lineas">Líneas</a></li>
-    <li><a href="#proceso">Proceso</a></li>
-    <li><a href="#contacto">Contacto</a></li>
-  </ul>
-  <a href="https://wa.me/5492615574180" class="nav-cta" target="_blank" rel="noopener">Consulta privada</a>
-</nav>
-
-<!-- ============ HERO CON LA PISCINA ============ -->
-<section class="pool-hero" id="inicio">
-  <div class="pool-frame" id="pool-frame">
-    <img class="pool-img" src="pool-top.png" alt="" />
-    <img class="pool-img" src="pool-bottom.png" alt="" />
-    <canvas id="water" aria-hidden="true"></canvas>
+  <!-- Loader -->
+  <div id="loader" aria-hidden="true">
+    <div class="ld-mark">Piscinas Cuyo</div>
+    <div class="ld-tagline">Tres generaciones · desde 1995</div>
+    <div class="ld-bar"></div>
   </div>
 
-  <div class="pool-overlay">
-    <div>
-      <h1 class="pool-mark">Una piscina no se <em>compra.</em><br>Se <em>dibuja.</em></h1>
-      <div class="pool-sub">Atelier de piscinas · Mendoza · San Juan · San Luis</div>
-    </div>
-    <div class="pool-scroll">Descubrí nuestras líneas</div>
+  <!-- Background — pool composition spans the entire document, scrolls with page -->
+  <div class="pool-bg" aria-hidden="true">
+    <img class="pool-bg__img" src="assets/pool-extended.jpg" alt="" />
+    <!-- Agua realista: jquery.ripples distorsiona este fondo (mismos píxeles
+         que la foto de abajo, alineados por syncLayout). -->
+    <div id="water" aria-hidden="true"></div>
   </div>
-</section>
 
-<!-- ============ QUIÉNES SOMOS ============ -->
-<section class="section" id="quienes">
-  <div class="section-eyebrow">Nosotros</div>
-  <h2 class="section-title">Un taller donde cada obra<br>nace de un <em>dibujo único.</em></h2>
+  <!-- Side rail (dots populated by JS) -->
+  <nav id="rail" aria-label="Secciones"></nav>
 
-  <div class="quienes-grid">
-    <div>
-      <p class="section-lead">
-        Piscinas Cuyo construye desde 1995. CUYO POOL es nuestra línea de élite:
-        proyectos a medida, sin catálogo, dibujados desde cero por arquitectos
-        propios y revestidos en porcelanato premium que dura décadas.
+  <!-- Nav -->
+  <header class="nav" id="nav">
+    <a href="#" class="nav__mark">Piscinas <small>Cuyo · est. 1995</small></a>
+    <nav class="nav__links">
+      <a href="#estilos">Estilos</a>
+      <a href="#proceso">Proceso</a>
+      <a href="#obras">Obras</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+    <a href="#contacto" class="nav__cta" data-magnetic="0.22">
+      Cotizar
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 6h8M7 2l4 4-4 4"/></svg>
+    </a>
+  </header>
+
+  <main>
+
+    <!-- HERO -->
+    <section class="hero" data-screen-label="01 Hero">
+      <span class="hero__eyebrow reveal">Mendoza · San Juan · San Luis · desde 1995</span>
+      <h1 class="hero__title">
+        <span class="l1 reveal reveal-delay-1">Piscinas</span>
+        <span class="l2 reveal reveal-delay-2">Cuyo</span>
+      </h1>
+      <p class="hero__sub reveal reveal-delay-3">
+        Tres generaciones construyendo piscinas a medida. Más de treinta años de
+        oficio en hormigón, agua y piedra. Calidad y compromiso,
+        nuestra mejor garantía.
       </p>
-      <p class="section-lead" style="margin-bottom:0">
-        Treinta años en Cuyo. Mil obras y contando. Ninguna se repite dos veces.
+      <div class="hero__cta-row reveal reveal-delay-4">
+        <a class="btn btn--primary" href="#contacto" data-magnetic="0.32">
+          Iniciar proyecto
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 7h10M8 3l4 4-4 4"/></svg>
+        </a>
+        <a class="btn btn--ghost" href="#obras" data-magnetic="0.22">Ver obra reciente</a>
+      </div>
+      <span class="hero__scroll">Movete sobre el agua</span>
+    </section>
+
+    <!-- MARQUEE -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee__track">
+        <span class="marquee__item">Atelier de autor <span>·</span></span>
+        <span class="marquee__item">Desborde infinito <span>·</span></span>
+        <span class="marquee__item">Porcelanato italiano <span>·</span></span>
+        <span class="marquee__item">1.000 obras <span>·</span></span>
+        <span class="marquee__item">Mendoza · San Juan · San Luis <span>·</span></span>
+        <span class="marquee__item">Treinta años <span>·</span></span>
+        <!-- duplicate for seamless loop -->
+        <span class="marquee__item">Atelier de autor <span>·</span></span>
+        <span class="marquee__item">Desborde infinito <span>·</span></span>
+        <span class="marquee__item">Porcelanato italiano <span>·</span></span>
+        <span class="marquee__item">1.000 obras <span>·</span></span>
+        <span class="marquee__item">Mendoza · San Juan · San Luis <span>·</span></span>
+        <span class="marquee__item">Treinta años <span>·</span></span>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <section class="stats" data-screen-label="02 Estudio">
+      <div class="stats__grid">
+        <div class="stat reveal">
+          <span class="stat__num" data-count-to="1000" data-count-suffix="+">0</span>
+          <span class="stat__label">Obras firmadas</span>
+          <span class="stat__desc">Residencias, hotelería, bodegas y countries. Cada obra entregada llave en mano.</span>
+        </div>
+        <div class="stat reveal reveal-delay-1">
+          <span class="stat__num" data-count-to="30">0</span>
+          <span class="stat__label">Años de oficio</span>
+          <span class="stat__desc">Tres generaciones de constructores haciendo realidad cada proyecto, obra por obra.</span>
+        </div>
+        <div class="stat reveal reveal-delay-2">
+          <span class="stat__num" data-count-to="3">0</span>
+          <span class="stat__label">Provincias</span>
+          <span class="stat__desc">Mendoza, San Juan y San Luis. Obras desde el llano hasta los 2.800 msnm.</span>
+        </div>
+        <div class="stat reveal reveal-delay-3">
+          <span class="stat__num" data-count-to="5">0</span>
+          <span class="stat__label">Años de garantía</span>
+          <span class="stat__desc">Estructura, hidráulica y revestimiento. Mantenimiento programado incluido.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- MANIFESTO -->
+    <section class="manifesto" data-screen-label="03 Manifesto">
+      <div class="manifesto__grid">
+        <div class="reveal">
+          <p class="manifesto__label">Manifiesto · 2026</p>
+        </div>
+        <div class="reveal reveal-delay-1">
+          <p class="manifesto__text">
+            Una piscina no es un volumen de agua. Es <b>hormigón pensado, agua
+            calibrada y piedra elegida en mano</b>. La calidad no se promete:
+            se construye en cada capa que el cliente no ve. Y eso no se aprende
+            en un año — se hereda.
+          </p>
+          <p class="manifesto__sign">Lucas Garro · Ariel Mercau — Tercera generación de constructores</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ESTILOS -->
+    <section id="estilos" data-screen-label="04 Estilos">
+      <header class="sec__head">
+        <div class="reveal"><span class="sec__eyebrow"><small>Capítulo 01</small>Colección</span></div>
+        <div class="reveal reveal-delay-1">
+          <h2 class="sec__title">Seis líneas <em>definidas para la cordillera.</em></h2>
+        </div>
+      </header>
+      <div class="styles__grid">
+
+        <a href="piscinas-diseno.html" class="style-card style-card--xl reveal" data-hover>
+          <span class="style-card__num">i.</span>
+          <h3 class="style-card__name">Piscinas de <em>diseño</em></h3>
+          <p class="style-card__desc">Jacuzzis, cascadas, semiolímpicas y proyectos imposibles de prefabricar. Desarrollado con tu arquitecto — o el nuestro — desde el plano hasta el último centímetro.</p>
+          <div class="style-card__meta"><span>Plazo 9–14 meses</span><span>Documentación completa</span><span>Acompañamiento de obra</span></div>
+        </a>
+
+        <a href="canal-de-nado.html" class="style-card style-card--lg reveal" data-hover>
+          <span class="style-card__num">ii.</span>
+          <h3 class="style-card__name">Canal de <em>nado</em></h3>
+          <p class="style-card__desc">Lámina larga de 12 a 25 m, filtración de alto caudal y porcelanato premium. Para los que nadan en serio.</p>
+          <div class="style-card__meta"><span>Lap pool</span><span>Contracorriente opcional</span></div>
+        </a>
+
+        <a href="desborde-infinito.html" class="style-card style-card--lg reveal reveal-delay-1" data-hover>
+          <span class="style-card__num">iii.</span>
+          <h3 class="style-card__name">Desborde <em>infinito</em></h3>
+          <p class="style-card__desc">Espejo continuo hacia el horizonte. Cálculo hidráulico exacto, perfil de borde a 0,3 mm de tolerancia.</p>
+          <div class="style-card__meta"><span>Vista al Aconcagua</span><span>Desde 14 m</span></div>
+        </a>
+
+        <a href="bali.html" class="style-card style-card--md reveal" data-hover>
+          <span class="style-card__num">iv.</span>
+          <h3 class="style-card__name"><em>Bali</em></h3>
+          <p class="style-card__desc">Piedra natural, formas orgánicas y vegetación que invade el borde. Atmósfera de resort tropical.</p>
+          <div class="style-card__meta"><span>Piedra</span><span>Orgánico</span></div>
+        </a>
+
+        <a href="travertino.html" class="style-card style-card--md reveal reveal-delay-1" data-hover>
+          <span class="style-card__num">v.</span>
+          <h3 class="style-card__name">Revestimiento <em>travertino</em></h3>
+          <p class="style-card__desc">Piedra cálida, antideslizante natural. La misma piedra del Coliseo aplicada a tu pileta.</p>
+          <div class="style-card__meta"><span>Material</span><span>Atemporal</span></div>
+        </a>
+
+        <a href="porcelanato.html" class="style-card style-card--md reveal reveal-delay-2" data-hover>
+          <span class="style-card__num">vi.</span>
+          <h3 class="style-card__name">Porcelanato <em>de piscina</em></h3>
+          <p class="style-card__desc">Cero absorción, formatos grandes, color uniforme. Precisión industrial al servicio del agua.</p>
+          <div class="style-card__meta"><span>Material</span><span>Premium</span></div>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- PROCESO -->
+    <section id="proceso" class="proceso" data-screen-label="05 Proceso">
+      <header class="sec__head">
+        <div class="reveal"><span class="sec__eyebrow"><small>Capítulo 02</small>Método</span></div>
+        <div class="reveal reveal-delay-1">
+          <h2 class="sec__title">Trece <em>etapas</em> entre la conversación y el primer baño.</h2>
+        </div>
+      </header>
+      <ol class="proc-grid reveal">
+        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">01</span><span class="proc-step__name">Conversación</span><span class="proc-step__desc">Visita y lectura del sitio</span></li>
+        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">02</span><span class="proc-step__name">Anteproyecto</span><span class="proc-step__desc">Croquis y briefing</span></li>
+        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">03</span><span class="proc-step__name">Hidráulico</span><span class="proc-step__desc">Cálculo de caudal</span></li>
+        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">04</span><span class="proc-step__name">Maqueta</span><span class="proc-step__desc">Muestras de material</span></li>
+        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">05</span><span class="proc-step__name">Documentación</span><span class="proc-step__desc">Planos firmados</span></li>
+        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">06</span><span class="proc-step__name">Replanteo</span><span class="proc-step__desc">Marcado en terreno</span></li>
+        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">07</span><span class="proc-step__name">Excavación</span><span class="proc-step__desc">Movimiento de suelo</span></li>
+        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">08</span><span class="proc-step__name">Estructura</span><span class="proc-step__desc">Hormigón armado</span></li>
+        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">09</span><span class="proc-step__name">Hidráulica</span><span class="proc-step__desc">Cañerías y skimmers</span></li>
+        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">10</span><span class="proc-step__name">Revestimiento</span><span class="proc-step__desc">Porcelanato pieza por pieza</span></li>
+        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">11</span><span class="proc-step__name">Sistema</span><span class="proc-step__desc">Bombas y domótica</span></li>
+        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">12</span><span class="proc-step__name">Llenado</span><span class="proc-step__desc">Balance químico</span></li>
+        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">13</span><span class="proc-step__name">Entrega</span><span class="proc-step__desc">Manual y garantía</span></li>
+      </ol>
+    </section>
+
+    <!-- GALERÍA — grid editorial asimétrico -->
+    <section id="galeria" class="galeria" data-screen-label="06 Galería">
+      <header class="sec__head">
+        <div class="reveal"><span class="sec__eyebrow"><small>Capítulo 03</small>Galería</span></div>
+        <div class="reveal reveal-delay-1">
+          <h2 class="sec__title">Obra <em>fotografiada.</em></h2>
+        </div>
+      </header>
+      <div class="galeria__grid">
+        <a href="desborde-infinito.html" class="gal-item gal-item--hero reveal" data-hover>
+          <img src="assets/lp-infinito.jpg" alt="Piscina con desborde infinito en Valle de Uco" loading="lazy" />
+          <div class="gal-item__cap">
+            <span class="gal-item__name">Casa <em>Tunuyán</em></span>
+            <span class="gal-item__loc">Valle de Uco · Desborde</span>
+          </div>
+        </a>
+        <a href="canal-de-nado.html" class="gal-item gal-item--tall reveal reveal-delay-1" data-hover>
+          <img src="assets/lp-canal.jpg" alt="Canal de nado vista aérea" loading="lazy" />
+          <div class="gal-item__cap">
+            <span class="gal-item__name">Lap pool</span>
+            <span class="gal-item__loc">25 m</span>
+          </div>
+        </a>
+        <a href="bali.html" class="gal-item gal-item--md reveal reveal-delay-2" data-hover>
+          <img src="assets/lp-bali.jpg" alt="Piscina estilo Bali vista aérea" loading="lazy" />
+          <div class="gal-item__cap">
+            <span class="gal-item__name"><em>Bali</em></span>
+            <span class="gal-item__loc">Tropical · Piedra</span>
+          </div>
+        </a>
+        <a href="piscinas-diseno.html" class="gal-item gal-item--wide reveal" data-hover>
+          <img src="assets/lp-cascada.jpg" alt="Piscina de diseño con cascada vista aérea" loading="lazy" />
+          <div class="gal-item__cap">
+            <span class="gal-item__name">Refugio <em>Manzano</em></span>
+            <span class="gal-item__loc">Manzano Histórico · Espejo + cascada</span>
+          </div>
+        </a>
+        <a href="travertino.html" class="gal-item gal-item--md reveal reveal-delay-1" data-hover>
+          <img src="assets/lp-travertino.jpg" alt="Piscina con revestimiento de travertino" loading="lazy" />
+          <div class="gal-item__cap">
+            <span class="gal-item__name"><em>Travertino</em></span>
+            <span class="gal-item__loc">San Juan · Piedra</span>
+          </div>
+        </a>
+        <a href="porcelanato.html" class="gal-item gal-item--sm reveal reveal-delay-2" data-hover>
+          <img src="assets/lp-porcelana.jpg" alt="Piscina con porcelanato" loading="lazy" />
+          <div class="gal-item__cap">
+            <span class="gal-item__name"><em>Porcelanato</em></span>
+            <span class="gal-item__loc">Florim · 60×120</span>
+          </div>
+        </a>
+        <a href="piscinas-diseno.html" class="gal-item gal-item--sm reveal reveal-delay-3" data-hover>
+          <img src="assets/lp-semi.jpg" alt="Piscina semi-olímpica" loading="lazy" />
+          <div class="gal-item__cap">
+            <span class="gal-item__name">Semi-olímpica</span>
+            <span class="gal-item__loc">Bodega · 18 m</span>
+          </div>
+        </a>
+        <a href="piscinas-diseno.html" class="gal-item gal-item--sm reveal" data-hover>
+          <img src="assets/lp-jacuzzi.jpg" alt="Jacuzzi integrado" loading="lazy" />
+          <div class="gal-item__cap">
+            <span class="gal-item__name">Jacuzzi</span>
+            <span class="gal-item__loc">Integrado al borde</span>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <!-- OBRAS — horizontal -->
+    <section id="obras" class="obras" data-screen-label="07 Obras">
+      <header class="sec__head">
+        <div class="reveal"><span class="sec__eyebrow"><small>Capítulo 04</small>Selección</span></div>
+        <div class="reveal reveal-delay-1">
+          <h2 class="sec__title">Seis obras <em>recientes.</em></h2>
+        </div>
+      </header>
+      <div class="obras__rail reveal">
+        <article class="obra"><div class="obra__media"><span class="obra__badge">Valle de Uco</span><span class="obra__id">N° 01 — 2025</span></div>
+          <h3 class="obra__name">Casa <em>Tunuyán</em></h3>
+          <div class="obra__meta"><span>Desborde infinito</span><span>22 × 4.2 m</span></div></article>
+        <article class="obra"><div class="obra__media"><span class="obra__badge">Las Heras</span><span class="obra__id">N° 02 — 2025</span></div>
+          <h3 class="obra__name">Villa <em>Cordón</em></h3>
+          <div class="obra__meta"><span>Muro de agua</span><span>14 × 1.6 m</span></div></article>
+        <article class="obra"><div class="obra__media"><span class="obra__badge">Manzano Histórico</span><span class="obra__id">N° 03 — 2025</span></div>
+          <h3 class="obra__name">Refugio <em>Manzano</em></h3>
+          <div class="obra__meta"><span>Espejo + cascada</span><span>9 × 6 m</span></div></article>
+        <article class="obra"><div class="obra__media"><span class="obra__badge">Chacras de Coria</span><span class="obra__id">N° 04 — 2024</span></div>
+          <h3 class="obra__name">Casa <em>Roldán</em></h3>
+          <div class="obra__meta"><span>Familiar libre</span><span>16 × 7 m</span></div></article>
+        <article class="obra"><div class="obra__media"><span class="obra__badge">Potrerillos</span><span class="obra__id">N° 05 — 2024</span></div>
+          <h3 class="obra__name">Bodega <em>Altamira</em></h3>
+          <div class="obra__meta"><span>Lap pool</span><span>25 m</span></div></article>
+        <article class="obra"><div class="obra__media"><span class="obra__badge">San Juan</span><span class="obra__id">N° 06 — 2024</span></div>
+          <h3 class="obra__name">Hotel <em>Vista Andes</em></h3>
+          <div class="obra__meta"><span>Atelier</span><span>32 × 8 m</span></div></article>
+      </div>
+    </section>
+
+    <!-- FEATURED OBRA -->
+    <section class="featured" data-screen-label="08 Obra destacada">
+      <header class="sec__head">
+        <div class="reveal"><span class="sec__eyebrow"><small>Obra destacada</small>En curso</span></div>
+        <div class="reveal reveal-delay-1">
+          <h2 class="sec__title">Lámina sobre el <em>viñedo</em>.</h2>
+        </div>
+      </header>
+      <article class="feat-card reveal" data-tilt="3">
+        <div class="feat-card__media"><span class="feat-card__badge">En obra · entrega 2026</span></div>
+        <div class="feat-card__body">
+          <span class="feat-card__eye">Estudio · Bórmida & Yanzón / Cuyopool</span>
+          <h3>Casa <em>Tunuyán</em>, Valle de Uco.</h3>
+          <p class="feat-card__lead">
+            Desborde infinito orientado al Cordón del Plata. Revestimiento en porcelanato
+            color cielo profundo y borde de travertino tambor. La superficie sirve a la
+            vez como espejo de la bodega y como pileta de nado.
+          </p>
+          <dl class="feat-specs">
+            <div><dt>Espejo</dt><dd>22 × 4,2 m</dd></div>
+            <div><dt>Profundidad</dt><dd>1,40 m</dd></div>
+            <div><dt>Altitud</dt><dd>1.180 msnm</dd></div>
+          </dl>
+        </div>
+      </article>
+    </section>
+
+    <!-- MARQUEE 2 — Cubre la junta visual entre imagen superior e inferior del fondo -->
+    <div class="marquee marquee--rev marquee--sm" aria-hidden="true">
+      <div class="marquee__track">
+        <span class="marquee__item">Hormigón armado <span>·</span></span>
+        <span class="marquee__item">Borde infinito <span>·</span></span>
+        <span class="marquee__item">Porcelanato Florim <span>·</span></span>
+        <span class="marquee__item">Travertino de San Juan <span>·</span></span>
+        <span class="marquee__item">Mendoza · Cuyo <span>·</span></span>
+        <span class="marquee__item">Diseño a medida <span>·</span></span>
+        <span class="marquee__item">Est. 1995 <span>·</span></span>
+        <!-- duplicate for seamless loop -->
+        <span class="marquee__item">Hormigón armado <span>·</span></span>
+        <span class="marquee__item">Borde infinito <span>·</span></span>
+        <span class="marquee__item">Porcelanato Florim <span>·</span></span>
+        <span class="marquee__item">Travertino de San Juan <span>·</span></span>
+        <span class="marquee__item">Mendoza · Cuyo <span>·</span></span>
+        <span class="marquee__item">Diseño a medida <span>·</span></span>
+        <span class="marquee__item">Est. 1995 <span>·</span></span>
+      </div>
+    </div>
+
+    <!-- TESTIMONIAL -->
+    <section class="testi" data-screen-label="09 Testimonio">
+      <div class="testi__inner reveal">
+        <span class="testi__mark">"</span>
+        <blockquote class="testi__quote">
+          Cumplieron el plazo, el presupuesto y el detalle constructivo.
+          Cinco años después, la pileta sigue impecable.
+        </blockquote>
+        <span class="testi__by">
+          <b>Familia Roldán</b>
+          <span>Chacras de Coria · Entrega 2021</span>
+        </span>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contacto" class="contact" data-screen-label="10 Contacto">
+      <header class="contact__head">
+        <div class="reveal"><span class="sec__eyebrow"><small>Capítulo 05</small>Conversemos</span></div>
+        <div class="reveal reveal-delay-1">
+          <h2 class="contact__title">Tu próxima obra <em>empieza</em> con un mensaje.</h2>
+        </div>
+      </header>
+      <p class="contact__lead reveal">
+        Mandanos una foto del terreno o una referencia de lo que tenés en mente.
+        Respondemos en 24 horas con un primer planteo, plazos y rango de inversión.
+        Sin formularios ni intermediarios — hablás directo con quien construye.
       </p>
+      <div class="agents">
+        <div class="agent reveal">
+          <span class="agent__role">Diseño · Asesoramiento</span>
+          <h3 class="agent__name">Lucas Garro</h3>
+          <p class="agent__phone">+54 9 261 557 4180</p>
+          <a class="agent__cta" href="https://wa.me/5492615574180" target="_blank" rel="noopener" data-magnetic="0.24">
+            Escribir a Lucas
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 7h10M8 3l4 4-4 4"/></svg>
+          </a>
+        </div>
+        <div class="agent reveal reveal-delay-1">
+          <span class="agent__role">Obra · Construcción</span>
+          <h3 class="agent__name">Ariel Mercau</h3>
+          <p class="agent__phone">+54 9 261 344 6651</p>
+          <a class="agent__cta" href="https://wa.me/5492613446651" target="_blank" rel="noopener" data-magnetic="0.24">
+            Escribir a Ariel
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 7h10M8 3l4 4-4 4"/></svg>
+          </a>
+        </div>
+        <div class="agent reveal reveal-delay-2">
+          <span class="agent__role">Coordinación · Presupuestos</span>
+          <h3 class="agent__name">Yemina Balliro</h3>
+          <p class="agent__phone">+54 9 261 469 9919</p>
+          <a class="agent__cta" href="https://wa.me/5492614699919" target="_blank" rel="noopener" data-magnetic="0.24">
+            Escribir a Yemina
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 7h10M8 3l4 4-4 4"/></svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="foot">
+      <div class="foot__brand">
+        <h4>Piscinas Cuyo</h4>
+        <p>Tres generaciones de constructores. Diseño y construcción de piscinas a medida en Mendoza, San Juan y San Luis.</p>
+      </div>
+      <div class="foot__col"><h5>Cobertura</h5>
+        <p>Mendoza · San Juan · San Luis</p>
+        <p>Atención todo el año</p></div>
+      <div class="foot__col"><h5>Contacto</h5>
+        <a href="mailto:cuyopiscinas@gmail.com">cuyopiscinas@gmail.com</a>
+        <a href="tel:+5492615574180">+54 9 261 557 4180</a>
+        <a href="tel:+5492613446651">+54 9 261 344 6651</a></div>
+      <div class="foot__col"><h5>Seguinos</h5>
+        <a href="https://www.instagram.com/piscinascuyo" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://www.facebook.com/piscinascuyooficial" target="_blank" rel="noopener">Facebook</a>
+        <a href="https://wa.me/5492615574180" target="_blank" rel="noopener">WhatsApp</a></div>
     </div>
-
-    <div class="quienes-stats">
-      <div class="stat">
-        <div class="num">+<em>1000</em></div>
-        <div class="desc">Obras realizadas en Cuyo</div>
-      </div>
-      <div class="stat">
-        <div class="num"><em>30</em> años</div>
-        <div class="desc">De experiencia ininterrumpida</div>
-      </div>
-      <div class="stat">
-        <div class="num"><em>3</em> provincias</div>
-        <div class="desc">Mendoza · San Juan · San Luis</div>
-      </div>
-      <div class="stat">
-        <div class="num">0 <em>catálogos</em></div>
-        <div class="desc">Cada proyecto nace desde cero</div>
-      </div>
+    <div class="foot__bottom">
+      <span>© 2026 Piscinas Cuyo</span>
+      <span>Calidad y compromiso, nuestra mejor garantía</span>
     </div>
-  </div>
-</section>
+  </footer>
 
-<!-- ============ LAS 8 LÍNEAS ============ -->
-<section class="section" id="lineas">
-  <div class="section-eyebrow">Nuestras líneas</div>
-  <h2 class="section-title">Ocho líneas.<br>Ninguna se repite <em>dos veces.</em></h2>
-  <p class="section-lead">
-    Cada tipo de piscina con su propia identidad arquitectónica.
-    Hacé clic en cada una para conocer detalles, proceso y solicitar consulta.
-  </p>
-
-  <div class="lineas-grid">
-
-    <a href="jacuzzi.html" class="linea-card">
-      <img class="linea-card-img" src="lp-jacuzzi.jpg" alt="Piscina con Jacuzzi" />
-      <div class="linea-card-content">
-        <div class="linea-card-eyebrow">Línea Premium</div>
-        <h3 class="linea-card-title">Piscina con<br>Jacuzzi integrado</h3>
-        <span class="linea-card-arrow">Ver línea →</span>
-      </div>
-    </a>
-
-    <a href="canal.html" class="linea-card">
-      <img class="linea-card-img" src="lp-canal.jpg" alt="Canal de Nado" />
-      <div class="linea-card-content">
-        <div class="linea-card-eyebrow">Deportiva</div>
-        <h3 class="linea-card-title">Canal de Nado<br>semiolímpico</h3>
-        <span class="linea-card-arrow">Ver línea →</span>
-      </div>
-    </a>
-
-    <a href="infinito.html" class="linea-card">
-      <img class="linea-card-img" src="lp-infinito.jpg" alt="Desborde Infinito" />
-      <div class="linea-card-content">
-        <div class="linea-card-eyebrow">Diseño exclusivo</div>
-        <h3 class="linea-card-title">Desborde<br>Infinito</h3>
-        <span class="linea-card-arrow">Ver línea →</span>
-      </div>
-    </a>
-
-    <a href="cascada.html" class="linea-card">
-      <img class="linea-card-img" src="lp-cascada.jpg" alt="Piscina con Cascada" />
-      <div class="linea-card-content">
-        <div class="linea-card-eyebrow">Detalle escultural</div>
-        <h3 class="linea-card-title">Piscina con<br>Cascada</h3>
-        <span class="linea-card-arrow">Ver línea →</span>
-      </div>
-    </a>
-
-    <a href="semi.html" class="linea-card">
-      <img class="linea-card-img" src="lp-semi.jpg" alt="Piscina Semiolímpica" />
-      <div class="linea-card-content">
-        <div class="linea-card-eyebrow">Gran escala</div>
-        <h3 class="linea-card-title">Piscina<br>Semiolímpica</h3>
-        <span class="linea-card-arrow">Ver línea →</span>
-      </div>
-    </a>
-
-    <a href="porcelanato.html" class="linea-card">
-      <img class="linea-card-img" src="lp-porcelana.jpg" alt="Porcelanato Premium" />
-      <div class="linea-card-content">
-        <div class="linea-card-eyebrow">Revestimiento</div>
-        <h3 class="linea-card-title">Porcelanato<br>Premium</h3>
-        <span class="linea-card-arrow">Ver línea →</span>
-      </div>
-    </a>
-
-    <a href="bali.html" class="linea-card">
-      <img class="linea-card-img" src="lp-bali.jpg" alt="Línea Bali" />
-      <div class="linea-card-content">
-        <div class="linea-card-eyebrow">Estética resort</div>
-        <h3 class="linea-card-title">Línea<br>Bali</h3>
-        <span class="linea-card-arrow">Ver línea →</span>
-      </div>
-    </a>
-
-    <a href="travertino.html" class="linea-card">
-      <img class="linea-card-img" src="lp-travertino.jpg" alt="Línea Travertino" />
-      <div class="linea-card-content">
-        <div class="linea-card-eyebrow">Piedra natural</div>
-        <h3 class="linea-card-title">Línea<br>Travertino</h3>
-        <span class="linea-card-arrow">Ver línea →</span>
-      </div>
-    </a>
-
-  </div>
-</section>
-
-<!-- ============ PROCESO ============ -->
-<section class="section" id="proceso">
-  <div class="section-eyebrow">El proceso</div>
-  <h2 class="section-title">Del primer plano al<br>primer chapuzón. <em>Sin sorpresas.</em></h2>
-  <p class="section-lead">
-    Trabajamos en cuatro etapas claras. Cada una con tiempos definidos y supervisión técnica permanente.
-  </p>
-
-  <div class="proceso-grid">
-    <div class="paso">
-      <div class="paso-num">I</div>
-      <h3 class="paso-title">Consulta y diseño</h3>
-      <p class="paso-desc">
-        Asesoramiento sin cargo. Nuestros arquitectos analizan tu terreno y necesidades.
-        Preparamos presupuesto detallado con propuesta visual.
-      </p>
-    </div>
-    <div class="paso">
-      <div class="paso-num">II</div>
-      <h3 class="paso-title">Visita técnica</h3>
-      <p class="paso-desc">
-        Visita presencial y análisis del terreno. Contrato claro con plazos,
-        materiales especificados y condiciones definidas.
-      </p>
-    </div>
-    <div class="paso">
-      <div class="paso-num">III</div>
-      <h3 class="paso-title">Construcción</h3>
-      <p class="paso-desc">
-        Ejecución en 13 etapas documentadas. Hormigón armado, impermeabilización,
-        porcelanato premium y sala de máquinas.
-      </p>
-    </div>
-    <div class="paso">
-      <div class="paso-num">IV</div>
-      <h3 class="paso-title">Entrega y garantía</h3>
-      <p class="paso-desc">
-        Piscina operativa, capacitación en uso y mantenimiento.
-        Garantía extendida con soporte técnico permanente.
-      </p>
-    </div>
-  </div>
-</section>
-
-<!-- ============ CTA FINAL ============ -->
-<section class="cta-section" id="contacto">
-  <div class="section-eyebrow" style="text-align:center;">Empezá por el plano</div>
-  <h2 class="section-title" style="text-align:center;">Respondemos en <em>24 horas.</em></h2>
-  <p class="section-lead" style="margin: 0 auto 32px; text-align:center;">
-    Contanos qué soñás y qué terreno tenés. Te enviamos una propuesta inicial sin compromiso.
-  </p>
-  <div class="cta-buttons">
-    <a href="https://wa.me/5492615574180?text=Hola%20Lucas%2C%20quisiera%20una%20consulta%20sobre%20una%20piscina" class="btn-gold" target="_blank" rel="noopener">
-      WhatsApp con Lucas
-    </a>
-    <a href="https://wa.me/5492613446651?text=Hola%20Ariel%2C%20quisiera%20una%20consulta%20sobre%20una%20piscina" class="btn-ghost" target="_blank" rel="noopener">
-      WhatsApp con Ariel
-    </a>
-  </div>
-</section>
-
-<!-- ============ FOOTER ============ -->
-<footer class="footer">
-  <div class="footer-grid">
-    <div class="footer-col">
-      <h4>CUYO POOL</h4>
-      <p>Taller de piscinas a medida.<br>Desde 1995 en Cuyo.</p>
-      <p style="margin-top:14px;">Mendoza · San Juan · San Luis</p>
-    </div>
-    <div class="footer-col">
-      <h4>Contacto</h4>
-      <a href="https://wa.me/5492615574180">Lucas Garro · 261 557-4180</a>
-      <a href="https://wa.me/5492613446651">Ariel Mercau · 261 344-6651</a>
-      <a href="mailto:hola@piscinascuyo.com">hola@piscinascuyo.com</a>
-    </div>
-    <div class="footer-col">
-      <h4>Líneas</h4>
-      <a href="jacuzzi.html">Piscina con Jacuzzi</a>
-      <a href="canal.html">Canal de Nado</a>
-      <a href="infinito.html">Desborde Infinito</a>
-      <a href="cascada.html">Piscina con Cascada</a>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    © 2026 Piscinas Cuyo · CUYO POOL · Todos los derechos reservados.
-  </div>
-</footer>
-
-<!-- WhatsApp flotante -->
-<a href="https://wa.me/5492615574180" class="wa-float" target="_blank" rel="noopener" aria-label="WhatsApp">
-  <svg viewBox="0 0 24 24"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.85.47 3.65 1.36 5.24L2 22l4.95-1.3c1.55.84 3.3 1.28 5.09 1.28h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.825 9.825 0 0 0 12.04 2zm0 18.13h-.01c-1.59 0-3.15-.43-4.51-1.23l-.32-.19-3.35.88.89-3.27-.21-.34a8.18 8.18 0 0 1-1.26-4.37c0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.23 8.24zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.38-1.72-.14-.25-.02-.39.11-.51.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.86.84-.86 2.05 0 1.21.88 2.38 1.01 2.55.12.17 1.74 2.66 4.22 3.73.59.25 1.05.41 1.41.52.59.19 1.13.16 1.56.1.47-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.11-.23-.18-.48-.31z"/></svg>
-</a>
-
-<!-- ============ SCRIPTS ============ -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="jquery.ripples.js"></script>
-
+<!-- Posiciona el #water sobre el rectángulo de azulejos de la foto (cover-fit),
+     abarcando todo el documento. Recalcula en resize y cambios de alto.
+     Corre ANTES de jquery.ripples para que el div tenga tamaño y el
+     background alineado cuando el plugin inicializa. -->
 <script>
-  // === NAV con scroll ===
-  const nav = document.getElementById('nav');
-  window.addEventListener('scroll', () => {
-    nav.classList.toggle('scrolled', window.scrollY > 60);
-  });
+(function () {
+  const poolBg = document.querySelector('.pool-bg');
+  const canvas = document.getElementById('water');
+  if (!poolBg || !canvas) return;
 
-  // === Smooth scroll a anclas ===
-  document.querySelectorAll('a[href^="#"]').forEach(a => {
-    a.addEventListener('click', e => {
-      const id = a.getAttribute('href');
-      if (id === '#') return;
-      const target = document.querySelector(id);
-      if (target) {
-        e.preventDefault();
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    });
-  });
+  const TILE_L_DEFAULT = 0.2561, TILE_T_DEFAULT = 0.0328,
+        TILE_R_DEFAULT = 0.7439, TILE_B_DEFAULT = 0.9520;
+  const IMG_W = 768, IMG_H = 6489;
 
-  // === Fade-in al scroll ===
-  const io = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.classList.add('visible');
-        io.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.15 });
 
-  document.querySelectorAll('.section, .linea-card, .paso, .stat')
-    .forEach(el => { el.classList.add('fade-in'); io.observe(el); });
+  function syncLayout() {
+    const vw = window.innerWidth;
+    const testi = document.querySelector('.testi');
+    const endY = testi
+      ? testi.offsetTop + testi.offsetHeight
+      : document.documentElement.scrollHeight;
 
-  // === ANIMACIÓN DEL AGUA EN LA PISCINA ===
-  $(window).on('load', function () {
-    const $water = $('#water');
-    if (!$water.length) return;
+    // Live overrides from the framing panel (or fall back to defaults).
+    const o = window.POOL_FRAME_OVERRIDES || {};
+    const TILE_L = o.left   != null ? o.left   : TILE_L_DEFAULT;
+    const TILE_T = o.top    != null ? o.top    : TILE_T_DEFAULT;
+    const TILE_R = o.right  != null ? o.right  : TILE_R_DEFAULT;
+    const TILE_B = o.bottom != null ? o.bottom : TILE_B_DEFAULT;
+    // Margen inferior del canvas (px desde el fondo). Ajustable desde el panel.
+    const BOT_MARGIN = o.botMargin != null ? o.botMargin : 1500;
 
-    try {
-      $water.ripples({
-        resolution: 1024,
-        dropRadius: 26,
-        perturbance: 0.05,
-        interactive: false
-      });
+    poolBg.style.width  = vw + 'px';
+    poolBg.style.height = endY + 'px';
 
-      // Reaccionar al cursor sobre el rect de la piscina
-      $(document).on('mousemove', function (e) {
-        const r = $water[0].getBoundingClientRect();
-        if (e.clientX >= r.left && e.clientX <= r.right &&
-            e.clientY >= r.top  && e.clientY <= r.bottom) {
-          $water.ripples('drop',
-            e.clientX - r.left,
-            e.clientY - r.top,
-            18,
-            0.04
-          );
-        }
-      });
+    // CSS: width:100% height:auto object-fit:cover → escala al ancho del viewport.
+    // Si la altura natural es menor que endY, se estira verticalmente (object-fit:cover).
+    const naturalH = vw * (IMG_H / IMG_W);
+    const scale    = naturalH < endY ? endY / IMG_H : vw / IMG_W;
+    const dispW    = IMG_W * scale;   // = vw (ancho completo)
+    const dispH    = IMG_H * scale;
+    const offX     = 0;               // sin margen lateral — imagen de costado a costado
+    // CSS top:0 — cuando la imagen es más alta que el contenedor empieza en 0, no centrada.
+    const offY     = dispH > endY ? 0 : (endY - dispH) / 2;
 
-      // Lluvia suave de fondo
-      setInterval(function () {
-        const r = $water[0].getBoundingClientRect();
-        if (r.width === 0) return;
-        $water.ripples('drop',
-          Math.random() * r.width,
-          Math.random() * r.height,
-          Math.random() * 18 + 8,
-          0.018
-        );
-      }, 900);
+    // Pool-tile rect in document/container coords.
+    const tileL = offX + dispW * TILE_L;
+    const tileT = offY + dispH * TILE_T;
+    const tileR = offX + dispW * TILE_R;
+    const tileB = offY + dispH * TILE_B;
 
-      console.log('✓ CUYO POOL — animación activa');
-    } catch (err) {
-      console.warn('No se pudo iniciar la animación de agua:', err);
+    // Clamp to the pool-bg rect (don't paint outside).
+    // El margen inferior es ajustable desde el panel (default 1500px).
+    const cL = Math.max(0, tileL);
+    const cT = Math.max(0, tileT);
+    const cR = Math.min(vw, tileR);
+    const cB = Math.min(endY - BOT_MARGIN, tileB);
+
+    canvas.style.left   = cL + 'px';
+    canvas.style.top    = cT + 'px';
+    canvas.style.width  = (cR - cL) + 'px';
+    canvas.style.height = (cB - cT) + 'px';
+
+    // Alinear el background-image del #water para que muestre EXACTAMENTE los
+    // mismos píxeles que la foto de fondo bajo el área de azulejos.
+    //   - background-size  = tamaño completo de la imagen escalada (dispW × dispH)
+    //   - background-position = desplazamiento negativo (-cL, -cT) para que el
+    //     píxel de la imagen en (cL, cT) caiga en la esquina sup-izq del #water.
+    // jquery.ripples relee estos valores cada frame (computeTextureBoundaries),
+    // por lo que el resize queda cubierto automáticamente.
+    canvas.style.backgroundSize     = dispW + 'px ' + dispH + 'px';
+    canvas.style.backgroundPosition = (-cL) + 'px ' + (-cT) + 'px';
+    canvas.classList.add('is-ready');
+  }
+
+  syncLayout();
+  window.addEventListener('load', syncLayout);
+  window.addEventListener('resize', syncLayout);
+  new ResizeObserver(syncLayout).observe(document.body);
+})();
+</script>
+
+<!-- Agua realista: jquery.ripples (WebGL, refracción + reflejos) -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"
+        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+        crossorigin="anonymous"></script>
+<script src="jquery.ripples.js"></script>
+<script>
+(function () {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+  if (!window.jQuery) return;
+  var $ = window.jQuery;
+
+  function tw(k, d){ var v = (window.WATER_TWEAKS || {})[k]; return v != null ? v : d; }
+
+  $(function () {
+    var $water = $('#water');
+    if (!$water.length || !$water[0].getContext) {
+      // getContext check is irrelevant for a div; ensure WebGL is available indirectly
     }
+
+    function initRipples() {
+      var el = $water[0];
+      // Esperar a que el div tenga tamaño real (syncLayout corre antes).
+      if (!el.clientWidth || !el.clientHeight) { return setTimeout(initRipples, 120); }
+      try {
+        $water.ripples({
+          resolution: 512,
+          dropRadius: 18,
+          perturbance: tw('refract', 0.03),
+          interactive: false
+        });
+        $water.addClass('is-ready');
+
+        // Gotas siguiendo el cursor sobre el área de la piscina.
+        var lastMove = 0;
+        $(document).on('mousemove.water', function (e) {
+          var now = Date.now();
+          if (now - lastMove < 28) return;
+          lastMove = now;
+          var r = el.getBoundingClientRect();
+          if (e.clientX >= r.left && e.clientX <= r.right &&
+              e.clientY >= r.top  && e.clientY <= r.bottom) {
+            $water.ripples('drop', e.clientX - r.left, e.clientY - r.top,
+                           tw('cursorRadius', 14), tw('cursorStrength', 0.05));
+          }
+        });
+        // Salpicón fuerte al hacer click.
+        $(document).on('mousedown.water', function (e) {
+          var r = el.getBoundingClientRect();
+          if (e.clientX >= r.left && e.clientX <= r.right &&
+              e.clientY >= r.top  && e.clientY <= r.bottom) {
+            $water.ripples('drop', e.clientX - r.left, e.clientY - r.top, 26, 0.14);
+          }
+        });
+        window.__splash = function (cx, cy, strength) {
+          var r = el.getBoundingClientRect();
+          if (cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom) {
+            $water.ripples('drop', cx - r.left, cy - r.top, 30, 0.12 * (strength || 1));
+          }
+        };
+
+        // Lluvia ambiental suave de fondo.
+        setInterval(function () {
+          var r = el.getBoundingClientRect();
+          if (!r.width || r.bottom < 0 || r.top > window.innerHeight) return;
+          var amb = tw('ambientWaves', 0.5);
+          if (amb < 0.01) return;
+          $water.ripples('drop',
+            Math.random() * r.width,
+            Math.random() * Math.min(r.height, window.innerHeight * 1.3),
+            8 + Math.random() * 14,
+            (0.01 + Math.random() * 0.02) * (amb / 0.5));
+        }, 1100);
+      } catch (err) {
+        console.warn('[water] jquery.ripples no disponible:', err);
+        $water.hide();
+      }
+    }
+    initRipples();
   });
+})();
+</script>
+<script src="interactions.js?v=6"></script>
+<!-- ── Pool-area framing controls ──
+     Floating panel to fine-tune the water area edges (top, bottom, left, right).
+     Adjustments persist in localStorage and survive reload. Hide once happy
+     by clicking the × button (re-show with ?frame in the URL). -->
+<style>
+  .frame-panel{
+    position: fixed;
+    bottom: 16px; right: 16px;
+    z-index: 9999;
+    background: rgba(8, 18, 14, 0.94);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: #f3efe4;
+    font-family: 'Inter Tight', system-ui, sans-serif;
+    font-size: 11px;
+    padding: 14px 16px 12px;
+    border-radius: 12px;
+    box-shadow: 0 18px 50px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.06);
+    width: 290px;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    user-select: none;
+  }
+  .frame-panel__title{
+    font-size: 9.5px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: rgba(243,239,228,0.85);
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .frame-panel__close{
+    background: none; border: 0; color: rgba(243,239,228,0.55);
+    font-size: 16px; line-height: 1; cursor: pointer; padding: 0 4px;
+  }
+  .frame-panel__close:hover{ color: #f3efe4; }
+  .frame-section{
+    margin: 10px 0 6px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    font-size: 9px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: rgba(243,239,228,0.42);
+  }
+  .frame-section:first-of-type{ border-top: 0; padding-top: 0; margin-top: 0; }
+  .frame-row{
+    display: grid;
+    grid-template-columns: 52px 1fr 22px 22px 50px;
+    align-items: center;
+    gap: 4px;
+    margin: 5px 0;
+  }
+  .frame-row label{
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(243,239,228,0.78);
+  }
+  .frame-row input[type=range]{
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 3px;
+    background: rgba(255,255,255,0.16);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  .frame-row input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance: none; appearance: none;
+    width: 13px; height: 13px; border-radius: 50%;
+    background: #d4c79a;
+    border: 2px solid rgba(0,0,0,0.4);
+    cursor: pointer;
+  }
+  .frame-row input[type=range]::-moz-range-thumb{
+    width: 13px; height: 13px; border-radius: 50%;
+    background: #d4c79a; border: 2px solid rgba(0,0,0,0.4);
+    cursor: pointer;
+  }
+  .nudge-btn{
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.10);
+    color: #f3efe4;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1;
+    width: 22px; height: 22px;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .nudge-btn:hover{
+    background: rgba(212, 199, 154, 0.20);
+    border-color: rgba(212, 199, 154, 0.4);
+  }
+  .nudge-btn:active{
+    background: rgba(212, 199, 154, 0.40);
+  }
+  .frame-row .val{
+    font-variant-numeric: tabular-nums;
+    font-size: 10px;
+    color: rgba(243,239,228,0.68);
+    text-align: right;
+  }
+  .frame-actions{
+    display: flex; gap: 6px; margin-top: 10px;
+  }
+  .frame-actions button{
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.10);
+    color: rgba(243,239,228,0.85);
+    font-family: inherit;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 6px 0;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .frame-actions button:hover{
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+  }
+</style>
+<div class="frame-panel" id="frame-panel" hidden>
+  <div class="frame-panel__title">
+    <span>Encuadre &amp; Agua</span>
+    <button class="frame-panel__close" id="frame-close" aria-label="Cerrar">&times;</button>
+  </div>
+
+  <div class="frame-section">Encuadre del agua</div>
+  <div class="frame-row" data-ctl="botMargin">
+    <label>Margen inf.</label>
+    <input type="range" min="0" max="3000" step="4" />
+    <button class="nudge-btn" data-dir="-1" title="Achicar margen (animación más grande)">&minus;</button>
+    <button class="nudge-btn" data-dir="+1" title="Agrandar margen (animación más chica)">+</button>
+    <span class="val"></span>
+  </div>
+  <div class="frame-row" data-ctl="top">
+    <label>Arriba</label>
+    <input type="range" min="0.000" max="0.600" step="0.0001" />
+    <button class="nudge-btn" data-dir="-1" title="Subir ~1mm">&minus;</button>
+    <button class="nudge-btn" data-dir="+1" title="Bajar ~1mm">+</button>
+    <span class="val"></span>
+  </div>
+  <div class="frame-row" data-ctl="bottom">
+    <label>Abajo</label>
+    <input type="range" min="0.400" max="1.000" step="0.0001" />
+    <button class="nudge-btn" data-dir="-1" title="Subir ~1mm">&minus;</button>
+    <button class="nudge-btn" data-dir="+1" title="Bajar ~1mm">+</button>
+    <span class="val"></span>
+  </div>
+  <div class="frame-row" data-ctl="left">
+    <label>Izq.</label>
+    <input type="range" min="0.000" max="0.700" step="0.001" />
+    <button class="nudge-btn" data-dir="-1" title="A izquierda ~1mm">&minus;</button>
+    <button class="nudge-btn" data-dir="+1" title="A derecha ~1mm">+</button>
+    <span class="val"></span>
+  </div>
+  <div class="frame-row" data-ctl="right">
+    <label>Der.</label>
+    <input type="range" min="0.300" max="1.000" step="0.001" />
+    <button class="nudge-btn" data-dir="-1" title="A izquierda ~1mm">&minus;</button>
+    <button class="nudge-btn" data-dir="+1" title="A derecha ~1mm">+</button>
+    <span class="val"></span>
+  </div>
+
+  <div class="frame-section">Animaci&oacute;n</div>
+  <div class="frame-row" data-anim="cursorStrength">
+    <label>Fuerza</label>
+    <input type="range" min="0.05" max="1.50" step="0.01" />
+    <button class="nudge-btn" data-dir="-1">&minus;</button>
+    <button class="nudge-btn" data-dir="+1">+</button>
+    <span class="val"></span>
+  </div>
+  <div class="frame-row" data-anim="cursorRadius">
+    <label>Tama&ntilde;o</label>
+    <input type="range" min="0.003" max="0.030" step="0.0005" />
+    <button class="nudge-btn" data-dir="-1">&minus;</button>
+    <button class="nudge-btn" data-dir="+1">+</button>
+    <span class="val"></span>
+  </div>
+  <div class="frame-row" data-anim="damping">
+    <label>Duraci&oacute;n</label>
+    <input type="range" min="0.950" max="0.999" step="0.0005" />
+    <button class="nudge-btn" data-dir="-1">&minus;</button>
+    <button class="nudge-btn" data-dir="+1">+</button>
+    <span class="val"></span>
+  </div>
+  <div class="frame-row" data-anim="speed">
+    <label>Velocidad</label>
+    <input type="range" min="0.30" max="1.80" step="0.01" />
+    <button class="nudge-btn" data-dir="-1">&minus;</button>
+    <button class="nudge-btn" data-dir="+1">+</button>
+    <span class="val"></span>
+  </div>
+  <div class="frame-row" data-anim="refract">
+    <label>Refracci&oacute;n</label>
+    <input type="range" min="0.000" max="0.060" step="0.001" />
+    <button class="nudge-btn" data-dir="-1">&minus;</button>
+    <button class="nudge-btn" data-dir="+1">+</button>
+    <span class="val"></span>
+  </div>
+  <div class="frame-row" data-anim="caustics">
+    <label>C&aacute;usticas</label>
+    <input type="range" min="0.000" max="5.00" step="0.05" />
+    <button class="nudge-btn" data-dir="-1">&minus;</button>
+    <button class="nudge-btn" data-dir="+1">+</button>
+    <span class="val"></span>
+  </div>
+  <div class="frame-row" data-anim="specularStrength">
+    <label>Brillo</label>
+    <input type="range" min="0.00" max="4.00" step="0.05" />
+    <button class="nudge-btn" data-dir="-1">&minus;</button>
+    <button class="nudge-btn" data-dir="+1">+</button>
+    <span class="val"></span>
+  </div>
+  <div class="frame-row" data-anim="sharpness">
+    <label>Nitidez</label>
+    <input type="range" min="20" max="200" step="1" />
+    <button class="nudge-btn" data-dir="-1">&minus;</button>
+    <button class="nudge-btn" data-dir="+1">+</button>
+    <span class="val"></span>
+  </div>
+  <div class="frame-row" data-anim="ambientWaves">
+    <label>Ambient.</label>
+    <input type="range" min="0.00" max="1.50" step="0.01" />
+    <button class="nudge-btn" data-dir="-1">&minus;</button>
+    <button class="nudge-btn" data-dir="+1">+</button>
+    <span class="val"></span>
+  </div>
+
+  <div class="frame-actions">
+    <button id="frame-reset">Reset</button>
+    <button id="frame-copy">Copiar</button>
+  </div>
+</div>
+<script>
+(function () {
+  // Los valores de Encuadre deben coincidir con los TILE_*_DEFAULT de syncLayout().
+  const FRAME_DEFAULTS = {
+    top: 0.0328, bottom: 0.9520, left: 0.2561, right: 0.7439,
+    botMargin: 1500,  // px desde el fondo del contenedor donde termina la animación
+  };
+  const ANIM_DEFAULTS = {
+    cursorStrength: 0.55,    // intensidad de la onda del cursor
+    cursorRadius: 0.004,     // radio de la onda (UV canvas)
+    damping: 0.9635,         // duración de las ondas (más alto = más largo)
+    speed: 1.0,
+    refract: 0.024,          // intensidad del desplazamiento
+    caustics: 0.0,
+    specularStrength: 1.2,
+    sharpness: 117,
+    ambientWaves: 0.50,      // gotas ambientales de fondo
+  };
+  // Step size for each + / − nudge. Cada clic ≈1mm a 96 DPI.
+  const NUDGE_STEP = {
+    top: 0.0004, bottom: 0.0004, left: 0.003, right: 0.003,
+    botMargin: 4,
+    cursorStrength: 0.02, cursorRadius: 0.0005, damping: 0.001, speed: 0.02,
+    refract: 0.001, caustics: 0.05, specularStrength: 0.05, sharpness: 2,
+    ambientWaves: 0.02,
+  };
+  // Precision per value display (digits after decimal point).
+  const PRECISION = {
+    top: 4, bottom: 4, left: 4, right: 4,
+    botMargin: 0,
+    cursorStrength: 2, cursorRadius: 4, damping: 4, speed: 2,
+    refract: 3, caustics: 2, specularStrength: 2, sharpness: 0,
+    ambientWaves: 2,
+  };
+
+  const KEY_FRAME = 'cuyo.poolFrame.v9';
+  const KEY_ANIM  = 'cuyo.poolAnim.v9';
+  const KEY_HIDE  = 'cuyo.poolFrame.hidden';
+
+  function loadJSON(key, defaults) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return { ...defaults };
+      return { ...defaults, ...JSON.parse(raw) };
+    } catch { return { ...defaults }; }
+  }
+  function saveJSON(key, obj) {
+    try { localStorage.setItem(key, JSON.stringify(obj)); } catch {}
+  }
+
+  const frame = loadJSON(KEY_FRAME, FRAME_DEFAULTS);
+  const anim  = loadJSON(KEY_ANIM,  ANIM_DEFAULTS);
+
+  function applyFrame() {
+    window.POOL_FRAME_OVERRIDES = { ...frame };
+    window.dispatchEvent(new Event('resize'));
+  }
+  function applyAnim() {
+    window.WATER_TWEAKS = { ...(window.WATER_TWEAKS || {}), ...anim };
+  }
+  applyFrame();
+  applyAnim();
+
+  function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
+
+  function wireRow(row, store, key) {
+    const slider = row.querySelector('input[type=range]');
+    const val    = row.querySelector('.val');
+    const minus  = row.querySelector('.nudge-btn[data-dir="-1"]');
+    const plus   = row.querySelector('.nudge-btn[data-dir="+1"]');
+    const step   = NUDGE_STEP[key];
+    const prec   = PRECISION[key];
+    const sMin   = parseFloat(slider.min), sMax = parseFloat(slider.max);
+
+    function render() {
+      slider.value = store[key];
+      val.textContent = (+store[key]).toFixed(prec);
+    }
+    function set(v) {
+      store[key] = +clamp(v, sMin, sMax).toFixed(6);
+      render();
+      if (store === frame) { saveJSON(KEY_FRAME, frame); applyFrame(); }
+      else                  { saveJSON(KEY_ANIM,  anim);  applyAnim();  }
+    }
+    slider.addEventListener('input', () => set(parseFloat(slider.value)));
+    // Hold-to-repeat for nudge buttons.
+    function nudgeRepeat(btn, dir) {
+      let t1, t2;
+      btn.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        set(store[key] + dir * step);
+        t1 = setTimeout(() => {
+          t2 = setInterval(() => set(store[key] + dir * step), 60);
+        }, 320);
+      });
+      const stop = () => { clearTimeout(t1); clearInterval(t2); };
+      btn.addEventListener('mouseup', stop);
+      btn.addEventListener('mouseleave', stop);
+      btn.addEventListener('touchend', stop);
+    }
+    nudgeRepeat(minus, -1);
+    nudgeRepeat(plus,  +1);
+    render();
+  }
+
+  // Wire all rows.
+  document.querySelectorAll('.frame-row[data-ctl]').forEach((row) => {
+    wireRow(row, frame, row.dataset.ctl);
+  });
+  document.querySelectorAll('.frame-row[data-anim]').forEach((row) => {
+    wireRow(row, anim, row.dataset.anim);
+  });
+
+  // Panel visibility
+  const panel = document.getElementById('frame-panel');
+  const forceShow = /[?&]frame\b/.test(location.search);
+  panel.hidden = !forceShow && localStorage.getItem(KEY_HIDE) === '1';
+  document.getElementById('frame-close').addEventListener('click', () => {
+    panel.hidden = true;
+    try { localStorage.setItem(KEY_HIDE, '1'); } catch {}
+  });
+
+  document.getElementById('frame-reset').addEventListener('click', () => {
+    Object.assign(frame, FRAME_DEFAULTS);
+    Object.assign(anim,  ANIM_DEFAULTS);
+    saveJSON(KEY_FRAME, frame); saveJSON(KEY_ANIM, anim);
+    applyFrame(); applyAnim();
+    // Re-render all rows.
+    document.querySelectorAll('.frame-row').forEach((row) => {
+      const key = row.dataset.ctl || row.dataset.anim;
+      const store = row.dataset.ctl ? frame : anim;
+      const s = row.querySelector('input[type=range]');
+      const v = row.querySelector('.val');
+      s.value = store[key];
+      v.textContent = (+store[key]).toFixed(PRECISION[key]);
+    });
+  });
+
+  document.getElementById('frame-copy').addEventListener('click', () => {
+    const out =
+      'Encuadre:\n' +
+      `  TILE_L = ${frame.left.toFixed(4)}, TILE_T = ${frame.top.toFixed(4)},\n` +
+      `  TILE_R = ${frame.right.toFixed(4)}, TILE_B = ${frame.bottom.toFixed(4)}\n\n` +
+      'Animaci\u00f3n:\n' + JSON.stringify(anim, null, 2);
+    navigator.clipboard?.writeText(out);
+    const btn = document.getElementById('frame-copy');
+    const orig = btn.textContent;
+    btn.textContent = '\u00a1Copiado!';
+    setTimeout(() => { btn.textContent = orig; }, 1200);
+  });
+})();
 </script>
 
 </body>
