@@ -107,51 +107,63 @@
       'uniform float u_time;',
       'uniform vec2  u_res;',
       'uniform vec3  u_drops[' + MAX_DROPS + '];',
-      'void main(){',
-      '  vec2 uv = v_uv;',
-      '  float aspect = u_res.x / u_res.y;',
-      '  vec2 p = vec2(uv.x*aspect, uv.y);',
+      '',
+      '// Campo de ALTURA de la superficie del agua (olas + ondas del dedo).',
+      '// P está en espacio corregido por aspecto (x:0..aspect, y:0..1).',
+      'float h_at(vec2 P){',
       '  float t = u_time;',
-      '  vec2 disp = vec2(0.0);',
-      '  float glow = 0.0;',
+      '  // Tren de olas suaves que se cruzan (oleaje base).',
+      '  float h = sin(P.x*6.0 + t*1.0) * 0.50',
+      '          + sin(P.y*5.2 - t*0.8) * 0.50',
+      '          + sin((P.x+P.y)*3.6 + t*0.6) * 0.35',
+      '          + sin((P.x*1.4 - P.y*2.6) + t*0.9) * 0.28;',
+      '  // Ondas interactivas: anillos que se expanden desde cada toque/cursor.',
+      '  float asp = u_res.x / u_res.y;',
       '  for(int i=0;i<' + MAX_DROPS + ';i++){',
       '    vec3 d = u_drops[i];',
       '    if(d.z < 0.0) continue;',
-      '    vec2 c = vec2(d.x*aspect, d.y);',
-      '    vec2 diff = p - c;',
-      '    float dist = length(diff);',
-      '    float age = d.z;',
-      '    float radius = age*0.6;',
-      '    float ring = sin((dist - radius)*38.0);',
-      '    float env = exp(-dist*5.0)*exp(-age*1.8)*smoothstep(0.9,0.0,dist);',
-      '    float w = ring*env;',
-      '    disp += (dist>1e-4 ? diff/dist : vec2(0.0)) * w * 0.06;',
-      '    glow += max(0.0, w);',
+      '    vec2 c = vec2(d.x*asp, d.y);',
+      '    float dist = length(P - c);',
+      '    float radius = d.z * 0.55;',
+      '    float ring = sin((dist - radius) * 40.0);',
+      '    h += ring * exp(-dist*5.0) * exp(-d.z*1.7) * 0.85;',
       '  }',
-      '  vec2 q = p*7.0 + disp*9.0;',
-      '  // Cáusticas tipo RED de luz en el fondo del agua (sin rayos diagonales).',
-      '  // El cruce de dos campos de crestas perpendiculares, con leve warp,',
-      '  // genera una malla orgánica como la luz que baila en el fondo de una pileta.',
-      '  vec2 cw = q*0.9;',
-      '  float rx = abs(sin(cw.x + 0.35*sin(cw.y + t*0.9) + t*0.5));',
-      '  float ry = abs(sin(cw.y + 0.35*sin(cw.x - t*0.8) - t*0.4));',
-      '  float net = (1.0 - rx) * (1.0 - ry);',
-      '  float caust = pow(max(0.0, net), 1.6);',
-      '  // Profundidad: superficie clara arriba, agua honda y oscura abajo.',
-      '  vec3 deep = vec3(0.010, 0.060, 0.115);',
-      '  vec3 surf = vec3(0.090, 0.330, 0.380);',
-      '  vec3 hi   = vec3(0.58, 0.92, 0.92);',
-      '  vec3 col = mix(deep, surf, pow(uv.y, 1.25));',
-      '  // Ondulación amplia y suave de la luz (sin vetas marcadas).',
-      '  float swell = 0.5 + 0.5*sin(q.x*0.4 + q.y*0.3 + t*0.5);',
-      '  col *= 0.92 + 0.10*swell;',
-      '  // Cáusticas, más intensas cerca de la superficie.',
-      '  col += hi * caust * (0.16 + 0.30*uv.y);',
-      '  // Brillo interactivo del toque / cursor.',
-      '  col += hi * glow * 0.22;',
+      '  return h;',
+      '}',
+      '',
+      'void main(){',
+      '  vec2 uv = v_uv;',
+      '  float aspect = u_res.x / u_res.y;',
+      '  vec2 P = vec2(uv.x*aspect, uv.y);',
+      '',
+      '  // Normal de la superficie por diferencias finitas del campo de altura.',
+      '  float e = 0.018;',
+      '  float hC = h_at(P);',
+      '  float hX = h_at(P + vec2(e, 0.0));',
+      '  float hY = h_at(P + vec2(0.0, e));',
+      '  float sx = (hX - hC) / e;',
+      '  float sy = (hY - hC) / e;',
+      '  vec3 N = normalize(vec3(-sx, -sy, 7.0));',   // 7.0 = "planura": más alto = más calmo
+      '',
+      '  // Color del agua por profundidad (más honda y oscura hacia abajo).',
+      '  vec3 deep    = vec3(0.014, 0.080, 0.130);',
+      '  vec3 shallow = vec3(0.040, 0.180, 0.235);',
+      '  vec3 col = mix(deep, shallow, pow(uv.y, 1.2));',
+      '',
+      '  // Sombreado por las pendientes de las olas (claro/oscuro, SIN destellos).',
+      '  vec3 L = normalize(vec3(0.28, 0.42, 0.86));',
+      '  float diff = clamp(dot(N, L), 0.0, 1.0);',
+      '  col *= 0.78 + 0.30 * diff;',
+      '',
+      '  // Fresnel: reflejo de cielo APAGADO en las caras inclinadas de las olas.',
+      '  float fres = pow(1.0 - clamp(N.z, 0.0, 1.0), 3.0);',
+      '  vec3 sky = vec3(0.10, 0.22, 0.28);',
+      '  col = mix(col, sky, fres * 0.45);',
+      '',
       '  // Viñeta muy leve (mantiene la claridad).',
-      '  float vig = smoothstep(1.4, 0.25, length(uv-0.5));',
-      '  col *= 0.90 + 0.10*vig;',
+      '  float vig = smoothstep(1.45, 0.3, length(uv - 0.5));',
+      '  col *= 0.93 + 0.07 * vig;',
+      '',
       '  gl_FragColor = vec4(col, 1.0);',
       '}'
     ].join('\n');
@@ -229,39 +241,38 @@
       var now = performance.now();
       var t = (now - t0) / 1000;
 
-      // gradiente base
+      // gradiente base por profundidad (oscuro abajo, sin luces)
       var g = ctx.createLinearGradient(0, 0, 0, H);
-      g.addColorStop(0, '#072233'); g.addColorStop(0.5, '#0a2e3c'); g.addColorStop(1, '#06222e');
+      g.addColorStop(0, '#0a2f3c'); g.addColorStop(0.55, '#072430'); g.addColorStop(1, '#04161f');
       ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
 
-      // cáusticas en movimiento (blobs radiales suaves)
-      ctx.globalCompositeOperation = 'lighter';
-      for (var k = 0; k < 7; k++) {
-        var fx = 0.5 + 0.42 * Math.sin(t * (0.3 + k * 0.07) + k * 1.7);
-        var fy = 0.5 + 0.42 * Math.cos(t * (0.25 + k * 0.05) + k * 2.3);
-        var rad = (0.18 + 0.06 * Math.sin(t * 0.6 + k)) * Math.max(W, H);
-        var rg = ctx.createRadialGradient(fx * W, fy * H, 0, fx * W, fy * H, rad);
-        rg.addColorStop(0, 'rgba(120,220,210,0.10)');
-        rg.addColorStop(1, 'rgba(120,220,210,0)');
-        ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+      // oleaje: bandas tenues claro/oscuro que ondulan (sin destellos)
+      var step = Math.max(3, Math.round(H / 90));
+      for (var y = 0; y < H; y += step) {
+        var yn = y / H;
+        var s = Math.sin(yn * 26.0 + t * 1.3) + Math.sin(yn * 11.0 - t * 0.9);
+        var sh = s * 0.04;   // -0.08..0.08
+        ctx.fillStyle = sh >= 0
+          ? 'rgba(150,210,215,' + (sh).toFixed(3) + ')'
+          : 'rgba(0,12,20,' + (-sh).toFixed(3) + ')';
+        ctx.fillRect(0, y, W, step + 1);
       }
 
-      // ondas interactivas: anillos que se expanden desde cada toque
+      // ondas interactivas: anillos tenues que se expanden desde cada toque
       for (var i = 0; i < drops.length; i++) {
         var d = drops[i]; var age = now / 1000 - d.t0;
         if (age > 3.2) continue;
         var cx = d.x * W, cy = d.y * H;
         var rings = 3;
         for (var r = 0; r < rings; r++) {
-          var rr = (age * 0.6 - r * 0.06) * Math.max(W, H) * 0.5;
+          var rr = (age * 0.55 - r * 0.06) * Math.max(W, H) * 0.5;
           if (rr <= 0) continue;
-          var a = Math.max(0, (1 - age / 3.2)) * (1 - r / rings) * 0.5;
-          ctx.strokeStyle = 'rgba(160,235,225,' + a.toFixed(3) + ')';
-          ctx.lineWidth = Math.max(1, Math.max(W, H) * 0.004);
+          var a = Math.max(0, (1 - age / 3.2)) * (1 - r / rings) * 0.28;
+          ctx.strokeStyle = 'rgba(150,205,210,' + a.toFixed(3) + ')';
+          ctx.lineWidth = Math.max(1, Math.max(W, H) * 0.003);
           ctx.beginPath(); ctx.arc(cx, cy, rr, 0, Math.PI * 2); ctx.stroke();
         }
       }
-      ctx.globalCompositeOperation = 'source-over';
 
       // viñeta
       var vg = ctx.createRadialGradient(W/2, H*0.42, 0, W/2, H*0.42, Math.max(W,H)*0.75);
