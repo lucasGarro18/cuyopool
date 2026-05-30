@@ -14,14 +14,57 @@
  */
 (function () {
   'use strict';
-  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+
+  // ── Flags de URL ──────────────────────────────────────────────────────────
+  //  ?diag       → muestra un panel de diagnóstico EN PANTALLA (para el celu).
+  //  ?wave=0.05  → fuerza la amplitud del agua (para que sea inconfundible).
+  //  Cualquiera de los dos IGNORA "reducir movimiento" para poder depurar.
+  function qnum(k){ var m = location.search.match(new RegExp('[?&]' + k + '=([0-9.]+)')); return m ? parseFloat(m[1]) : null; }
+  var DIAG  = /[?&]diag\b/.test(location.search);
+  var WAVE  = qnum('wave');
+  var FORCE = DIAG || WAVE != null;
+  var reducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches);
+
+  // Panel de diagnóstico (solo con ?diag) — se ve en el propio teléfono.
+  var diagEl = null, diagStatus = 'init', frameCount = 0;
+  function diagMount(){
+    if (!DIAG) return;
+    diagEl = document.createElement('div');
+    diagEl.style.cssText = 'position:fixed;left:8px;top:8px;z-index:99999;max-width:94vw;' +
+      'background:rgba(0,0,0,.85);color:#8ff0c8;font:11px/1.45 monospace;padding:9px 11px;' +
+      'border-radius:9px;white-space:pre;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.5)';
+    var add = function(){ if (document.body && !diagEl.parentNode) document.body.appendChild(diagEl); };
+    add(); document.addEventListener('DOMContentLoaded', add);
+  }
+  function diagRender(amp){
+    if (!diagEl) return;
+    var c = (typeof canvas !== 'undefined' && canvas) ? canvas : null;
+    diagEl.textContent =
+      'WATER DIAG\n' +
+      'estado: ' + diagStatus + '\n' +
+      'frames: ' + frameCount + '\n' +
+      'webgl: ' + (typeof gl !== 'undefined' && gl ? 'OK' : 'NULL') + '\n' +
+      'reduceMotion: ' + reducedMotion + '\n' +
+      'imgReady: ' + (typeof imgReady !== 'undefined' ? imgReady : '-') + '\n' +
+      'canvas: ' + (c ? c.width + 'x' + c.height : '-') + '\n' +
+      'client: ' + (c ? c.clientWidth + 'x' + c.clientHeight : '-') + '\n' +
+      'dpr: ' + (window.devicePixelRatio || 1) + '\n' +
+      'amp: ' + (amp != null ? amp.toFixed(4) : '-') + '\n' +
+      'UA: ' + navigator.userAgent.slice(0, 64);
+  }
+  diagMount();
+
+  if (!FORCE && reducedMotion) { diagStatus = 'OFF: reduce-motion'; diagRender(null); return; }
 
   var canvas = document.getElementById('water');
   if (!canvas) return;
 
+  canvas.addEventListener('webglcontextlost', function (e) { e.preventDefault(); diagStatus = 'CONTEXT LOST'; });
+  canvas.addEventListener('webglcontextrestored', function () { diagStatus = 'context restored'; });
+
   var gl = canvas.getContext('webgl', { alpha: false, antialias: false, depth: false, stencil: false })
         || canvas.getContext('experimental-webgl', { alpha: false, antialias: false, depth: false, stencil: false });
-  if (!gl) { canvas.style.display = 'none'; return; }
+  if (!gl) { diagStatus = 'NO WEBGL'; if (!DIAG) canvas.style.display = 'none'; return; }
 
   var MAX_DROPS = 6;
 
@@ -194,7 +237,9 @@
 
   function frame() {
     var now = performance.now();
-    if (canvas.width < 2 || canvas.height < 2) { resize(); requestAnimationFrame(frame); return; }
+    frameCount++;
+    diagStatus = 'running';
+    if (canvas.width < 2 || canvas.height < 2) { resize(); diagRender(null); requestAnimationFrame(frame); return; }
     if (!shown && imgReady) { canvas.classList.add('is-ready'); shown = true; }
 
     var p = window.POOL_WATER_PARAMS || {};
@@ -229,13 +274,15 @@
     // CUALQUIER pantalla, para que el agua se sienta IGUAL en celu y compu.
     var dispW = canvas.clientWidth || 320;
     var autoAmp = Math.max(0.006, Math.min(0.022, 3.6 / dispW));
-    gl.uniform1f(U.amp, tw('flowAmp', autoAmp));
+    var ampUsed = (WAVE != null) ? WAVE : tw('flowAmp', autoAmp);
+    gl.uniform1f(U.amp, ampUsed);
     gl.uniform1f(U.asp, canvas.height / canvas.width);
     gl.uniform3fv(U.drops, dropBuf);
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 
+    if (DIAG && (frameCount & 7) === 0) diagRender(ampUsed);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
