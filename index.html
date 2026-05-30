@@ -232,18 +232,25 @@
                box-shadow:0 30px 90px rgba(2,12,18,.35)}
   .hero__eyebrow{display:inline-flex;align-items:center;gap:14px;
                  font-size:10.5px;letter-spacing:.36em;text-transform:uppercase;
-                 color:var(--ink-dim);margin-bottom:40px}
+                 color:var(--ink-dim);margin-bottom:24px}
   .hero__eyebrow::before, .hero__eyebrow::after{
     content:"";width:48px;height:1px;background:linear-gradient(to right, transparent, var(--accent), transparent);
   }
-  .hero__title{font-family:var(--serif);font-weight:300;
-               font-size:clamp(64px, 13vw, 220px);line-height:.86;letter-spacing:-.03em;text-wrap:balance;
-               text-shadow:0 2px 40px rgba(3,19,30,.55), 0 1px 12px rgba(3,19,30,.4)}
-  .hero__title .l1{display:block;font-style:italic}
-  .hero__title .l2{display:block;font-weight:400;color:var(--accent)}
-  .hero__sub{margin-top:44px;max-width:580px;
-             font-size:17px;line-height:1.55;color:var(--ink-dim);text-wrap:pretty}
-  .hero__cta-row{margin-top:52px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+  /* Título = elemento visual más importante: titular de propuesta de valor. */
+  .hero__title{font-family:var(--serif);font-weight:400;
+               font-size:clamp(38px, 5.6vw, 70px);line-height:1.08;letter-spacing:-.015em;
+               max-width:14ch;text-wrap:balance;color:var(--ink);
+               text-shadow:0 2px 30px rgba(3,19,30,.6)}
+  .hero__title em{font-style:italic;color:var(--accent)}
+  .hero__sub{margin-top:22px;max-width:30ch;
+             font-size:clamp(16px,1.5vw,19px);line-height:1.6;color:var(--ink-dim);text-wrap:pretty}
+  .hero__cta-row{margin-top:40px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+  /* Indicadores de confianza bajo los botones. */
+  .hero__trust{list-style:none;margin:34px 0 0;padding:0;
+               display:flex;flex-wrap:wrap;justify-content:center;gap:12px 26px}
+  .hero__trust li{display:inline-flex;align-items:center;gap:9px;
+                  font-size:12.5px;letter-spacing:.05em;color:var(--ink-dim)}
+  .hero__trust li::before{content:"✓";color:var(--accent);font-weight:700;font-size:13px}
   .btn{display:inline-flex;align-items:center;gap:12px;padding:18px 30px;
        font-size:12px;letter-spacing:.22em;text-transform:uppercase;
        border-radius:999px;border:1px solid transparent;
@@ -671,7 +678,10 @@
 
   /* Pantallas muy chicas */
   @media (max-width:430px){
-    .hero__title{font-size:clamp(54px,17vw,80px)}
+    .hero__title{font-size:clamp(30px,7.6vw,40px);max-width:18ch}
+    .hero__sub{font-size:16px;max-width:34ch}
+    .hero__trust{flex-direction:column;align-items:center;gap:11px;margin-top:28px}
+    .hero__panel{padding:40px 22px 44px}
     .sec__title{font-size:clamp(28px,8vw,40px)}
     .stat__num{font-size:clamp(44px,14vw,64px)}
   }
@@ -723,21 +733,24 @@
     <section class="hero" data-screen-label="01 Hero">
       <div class="hero__panel glass">
         <span class="hero__eyebrow reveal">Mendoza · San Juan · San Luis · desde 1995</span>
-        <h1 class="hero__title">
-          <span class="l1 reveal reveal-delay-1">Cuyo</span>
-          <span class="l2 reveal reveal-delay-2">Pool</span>
+        <h1 class="hero__title reveal reveal-delay-1">
+          Construcción de piscinas <em>premium</em> en Mendoza
         </h1>
-        <p class="hero__sub reveal reveal-delay-3">
-          Diseño de autor en piscinas premium. Tres generaciones y más de mil obras
-          de Piscinas Cuyo, ahora como <em style="font-style:italic;color:var(--accent)">Cuyo Pool</em>.
+        <p class="hero__sub reveal reveal-delay-2">
+          Diseñamos y construimos piscinas de alta calidad adaptadas a cada proyecto.
         </p>
-        <div class="hero__cta-row reveal reveal-delay-4">
+        <div class="hero__cta-row reveal reveal-delay-3">
           <a class="btn btn--primary" href="#contacto" data-magnetic="0.32">
-            Iniciar proyecto
+            Solicitar presupuesto
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 7h10M8 3l4 4-4 4"/></svg>
           </a>
-          <a class="btn btn--ghost" href="#obras" data-magnetic="0.22">Ver obra reciente</a>
+          <a class="btn btn--ghost" href="#obras" data-magnetic="0.22">Ver proyectos</a>
         </div>
+        <ul class="hero__trust reveal reveal-delay-4">
+          <li>Diseño personalizado</li>
+          <li>Materiales de calidad</li>
+          <li>Asesoramiento integral</li>
+        </ul>
       </div>
       <span class="hero__scroll">Movete sobre el agua</span>
     </section>
