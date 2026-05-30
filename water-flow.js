@@ -223,7 +223,13 @@
     gl.uniform1f(U.time, tsec);
     gl.uniform2f(U.uvO, uvO[0], uvO[1]);
     gl.uniform2f(U.uvS, uvS[0], uvS[1]);
-    gl.uniform1f(U.amp, tw('flowAmp', 0.006));
+    // Amplitud ADAPTADA al tamaño mostrado: en pantallas chicas (celular) el
+    // canvas es angosto, así que una amplitud UV fija se traduce en <2px de
+    // movimiento → imperceptible. Apuntamos a ~5.5px de desplazamiento real en
+    // CUALQUIER pantalla, para que el agua se sienta IGUAL en celu y compu.
+    var dispW = canvas.clientWidth || 320;
+    var autoAmp = Math.max(0.006, Math.min(0.022, 3.6 / dispW));
+    gl.uniform1f(U.amp, tw('flowAmp', autoAmp));
     gl.uniform1f(U.asp, canvas.height / canvas.width);
     gl.uniform3fv(U.drops, dropBuf);
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
