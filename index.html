@@ -65,10 +65,21 @@
                     background:rgba(207,233,232,.06)}
   #c-ring.is-down{width:80px;height:80px;border-color:var(--accent-warm)}
 
-  /* ── Fondo: agua procedural interactiva a pantalla completa ──
-     Canvas FIJO que cubre todo el viewport y queda detrás de todo el contenido.
-     No usa ninguna imagen: el agua se genera por código, así se ve nítida en
-     cualquier resolución y funciona igual en todos los dispositivos. */
+  /* ── Fondo: agua HIPERREALISTA (jquery.ripples sobre foto de pileta) ──
+     Div FIJO con la foto de la pileta; jquery.ripples le superpone el agua.
+     Recibe los eventos del puntero para generar ondas (el contenido de arriba
+     lleva pointer-events:none para que los clics "atraviesen" hasta el agua). */
+  #ripple-bg{
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 0;
+    background: #06222e url('assets/lp-porcelana.jpg') center center / cover no-repeat;
+    pointer-events: none;
+  }
+  /* Respaldo: canvas procedural (solo si el dispositivo no soporta ripples). */
   #water-bg{
     position: fixed;
     inset: 0;
@@ -90,8 +101,21 @@
     z-index: 1;
     pointer-events: none;
     background:
-      radial-gradient(ellipse at 50% 32%, transparent 0%, rgba(2,14,22,.32) 78%),
-      linear-gradient(to bottom, rgba(2,14,22,.42) 0%, transparent 16%, transparent 80%, rgba(2,14,22,.5) 100%);
+      radial-gradient(ellipse at 50% 30%, transparent 0%, rgba(2,14,22,.30) 80%),
+      linear-gradient(to bottom, rgba(2,14,22,.50) 0%, transparent 18%, transparent 78%, rgba(2,14,22,.55) 100%);
+  }
+
+  /* Las ondas del agua se alimentan desde listeners pasivos a nivel documento
+     (ver script al final), así el agua reacciona al dedo/cursor en cualquier
+     parte SIN robar el evento → el scroll del celular sigue funcionando. */
+
+  /* ── Glassmorphism sutil para textos que flotan sobre el agua ── */
+  .glass{
+    background: rgba(8, 30, 40, 0.28);
+    -webkit-backdrop-filter: blur(7px) saturate(115%);
+    backdrop-filter: blur(7px) saturate(115%);
+    border: 1px solid rgba(180, 230, 230, 0.10);
+    border-radius: 18px;
   }
 
   /* ── Loader ── */
@@ -203,6 +227,9 @@
   /* ── Hero ── */
   .hero{min-height:100vh;padding:140px var(--pad) 96px;
         display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+  .hero__panel{display:flex;flex-direction:column;align-items:center;
+               padding:54px clamp(28px,5vw,72px) 60px;max-width:780px;
+               box-shadow:0 30px 90px rgba(2,12,18,.35)}
   .hero__eyebrow{display:inline-flex;align-items:center;gap:14px;
                  font-size:10.5px;letter-spacing:.36em;text-transform:uppercase;
                  color:var(--ink-dim);margin-bottom:40px}
@@ -659,7 +686,10 @@
     <div class="ld-bar"></div>
   </div>
 
-  <!-- Background — agua procedural interactiva a pantalla completa (sin imagen) -->
+  <!-- Background — agua HIPERREALISTA (jquery.ripples sobre foto de pileta).
+       #water-bg (canvas procedural) queda como RESPALDO automático si el
+       dispositivo no soporta las texturas float que necesita ripples. -->
+  <div id="ripple-bg" aria-hidden="true"></div>
   <canvas id="water-bg" aria-hidden="true"></canvas>
   <div id="bg-veil" aria-hidden="true"></div>
 
@@ -691,21 +721,23 @@
 
     <!-- HERO -->
     <section class="hero" data-screen-label="01 Hero">
-      <span class="hero__eyebrow reveal">Mendoza · San Juan · San Luis · desde 1995</span>
-      <h1 class="hero__title">
-        <span class="l1 reveal reveal-delay-1">Cuyo</span>
-        <span class="l2 reveal reveal-delay-2">Pool</span>
-      </h1>
-      <p class="hero__sub reveal reveal-delay-3">
-        Diseño de autor en piscinas premium. Tres generaciones y más de mil obras
-        de Piscinas Cuyo, ahora como <em style="font-style:italic;color:var(--accent)">Cuyo Pool</em>.
-      </p>
-      <div class="hero__cta-row reveal reveal-delay-4">
-        <a class="btn btn--primary" href="#contacto" data-magnetic="0.32">
-          Iniciar proyecto
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 7h10M8 3l4 4-4 4"/></svg>
-        </a>
-        <a class="btn btn--ghost" href="#obras" data-magnetic="0.22">Ver obra reciente</a>
+      <div class="hero__panel glass">
+        <span class="hero__eyebrow reveal">Mendoza · San Juan · San Luis · desde 1995</span>
+        <h1 class="hero__title">
+          <span class="l1 reveal reveal-delay-1">Cuyo</span>
+          <span class="l2 reveal reveal-delay-2">Pool</span>
+        </h1>
+        <p class="hero__sub reveal reveal-delay-3">
+          Diseño de autor en piscinas premium. Tres generaciones y más de mil obras
+          de Piscinas Cuyo, ahora como <em style="font-style:italic;color:var(--accent)">Cuyo Pool</em>.
+        </p>
+        <div class="hero__cta-row reveal reveal-delay-4">
+          <a class="btn btn--primary" href="#contacto" data-magnetic="0.32">
+            Iniciar proyecto
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 7h10M8 3l4 4-4 4"/></svg>
+          </a>
+          <a class="btn btn--ghost" href="#obras" data-magnetic="0.22">Ver obra reciente</a>
+        </div>
       </div>
       <span class="hero__scroll">Movete sobre el agua</span>
     </section>
@@ -1175,9 +1207,74 @@
     </div>
   </footer>
 
-<!-- Agua procedural interactiva a pantalla completa (sin imagen).
-     WebGL con respaldo automático a Canvas 2D → funciona en todos los dispositivos. -->
-<script src="water-bg.js?v=3"></script>
+<!-- ── Agua HIPERREALISTA: jQuery + jquery.ripples (CDN) ── -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.ripples/0.5.3/jquery.ripples.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+(function () {
+  // Inicializa el agua hiperrealista; si el dispositivo NO soporta las texturas
+  // float que necesita ripples, cae automáticamente al agua procedural (canvas).
+  function fallbackToCanvas() {
+    var wb = document.getElementById('water-bg');
+    var rb = document.getElementById('ripple-bg');
+    if (rb) rb.style.display = 'none';            // ocultar la foto fija
+    if (wb) wb.style.zIndex = '0';
+    var s = document.createElement('script');
+    s.src = 'water-bg.js?v=3';
+    document.body.appendChild(s);
+    console.warn('[agua] ripples no soportado → respaldo procedural (canvas).');
+  }
+
+  function startRipples() {
+    if (!window.jQuery || typeof jQuery.fn.ripples !== 'function') return false;
+    var $bg = jQuery('#ripple-bg');
+    if (!$bg.length) return false;
+    try {
+      $bg.ripples({
+        resolution: 512,      // malla de simulación
+        dropRadius: 20,       // tamaño de la gota
+        perturbance: 0.03,    // distorsión baja → no rompe la imagen
+        interactive: false    // NO usamos el modo nativo (robaría el scroll en mobile)
+      });
+    } catch (e) { console.warn('[agua] ripples error:', e); return false; }
+    // ¿Inicializó de verdad? (si el GPU no soporta float, no queda data)
+    if (!$bg.data('ripples')) return false;
+
+    // Ondas alimentadas desde el DOCUMENTO (pasivo) → reacciona al dedo/cursor
+    // en cualquier parte sin robar el evento, así el scroll del celu sigue OK.
+    function drop(cx, cy, strength) {
+      try { $bg.ripples('drop', cx, cy, 20, strength); } catch (e) {}
+    }
+    var lastMove = 0;
+    document.addEventListener('mousemove', function (e) {
+      var now = Date.now(); if (now - lastMove < 55) return; lastMove = now;
+      drop(e.clientX, e.clientY, 0.03);
+    }, { passive: true });
+    document.addEventListener('mousedown', function (e) { drop(e.clientX, e.clientY, 0.05); }, { passive: true });
+    document.addEventListener('touchstart', function (e) {
+      var t = e.touches[0]; if (t) drop(t.clientX, t.clientY, 0.05);
+    }, { passive: true });
+    document.addEventListener('touchmove', function (e) {
+      var now = Date.now(); if (now - lastMove < 45) return; lastMove = now;
+      var t = e.touches[0]; if (t) drop(t.clientX, t.clientY, 0.04);
+    }, { passive: true });
+
+    // Gotas ambientales suaves para que el agua "viva" sin tocar.
+    setInterval(function () {
+      drop(Math.random() * window.innerWidth, Math.random() * window.innerHeight, 0.04);
+    }, 2600);
+    return true;
+  }
+
+  function init() {
+    if (!startRipples()) fallbackToCanvas();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+
 <script src="interactions.js?v=8"></script>
 <script src="editor.js"></script>
 <!-- ── Pool-area framing controls ──
