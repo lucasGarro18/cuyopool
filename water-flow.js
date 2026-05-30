@@ -54,19 +54,30 @@
   }
   diagMount();
 
-  if (!FORCE && reducedMotion) { diagStatus = 'OFF: reduce-motion'; diagRender(null); return; }
+  // NOTA: NO desactivamos por "reducir movimiento". El agua interactiva es el
+  // centro de la marca y el usuario la quiere en TODOS los dispositivos. (Antes
+  // esto la apagaba en celulares con esa opción activada → "no salía nada".)
 
   var canvas = document.getElementById('water');
   if (!canvas) return;
+
+  // Respaldo: si el dispositivo no tiene WebGL, cargamos el motor Canvas 2D.
+  function fallbackCanvas2D() {
+    if (window.__waterCanvasLoaded) return;
+    window.__waterCanvasLoaded = true;
+    var s = document.createElement('script');
+    s.src = 'water-canvas.js?v=1';
+    document.head.appendChild(s);
+  }
 
   canvas.addEventListener('webglcontextlost', function (e) { e.preventDefault(); diagStatus = 'CONTEXT LOST'; });
   canvas.addEventListener('webglcontextrestored', function () { diagStatus = 'context restored'; });
 
   var gl = canvas.getContext('webgl', { alpha: false, antialias: false, depth: false, stencil: false })
         || canvas.getContext('experimental-webgl', { alpha: false, antialias: false, depth: false, stencil: false });
-  if (!gl) { diagStatus = 'NO WEBGL'; if (!DIAG) canvas.style.display = 'none'; return; }
+  if (!gl) { diagStatus = 'NO WEBGL → fallback canvas2d'; diagRender(null); fallbackCanvas2D(); return; }
 
-  var MAX_DROPS = 6;
+  var MAX_DROPS = 12;
 
   var VS = [
     'attribute vec2 a_pos;',
@@ -224,6 +235,12 @@
     var uv = clientToUV(e.clientX, e.clientY); if (uv) addDrop(uv.u, uv.v);
   }, { passive: true });
   document.addEventListener('touchstart', function (e) {
+    var t = e.touches[0]; if (!t) return;
+    var uv = clientToUV(t.clientX, t.clientY); if (uv) addDrop(uv.u, uv.v);
+  }, { passive: true });
+  // Arrastre del dedo: ondas continuas mientras se desliza por la pantalla.
+  document.addEventListener('touchmove', function (e) {
+    var now = performance.now(); if (now - lastMove < 45) return; lastMove = now;
     var t = e.touches[0]; if (!t) return;
     var uv = clientToUV(t.clientX, t.clientY); if (uv) addDrop(uv.u, uv.v);
   }, { passive: true });

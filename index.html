@@ -129,10 +129,8 @@
   }
   #water.is-ready{ opacity: 1; }
 
-  /* Reduced motion: keep the still composition, drop the ripples. */
-  @media (prefers-reduced-motion: reduce){
-    #water{ display: none; }
-  }
+  /* El agua interactiva es el centro de la experiencia: se mantiene siempre,
+     incluso con "reducir movimiento" activado en el dispositivo. */
 
   /* ── Loader ── */
   #loader{
@@ -1306,7 +1304,7 @@
 
 <!-- Agua en movimiento UNIVERSAL (shader de distorsión, sin texturas float →
      funciona en el 100% de los dispositivos con WebGL). -->
-<script src="water-canvas.js?v=1"></script>
+<script src="water-flow.js?v=5"></script>
 <script src="interactions.js?v=8"></script>
 <script src="editor.js"></script>
 <!-- ── Pool-area framing controls ──
