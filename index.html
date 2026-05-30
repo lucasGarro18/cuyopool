@@ -129,6 +129,13 @@
   }
   #water.is-ready{ opacity: 1; }
 
+  /* MOBILE: el canvas WebGL renderiza con artefactos en varios GPU de celular
+     (se ve "mal"). En celular mostramos la foto nítida estática (que se ve
+     perfecta en todos los teléfonos). La animación queda para desktop. */
+  @media (max-width:768px){
+    #water{ display: none !important; }
+  }
+
   /* Reduced motion: keep the still composition, drop the ripples. */
   @media (prefers-reduced-motion: reduce){
     #water{ display: none; }
