@@ -296,6 +296,17 @@
                                letter-spacing:.22em;text-transform:uppercase;color:var(--ink-dim)}
   .marquee--sm .marquee__item span{font-size:1em;color:var(--accent)}
 
+  /* ── Microdetalles de confianza (franja discreta) ── */
+  .trust-strip{max-width:1440px;margin:0 auto;padding:0 var(--pad)}
+  .trust-strip__row{list-style:none;display:grid;grid-template-columns:repeat(4,1fr);
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .trust-strip__row li{padding:30px 24px;text-align:center;
+    font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-dim);
+    display:flex;align-items:center;justify-content:center;gap:11px}
+  .trust-strip__row li::before{content:"";width:5px;height:5px;border-radius:50%;
+    background:var(--accent-warm);flex:none}
+  .trust-strip__row li + li{border-left:1px solid var(--line)}
+
   /* ── Stats ── */
   .stats{padding:80px var(--pad);margin-top:160px;
          border-top:1px solid var(--line);border-bottom:1px solid var(--line);
@@ -399,22 +410,16 @@
   .styles__group--mt{margin-top:72px}
 
   /* ── Proceso ── */
-  .proceso .sec__head{margin-bottom:64px}
-  .proc-grid{display:grid;grid-template-columns:repeat(13,1fr);gap:0;position:relative}
-  .proc-grid::before{content:"";position:absolute;left:0;right:0;top:24px;height:1px;
-                     background:linear-gradient(to right, transparent, var(--line-strong), transparent)}
-  .proc-step{position:relative;padding:14px 14px 22px;
-             display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px}
-  .proc-step__dot{width:14px;height:14px;border-radius:50%;border:1px solid var(--accent);
-                  background:var(--bg);position:relative;z-index:2;
-                  box-shadow:0 0 16px rgba(207,233,232,.4);
-                  transition:transform .35s, background .35s, box-shadow .35s}
-  .proc-step:hover .proc-step__dot{background:var(--accent);transform:scale(1.5);
-                                   box-shadow:0 0 28px rgba(207,233,232,.8)}
-  .proc-step__num{font-family:var(--serif);font-style:italic;color:var(--accent-warm);
-                  font-size:11px;letter-spacing:.04em;margin-top:6px}
-  .proc-step__name{font-size:11.5px;letter-spacing:.04em;color:var(--ink);font-weight:400}
-  .proc-step__desc{font-size:10.5px;color:var(--ink-faint);letter-spacing:.06em;line-height:1.4;max-width:140px}
+  .proceso .sec__head{margin-bottom:96px}
+  /* 4 pasos minimalistas: regla fina superior + número serif (estilo índice). */
+  .steps{list-style:none;display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+  .step{display:flex;flex-direction:column;gap:18px;
+        padding:36px 34px 10px 0;border-top:1px solid var(--line-strong)}
+  .step__num{font-family:var(--serif);font-style:italic;font-weight:300;
+             font-size:clamp(40px,3.2vw,54px);line-height:1;color:var(--accent-warm)}
+  .step__name{font-family:var(--serif);font-weight:400;
+              font-size:clamp(20px,1.5vw,25px);line-height:1.16;color:var(--ink)}
+  .step__desc{font-size:14px;line-height:1.62;color:var(--ink-dim);max-width:27ch}
 
   /* ── Materiales ── */
   .materiales{padding:160px var(--pad)}
@@ -450,25 +455,28 @@
     display:grid;grid-template-columns:repeat(12,1fr);
     grid-auto-rows:120px;gap:14px;
   }
+  /* Foto = protagonista absoluto: sin bordes, a plena luz; el dato aparece
+     discreto solo al pasar el cursor (la imagen manda como evidencia). */
   .gal-item{
-    position:relative;overflow:hidden;border:1px solid var(--line);
-    background:rgba(3,19,30,.5);
+    position:relative;overflow:hidden;background:rgba(3,19,30,.5);
   }
   .gal-item img{
     width:100%;height:100%;object-fit:cover;display:block;
-    transition:transform 1.4s cubic-bezier(.2,.7,.2,1), filter .6s;
-    filter:saturate(.92) brightness(.92);
+    transition:transform 1.6s cubic-bezier(.2,.7,.2,1);
+    filter:none;
   }
-  .gal-item:hover img{transform:scale(1.06);filter:saturate(1.05) brightness(1)}
+  .gal-item:hover img{transform:scale(1.045)}
   .gal-item__cap{
-    position:absolute;left:18px;bottom:14px;right:18px;
+    position:absolute;left:20px;bottom:16px;right:20px;
     display:flex;justify-content:space-between;gap:12px;align-items:end;
     color:var(--ink);font-size:11px;letter-spacing:.22em;text-transform:uppercase;
-    pointer-events:none;z-index:2;
+    pointer-events:none;z-index:2;opacity:0;transform:translateY(6px);
+    transition:opacity .5s ease, transform .5s ease;
   }
+  .gal-item:hover .gal-item__cap{opacity:1;transform:translateY(0)}
   .gal-item__cap::before{
-    content:"";position:absolute;left:-18px;right:-18px;bottom:-14px;height:90px;
-    background:linear-gradient(to top, rgba(3,19,30,.85), transparent);
+    content:"";position:absolute;left:-20px;right:-20px;bottom:-16px;height:110px;
+    background:linear-gradient(to top, rgba(3,19,30,.8), transparent);
     z-index:-1;
   }
   .gal-item__name{font-family:var(--serif);font-style:italic;font-size:18px;
@@ -613,8 +621,10 @@
     .manifesto__grid{grid-template-columns:1fr;gap:24px}
     .stats__grid{grid-template-columns:repeat(2,1fr)}
     .foot{grid-template-columns:1fr 1fr;gap:32px}
-    .proc-grid{grid-template-columns:repeat(7,1fr);row-gap:24px}
+    .steps{grid-template-columns:repeat(2,1fr)}
     .valores{grid-template-columns:repeat(2,1fr)}
+    .trust-strip__row{grid-template-columns:1fr 1fr}
+    .trust-strip__row li{border-left:0;padding:20px 14px;font-size:10px;letter-spacing:.14em}
   }
   @media (max-width:720px){
     /* Nav: logo + hamburguesa; los links pasan a menú a pantalla completa */
@@ -662,11 +672,9 @@
     .foot__bottom{flex-direction:column;gap:10px;text-align:center}
     .feat-specs{grid-template-columns:1fr;gap:14px}
 
-    /* Proceso: 2 columnas, sin línea conectora (causaba el overflow) */
-    .proc-grid{grid-template-columns:repeat(2,1fr);gap:18px 14px}
-    .proc-grid::before{display:none}
-    .proc-step{padding:8px 4px 16px;text-align:left;align-items:flex-start}
-    .proc-step__dot{margin-bottom:4px}
+    /* Proceso: pasos apilados (1 columna) para máxima claridad en mobile */
+    .steps{grid-template-columns:1fr}
+    .step{padding:28px 0 6px;gap:12px}
 
     .marquee__item{font-size:22px}
 
@@ -776,28 +784,28 @@
       </div>
     </div>
 
-    <!-- STATS -->
-    <section class="stats" data-screen-label="02 Estudio">
+    <!-- EXPERIENCIA — indicadores de confianza -->
+    <section class="stats" data-screen-label="02 Experiencia">
       <div class="stats__grid">
         <div class="stat reveal">
           <span class="stat__num" data-count-to="1000" data-count-suffix="+">0</span>
-          <span class="stat__label">Obras firmadas</span>
-          <span class="stat__desc">Residencias, hotelería, bodegas y countries. Cada obra entregada llave en mano.</span>
+          <span class="stat__label">Proyectos realizados</span>
+          <span class="stat__desc">Residencias, hoteles, bodegas y countries. Cada obra entregada llave en mano.</span>
         </div>
         <div class="stat reveal reveal-delay-1">
           <span class="stat__num" data-count-to="30">0</span>
-          <span class="stat__label">Años de oficio</span>
-          <span class="stat__desc">Tres generaciones de constructores haciendo realidad cada proyecto, obra por obra.</span>
+          <span class="stat__label">Años de experiencia</span>
+          <span class="stat__desc">Tres generaciones construyendo piscinas en la región de Cuyo.</span>
         </div>
         <div class="stat reveal reveal-delay-2">
-          <span class="stat__num" data-count-to="3">0</span>
-          <span class="stat__label">Provincias</span>
-          <span class="stat__desc">Mendoza, San Juan y San Luis. Obras desde el llano hasta los 2.800 msnm.</span>
+          <span class="stat__num" data-count-to="100" data-count-suffix="%">0</span>
+          <span class="stat__label">Clientes satisfechos</span>
+          <span class="stat__desc">Acompañamos cada proyecto de principio a fin, hasta la entrega final.</span>
         </div>
         <div class="stat reveal reveal-delay-3">
-          <span class="stat__num" data-count-to="5">0</span>
-          <span class="stat__label">Años de garantía</span>
-          <span class="stat__desc">Estructura, hidráulica y revestimiento.</span>
+          <span class="stat__num">1:1</span>
+          <span class="stat__label">Atención personalizada</span>
+          <span class="stat__desc">Trato directo con quien dirige tu obra, en cada decisión.</span>
         </div>
       </div>
     </section>
@@ -979,25 +987,32 @@
     <!-- PROCESO -->
     <section id="proceso" class="proceso" data-screen-label="06 Proceso">
       <header class="sec__head">
-        <div class="reveal"><span class="sec__eyebrow"><small>Capítulo 03</small>Método</span></div>
+        <div class="reveal"><span class="sec__eyebrow"><small>Cómo trabajamos</small>Proceso</span></div>
         <div class="reveal reveal-delay-1">
-          <h2 class="sec__title">Del primer plano al primer chapuzón. <em>Sin sorpresas.</em></h2>
+          <h2 class="sec__title">Un proceso claro, <em>de principio a fin.</em></h2>
         </div>
       </header>
-      <ol class="proc-grid reveal">
-        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">01</span><span class="proc-step__name">Conversación</span><span class="proc-step__desc">Visita y lectura del sitio</span></li>
-        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">02</span><span class="proc-step__name">Anteproyecto</span><span class="proc-step__desc">Croquis y briefing</span></li>
-        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">03</span><span class="proc-step__name">Hidráulico</span><span class="proc-step__desc">Cálculo de caudal</span></li>
-        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">04</span><span class="proc-step__name">Maqueta</span><span class="proc-step__desc">Muestras de material</span></li>
-        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">05</span><span class="proc-step__name">Documentación</span><span class="proc-step__desc">Planos firmados</span></li>
-        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">06</span><span class="proc-step__name">Replanteo</span><span class="proc-step__desc">Marcado en terreno</span></li>
-        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">07</span><span class="proc-step__name">Excavación</span><span class="proc-step__desc">Movimiento de suelo</span></li>
-        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">08</span><span class="proc-step__name">Estructura</span><span class="proc-step__desc">Hormigón armado</span></li>
-        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">09</span><span class="proc-step__name">Hidráulica</span><span class="proc-step__desc">Cañerías y skimmers</span></li>
-        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">10</span><span class="proc-step__name">Revestimiento</span><span class="proc-step__desc">Porcelanato pieza por pieza</span></li>
-        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">11</span><span class="proc-step__name">Sistema</span><span class="proc-step__desc">Bombas y domótica</span></li>
-        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">12</span><span class="proc-step__name">Llenado</span><span class="proc-step__desc">Balance químico</span></li>
-        <li class="proc-step"><span class="proc-step__dot"></span><span class="proc-step__num">13</span><span class="proc-step__name">Entrega</span><span class="proc-step__desc">Manual y garantía</span></li>
+      <ol class="steps">
+        <li class="step reveal">
+          <span class="step__num">01</span>
+          <h3 class="step__name">Asesoramiento y planificación</h3>
+          <p class="step__desc">Escuchamos tu idea, visitamos el terreno y definimos juntos el proyecto y el presupuesto.</p>
+        </li>
+        <li class="step reveal reveal-delay-1">
+          <span class="step__num">02</span>
+          <h3 class="step__name">Diseño personalizado</h3>
+          <p class="step__desc">Diseñamos tu piscina a medida: forma, revestimiento y detalles adaptados a tu espacio.</p>
+        </li>
+        <li class="step reveal reveal-delay-2">
+          <span class="step__num">03</span>
+          <h3 class="step__name">Construcción profesional</h3>
+          <p class="step__desc">Ejecutamos la obra con equipo propio, materiales seleccionados y control en cada etapa.</p>
+        </li>
+        <li class="step reveal reveal-delay-3">
+          <span class="step__num">04</span>
+          <h3 class="step__name">Entrega final</h3>
+          <p class="step__desc">Entregamos llave en mano, con puesta en marcha y seguimiento posterior de tu piscina.</p>
+        </li>
       </ol>
     </section>
 
@@ -1161,6 +1176,16 @@
         </span>
       </div>
     </section>
+
+    <!-- MICRODETALLES DE CONFIANZA — franja discreta -->
+    <div class="trust-strip" aria-label="Compromisos">
+      <ul class="trust-strip__row reveal">
+        <li>Presupuestos personalizados</li>
+        <li>Atención en Mendoza</li>
+        <li>Seguimiento durante todo el proyecto</li>
+        <li>Materiales seleccionados</li>
+      </ul>
+    </div>
 
     <!-- CONTACT -->
     <section id="contacto" class="contact" data-screen-label="11 Contacto">
