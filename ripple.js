@@ -27,43 +27,26 @@
           || canvas.getContext('experimental-webgl',ctxOpts);
   if (!gl) { canvas.style.display='none'; return; }
 
-  /* Tipo de textura para la simulación. Preferimos FLOAT (desktop) y caemos
-     a HALF_FLOAT (la mayoría de los GPU de celular lo soportan aunque no
-     soporten float renderizable). Verificamos que el framebuffer sea
-     completo antes de aceptar el tipo; si ninguno sirve → imagen estática. */
+  /* Simulación en texturas FLOAT. Verificamos que el framebuffer float sea
+     completo (renderizable) antes de aceptarlo; si el dispositivo no lo
+     soporta, fallback elegante a la imagen estática (sin romperse). */
   let TEX_TYPE = null, extLinear = null;
-
   (function detectTexType(){
-    function fbOk(type){
-      try {
-        const tex = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, tex);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 4, 4, 0, gl.RGBA, type, null);
-        const fb = gl.createFramebuffer();
-        gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
-        const ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        gl.deleteFramebuffer(fb); gl.deleteTexture(tex);
-        return ok;
-      } catch (e) { return false; }
-    }
-    // FLOAT
-    if (gl.getExtension('OES_texture_float') && fbOk(gl.FLOAT)) {
-      TEX_TYPE = gl.FLOAT;
-      extLinear = gl.getExtension('OES_texture_float_linear');
-      return;
-    }
-    // HALF FLOAT
-    const hf = gl.getExtension('OES_texture_half_float');
-    const HALF = hf ? hf.HALF_FLOAT_OES : null;
-    if (hf && fbOk(HALF)) {
-      TEX_TYPE = HALF;
-      extLinear = gl.getExtension('OES_texture_half_float_linear');
-      return;
-    }
+    if (!gl.getExtension('OES_texture_float')) return;
+    try {
+      const tex = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 4, 4, 0, gl.RGBA, gl.FLOAT, null);
+      const fb = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+      const ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.deleteFramebuffer(fb); gl.deleteTexture(tex);
+      if (ok) { TEX_TYPE = gl.FLOAT; extLinear = gl.getExtension('OES_texture_float_linear'); }
+    } catch (e) {}
   }());
 
   if (!TEX_TYPE) { canvas.style.display='none'; return; }
