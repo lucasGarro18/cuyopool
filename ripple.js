@@ -27,9 +27,46 @@
           || canvas.getContext('experimental-webgl',ctxOpts);
   if (!gl) { canvas.style.display='none'; return; }
 
-  const extFloat  = gl.getExtension('OES_texture_float');
-  const extLinear = gl.getExtension('OES_texture_float_linear');
-  if (!extFloat) { canvas.style.display='none'; return; }
+  /* Tipo de textura para la simulación. Preferimos FLOAT (desktop) y caemos
+     a HALF_FLOAT (la mayoría de los GPU de celular lo soportan aunque no
+     soporten float renderizable). Verificamos que el framebuffer sea
+     completo antes de aceptar el tipo; si ninguno sirve → imagen estática. */
+  let TEX_TYPE = null, extLinear = null;
+
+  (function detectTexType(){
+    function fbOk(type){
+      try {
+        const tex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 4, 4, 0, gl.RGBA, type, null);
+        const fb = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+        const ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.deleteFramebuffer(fb); gl.deleteTexture(tex);
+        return ok;
+      } catch (e) { return false; }
+    }
+    // FLOAT
+    if (gl.getExtension('OES_texture_float') && fbOk(gl.FLOAT)) {
+      TEX_TYPE = gl.FLOAT;
+      extLinear = gl.getExtension('OES_texture_float_linear');
+      return;
+    }
+    // HALF FLOAT
+    const hf = gl.getExtension('OES_texture_half_float');
+    const HALF = hf ? hf.HALF_FLOAT_OES : null;
+    if (hf && fbOk(HALF)) {
+      TEX_TYPE = HALF;
+      extLinear = gl.getExtension('OES_texture_half_float_linear');
+      return;
+    }
+  }());
+
+  if (!TEX_TYPE) { canvas.style.display='none'; return; }
 
   /* ── Shaders ─────────────────────────────────────────────────────── */
   const VS = `
@@ -155,7 +192,7 @@
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,f);
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
-    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,w,h,0,gl.RGBA,gl.FLOAT,null);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,w,h,0,gl.RGBA,TEX_TYPE,null);
     const fb=gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER,fb);
     gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0);
