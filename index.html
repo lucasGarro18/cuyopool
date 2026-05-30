@@ -54,8 +54,7 @@
     z-index:9999;border-radius:50%;
     will-change:transform;
   }
-  #c-dot{width:6px;height:6px;background:var(--accent);
-         box-shadow:0 0 12px var(--accent), 0 0 24px rgba(207,233,232,.45);
+  #c-dot{width:5px;height:5px;background:var(--accent);
          transition:width .25s, height .25s, background .25s}
   #c-ring{width:38px;height:38px;border:1px solid rgba(207,233,232,.35);
           transition:width .35s cubic-bezier(.2,.7,.2,1),
@@ -95,14 +94,16 @@
   }
   #water-bg.is-ready{ opacity: 1; }
   /* Velo sutil para legibilidad del texto sobre el agua. */
+  /* Velo más profundo y cinematográfico: el agua queda como telón de fondo
+     atenuado (iluminación suave), y el texto/imágenes ganan protagonismo. */
   #bg-veil{
     position: fixed;
     inset: 0;
     z-index: 1;
     pointer-events: none;
     background:
-      radial-gradient(ellipse at 50% 30%, transparent 0%, rgba(2,14,22,.30) 80%),
-      linear-gradient(to bottom, rgba(2,14,22,.50) 0%, transparent 18%, transparent 78%, rgba(2,14,22,.55) 100%);
+      radial-gradient(ellipse at 50% 26%, rgba(2,11,17,.28) 0%, rgba(2,11,17,.66) 100%),
+      linear-gradient(to bottom, rgba(2,11,17,.66) 0%, rgba(2,11,17,.40) 26%, rgba(2,11,17,.46) 72%, rgba(2,11,17,.72) 100%);
   }
 
   /* Las ondas del agua se alimentan desde listeners pasivos a nivel documento
@@ -161,8 +162,7 @@
     background:rgba(234,246,247,.18);
     transition:background .3s, transform .3s, width .3s;
   }
-  .rail__dot.is-active{background:var(--accent);transform:scale(1.4);
-                       box-shadow:0 0 12px var(--accent)}
+  .rail__dot.is-active{background:var(--accent);transform:scale(1.4)}
   .rail__dot::after{
     content:attr(data-label);
     position:absolute;right:calc(100% + 14px);top:50%;transform:translateY(-50%);
@@ -214,15 +214,16 @@
   .nav.is-open .nav__burger span:nth-child(2){bottom:21px;transform:rotate(-45deg)}
 
   /* ── Reveal ── */
-  .reveal{opacity:0;transform:translateY(28px);
-          transition:opacity 1s cubic-bezier(.2,.7,.2,1), transform 1s cubic-bezier(.2,.7,.2,1)}
+  /* Revelado lento y cinematográfico (entrada con profundidad). */
+  .reveal{opacity:0;transform:translateY(42px);
+          transition:opacity 1.3s cubic-bezier(.16,1,.3,1), transform 1.3s cubic-bezier(.16,1,.3,1)}
   .reveal.in{opacity:1;transform:translateY(0)}
   .reveal-delay-1{transition-delay:.08s} .reveal-delay-2{transition-delay:.16s}
   .reveal-delay-3{transition-delay:.24s} .reveal-delay-4{transition-delay:.32s}
 
   /* ── Layout shell ── */
   main{position:relative;z-index:1}
-  section{padding:140px var(--pad);max-width:1440px;margin:0 auto;position:relative}
+  section{padding:200px var(--pad);max-width:1440px;margin:0 auto;position:relative}
 
   /* ── Hero ── */
   .hero{min-height:100vh;padding:140px var(--pad) 96px;
@@ -273,22 +274,22 @@
   .marquee{
     overflow:hidden;
     border-top:1px solid var(--line);border-bottom:1px solid var(--line);
-    background:rgba(3,19,30,.4);
-    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    background:rgba(3,19,30,.26);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
   }
   .marquee__track{
-    display:flex;gap:64px;padding:22px 0;width:max-content;
-    animation:marquee 38s linear infinite;
+    display:flex;gap:80px;padding:20px 0;width:max-content;
+    animation:marquee 90s linear infinite;
   }
+  /* Franja editorial sobria: mayúsculas finas y tenues (no banner llamativo). */
   .marquee__item{
-    display:inline-flex;align-items:center;gap:22px;
-    font-family:var(--serif);font-style:italic;font-weight:300;
-    font-size:clamp(28px, 3.6vw, 48px);
-    color:var(--ink);letter-spacing:-.01em;
+    display:inline-flex;align-items:center;gap:26px;
+    font-family:var(--sans);font-weight:300;
+    font-size:clamp(12px, 1.2vw, 15px);letter-spacing:.32em;text-transform:uppercase;
+    color:var(--ink-faint);
     white-space:nowrap;
   }
-  .marquee__item span{color:var(--accent-warm);font-style:normal;font-family:var(--sans);
-                      font-size:.4em;letter-spacing:.32em;text-transform:uppercase}
+  .marquee__item span{color:var(--accent-warm);opacity:.7;font-size:1em;letter-spacing:.32em}
   @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
   .marquee--rev .marquee__track{animation-direction:reverse;animation-duration:28s}
   .marquee--sm .marquee__item{font-size:clamp(13px,1.4vw,18px);font-style:normal;font-family:var(--sans);
@@ -310,7 +311,7 @@
   .stat__desc{font-size:13px;line-height:1.45;color:var(--ink-dim);margin-top:6px}
 
   /* ── Manifesto ── */
-  .manifesto{padding:180px var(--pad)}
+  .manifesto{padding:240px var(--pad)}
   .manifesto__grid{display:grid;grid-template-columns:1fr 1.4fr;gap:80px;align-items:start}
   .manifesto__label{font-size:10.5px;letter-spacing:.36em;text-transform:uppercase;color:var(--accent-warm);
                     padding-top:12px;border-top:1px solid var(--accent-warm);max-width:240px}
@@ -322,7 +323,7 @@
   .manifesto__sign::before{content:"";width:36px;height:1px;background:var(--accent)}
 
   /* ── Nosotros (quiénes somos · misión · visión · valores) ── */
-  .nosotros{padding:140px var(--pad)}
+  .nosotros{padding:200px var(--pad)}
   .nosotros__inner{max-width:1280px;margin:0 auto}
   .nos-lead{max-width:760px;margin:48px 0 72px;
             font-family:var(--serif);font-weight:300;font-size:clamp(20px,2.2vw,28px);
@@ -333,8 +334,7 @@
   .mv-card{background:rgba(3,19,30,.55);padding:48px 44px;display:flex;flex-direction:column;gap:18px}
   .mv-card__eye{font-size:10.5px;letter-spacing:.36em;text-transform:uppercase;color:var(--accent-warm);
                 display:flex;align-items:center;gap:12px}
-  .mv-card__eye::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent-warm);
-                        box-shadow:0 0 10px var(--accent-warm)}
+  .mv-card__eye::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent-warm)}
   .mv-card__title{font-family:var(--serif);font-style:italic;font-weight:300;
                   font-size:32px;line-height:1;color:var(--accent)}
   .mv-card__text{font-size:15px;line-height:1.6;color:var(--ink-dim)}
@@ -346,11 +346,11 @@
   .valor__text{font-size:12.5px;line-height:1.5;color:var(--ink-faint)}
 
   /* ── Section heads ── */
-  .sec__head{display:grid;grid-template-columns:1fr 2fr;gap:60px;margin-bottom:80px;align-items:end}
-  .sec__eyebrow{font-size:11px;letter-spacing:.36em;text-transform:uppercase;color:var(--accent-warm);display:block}
-  .sec__eyebrow small{display:block;margin-bottom:14px;color:var(--ink-faint);font-size:10px;letter-spacing:.4em}
+  .sec__head{display:grid;grid-template-columns:1fr 2fr;gap:72px;margin-bottom:120px;align-items:end}
+  .sec__eyebrow{font-size:10.5px;letter-spacing:.44em;text-transform:uppercase;color:var(--accent-warm);display:block}
+  .sec__eyebrow small{display:block;margin-bottom:16px;color:var(--ink-faint);font-size:10px;letter-spacing:.46em}
   .sec__title{font-family:var(--serif);font-weight:300;
-              font-size:clamp(42px,5.6vw,82px);line-height:1.02;letter-spacing:-.022em;text-wrap:balance}
+              font-size:clamp(46px,6.6vw,104px);line-height:1.0;letter-spacing:-.03em;text-wrap:balance}
   .sec__title em{font-style:italic;color:var(--accent)}
 
   /* ── Estilos grid ── */
@@ -637,9 +637,11 @@
     .nav__links a{color:var(--ink);padding:8px 0}
     .nav__links a::after{display:none}
 
-    /* Espaciados de sección más compactos */
+    /* Espaciados de sección más compactos (con aire, sin exceso en mobile) */
+    section{padding-top:104px;padding-bottom:104px}
     section, .galeria, .proceso, .manifesto, .nosotros, .featured, .obras, .contact, .testi{
       padding-left:var(--pad);padding-right:var(--pad)}
+    .sec__head{grid-template-columns:1fr;gap:18px;margin-bottom:56px}
     .manifesto{padding-top:90px;padding-bottom:90px}
     .nosotros{padding-top:80px;padding-bottom:80px}
     .galeria{padding-top:80px;padding-bottom:80px}
@@ -1245,8 +1247,8 @@
     try {
       $bg.ripples({
         resolution: 512,      // malla de simulación
-        dropRadius: 20,       // tamaño de la gota
-        perturbance: 0.03,    // distorsión baja → no rompe la imagen
+        dropRadius: 22,       // gota más amplia → ondas más suaves
+        perturbance: 0.02,    // distorsión MUY baja → agua calma, cinematográfica
         interactive: false    // NO usamos el modo nativo (robaría el scroll en mobile)
       });
     } catch (e) { console.warn('[agua] ripples error:', e); return false; }
@@ -1260,22 +1262,22 @@
     }
     var lastMove = 0;
     document.addEventListener('mousemove', function (e) {
-      var now = Date.now(); if (now - lastMove < 55) return; lastMove = now;
-      drop(e.clientX, e.clientY, 0.03);
+      var now = Date.now(); if (now - lastMove < 70) return; lastMove = now;
+      drop(e.clientX, e.clientY, 0.018);
     }, { passive: true });
-    document.addEventListener('mousedown', function (e) { drop(e.clientX, e.clientY, 0.05); }, { passive: true });
+    document.addEventListener('mousedown', function (e) { drop(e.clientX, e.clientY, 0.03); }, { passive: true });
     document.addEventListener('touchstart', function (e) {
-      var t = e.touches[0]; if (t) drop(t.clientX, t.clientY, 0.05);
+      var t = e.touches[0]; if (t) drop(t.clientX, t.clientY, 0.03);
     }, { passive: true });
     document.addEventListener('touchmove', function (e) {
-      var now = Date.now(); if (now - lastMove < 45) return; lastMove = now;
-      var t = e.touches[0]; if (t) drop(t.clientX, t.clientY, 0.04);
+      var now = Date.now(); if (now - lastMove < 60) return; lastMove = now;
+      var t = e.touches[0]; if (t) drop(t.clientX, t.clientY, 0.022);
     }, { passive: true });
 
-    // Gotas ambientales suaves para que el agua "viva" sin tocar.
+    // Gotas ambientales muy suaves y espaciadas (movimiento sutil, no llamativo).
     setInterval(function () {
-      drop(Math.random() * window.innerWidth, Math.random() * window.innerHeight, 0.04);
-    }, 2600);
+      drop(Math.random() * window.innerWidth, Math.random() * window.innerHeight, 0.022);
+    }, 5200);
     return true;
   }
 
