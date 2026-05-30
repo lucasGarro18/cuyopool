@@ -65,72 +65,34 @@
                     background:rgba(207,233,232,.06)}
   #c-ring.is-down{width:80px;height:80px;border-color:var(--accent-warm)}
 
-  /* ── Pool background ── */
-  .pool-bg{
-    position: absolute;
-    left: 0; top: 0;
+  /* ── Fondo: agua procedural interactiva a pantalla completa ──
+     Canvas FIJO que cubre todo el viewport y queda detrás de todo el contenido.
+     No usa ninguna imagen: el agua se genera por código, así se ve nítida en
+     cualquier resolución y funciona igual en todos los dispositivos. */
+  #water-bg{
+    position: fixed;
+    inset: 0;
     width: 100vw;
-    height: 100%;
+    height: 100vh;
+    height: 100dvh;
     z-index: 0;
+    display: block;
     background: var(--bg);
     pointer-events: none;
-    overflow: hidden;
-  }
-  /* Capa inferior: muestra el FONDO de la imagen (marco + vegetación inferior)
-     anclada al borde inferior, con máscara de degradado para fundir con los mosaicos. */
-  .pool-bg::before{
-    content:'';
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 900px;
-    background: url('assets/pool-extended.jpg') center bottom / cover no-repeat;
-    z-index: 1;
-    mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.55) 30%, black 60%);
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.55) 30%, black 60%);
-    pointer-events: none;
-  }
-  /* Transición muy corta al final — sólo últimos 80px */
-  .pool-bg::after{
-    content:'';
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 80px;
-    background: linear-gradient(to bottom, transparent, var(--bg));
-    z-index: 3;
-    pointer-events: none;
-  }
-  .pool-bg__img{
-    position: absolute;
-    top: 0;
-    left: 0;
-    transform: none;
-    /* Ancho completo — la imagen cubre de costado a costado */
-    width: 100%;
-    height: auto;
-    min-height: 100%;
-    object-fit: cover;
-    object-position: center top;
-    max-width: none;
-    display: block;
-    user-select: none;
-    -webkit-user-drag: none;
-  }
-
-  /* Water canvas — desplazamiento puro: la imagen de la piscina se distorsiona
-     como si se viera a través del agua en movimiento. El canvas es opaco y
-     reemplaza la imagen estática SOLO en el área de azulejos. */
-  #water{
-    position: absolute;
-    left: 0; top: 0; width: 0; height: 0;
-    z-index: 2;
-    pointer-events: none;
     opacity: 0;
-    transition: opacity .8s ease;
+    transition: opacity 1s ease;
   }
-  #water.is-ready{ opacity: 1; }
-
-  /* El agua interactiva es el centro de la experiencia: se mantiene siempre,
-     incluso con "reducir movimiento" activado en el dispositivo. */
+  #water-bg.is-ready{ opacity: 1; }
+  /* Velo sutil para legibilidad del texto sobre el agua. */
+  #bg-veil{
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse at 50% 32%, transparent 0%, rgba(2,14,22,.32) 78%),
+      linear-gradient(to bottom, rgba(2,14,22,.42) 0%, transparent 16%, transparent 80%, rgba(2,14,22,.5) 100%);
+  }
 
   /* ── Loader ── */
   #loader{
@@ -697,11 +659,9 @@
     <div class="ld-bar"></div>
   </div>
 
-  <!-- Background — pool composition spans the entire document, scrolls with page -->
-  <div class="pool-bg" aria-hidden="true">
-    <img class="pool-bg__img" src="assets/pool-extended.jpg" alt="" />
-    <canvas id="water" aria-hidden="true"></canvas>
-  </div>
+  <!-- Background — agua procedural interactiva a pantalla completa (sin imagen) -->
+  <canvas id="water-bg" aria-hidden="true"></canvas>
+  <div id="bg-veil" aria-hidden="true"></div>
 
   <!-- Side rail (dots populated by JS) -->
   <nav id="rail" aria-label="Secciones"></nav>
@@ -1215,96 +1175,9 @@
     </div>
   </footer>
 
-<!-- Posiciona el #water sobre el rectángulo de azulejos de la foto (cover-fit),
-     abarcando todo el documento. Recalcula en resize y cambios de alto.
-     Corre ANTES de jquery.ripples para que el div tenga tamaño y el
-     background alineado cuando el plugin inicializa. -->
-<script>
-(function () {
-  const poolBg = document.querySelector('.pool-bg');
-  const canvas = document.getElementById('water');
-  if (!poolBg || !canvas) return;
-
-  const TILE_L_DEFAULT = 0.2561, TILE_T_DEFAULT = 0.0328,
-        TILE_R_DEFAULT = 0.7439, TILE_B_DEFAULT = 0.9520;
-  const IMG_W = 768, IMG_H = 6489;
-
-
-  function syncLayout() {
-    const vw = window.innerWidth;
-    const testi = document.querySelector('.testi');
-    const endY = testi
-      ? testi.offsetTop + testi.offsetHeight
-      : document.documentElement.scrollHeight;
-
-    // Live overrides from the framing panel (or fall back to defaults).
-    const o = window.POOL_FRAME_OVERRIDES || {};
-    const TILE_L = o.left   != null ? o.left   : TILE_L_DEFAULT;
-    const TILE_T = o.top    != null ? o.top    : TILE_T_DEFAULT;
-    const TILE_R = o.right  != null ? o.right  : TILE_R_DEFAULT;
-    const TILE_B = o.bottom != null ? o.bottom : TILE_B_DEFAULT;
-    // Margen inferior del canvas (px desde el fondo). Ajustable desde el panel.
-    const BOT_MARGIN = o.botMargin != null ? o.botMargin : 1500;
-
-    const isMobile = vw <= 768;
-    poolBg.style.width = vw + 'px';
-
-    let dispW, dispH, offX = 0, offY;
-    if (isMobile) {
-      // MOBILE: imagen a ANCHO COMPLETO (la pileta entera se ve igual que en
-      // la compu, sin zoom). Cubre su alto natural; debajo, fondo oscuro.
-      const scale = vw / IMG_W;
-      dispW = vw;
-      dispH = IMG_H * scale;
-      offY  = 0;
-      poolBg.style.height = Math.round(dispH) + 'px';
-    } else {
-      // DESKTOP: cover-fit que cubre todo el documento.
-      poolBg.style.height = endY + 'px';
-      const naturalH = vw * (IMG_H / IMG_W);
-      const scale    = naturalH < endY ? endY / IMG_H : vw / IMG_W;
-      dispW = IMG_W * scale;
-      dispH = IMG_H * scale;
-      offX  = (vw - dispW) / 2;
-      offY  = dispH > endY ? 0 : (endY - dispH) / 2;
-    }
-
-    const tileL = offX + dispW * TILE_L, tileT = offY + dispH * TILE_T;
-    const tileR = offX + dispW * TILE_R, tileB = offY + dispH * TILE_B;
-    const cL = Math.max(0, tileL);
-    const cT = Math.max(0, tileT);
-    const cR = Math.min(vw, tileR);
-    // Acota el alto del agua para no degradar la resolución (límite WebGL).
-    const MAX_WATER_H = Math.max(1600, Math.round(window.innerHeight * 2.8));
-    const cB = isMobile ? tileB : Math.min(endY - BOT_MARGIN, tileB, cT + MAX_WATER_H);
-
-    canvas.style.left   = cL + 'px';
-    canvas.style.top    = cT + 'px';
-    canvas.style.width  = (cR - cL) + 'px';
-    canvas.style.height = (cB - cT) + 'px';
-    canvas.classList.add('is-ready');
-
-    // UV mapping para ripple.js: qué región de la imagen corresponde al canvas.
-    const uvOriginX = (cL - offX) / dispW;
-    const uvOriginY = (cT - offY) / dispH;
-    const uvScaleX  = (cR - cL) / dispW;
-    const uvScaleY  = (cB - cT) / dispH;
-    window.POOL_WATER_PARAMS = window.POOL_WATER_PARAMS || {};
-    window.POOL_WATER_PARAMS.imageURL  = 'assets/pool-extended.jpg';
-    window.POOL_WATER_PARAMS.uvOrigin  = [uvOriginX, uvOriginY];
-    window.POOL_WATER_PARAMS.uvScale   = [uvScaleX,  uvScaleY];
-  }
-
-  syncLayout();
-  window.addEventListener('load', syncLayout);
-  window.addEventListener('resize', syncLayout);
-  new ResizeObserver(syncLayout).observe(document.body);
-})();
-</script>
-
-<!-- Agua en movimiento UNIVERSAL (shader de distorsión, sin texturas float →
-     funciona en el 100% de los dispositivos con WebGL). -->
-<script src="water-flow.js?v=5"></script>
+<!-- Agua procedural interactiva a pantalla completa (sin imagen).
+     WebGL con respaldo automático a Canvas 2D → funciona en todos los dispositivos. -->
+<script src="water-bg.js?v=1"></script>
 <script src="interactions.js?v=8"></script>
 <script src="editor.js"></script>
 <!-- ── Pool-area framing controls ──
