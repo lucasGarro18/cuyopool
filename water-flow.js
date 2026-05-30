@@ -32,7 +32,14 @@
   ].join('\n');
 
   var FS = [
+    // Alta precisión donde el GPU la soporte (casi todos los celulares
+    // modernos). Sin esto, en mobile (mediump) los sin(tiempo) se degradan
+    // y aparecen bandas/artefactos a los pocos segundos.
+    '#ifdef GL_FRAGMENT_PRECISION_HIGH',
+    'precision highp float;',
+    '#else',
     'precision mediump float;',
+    '#endif',
     'varying vec2 v_uv;',
     'uniform sampler2D u_img;',
     'uniform float u_time;',
@@ -193,7 +200,10 @@
     var p = window.POOL_WATER_PARAMS || {};
     var uvO = p.uvOrigin || [0.2561, 0.0328];
     var uvS = p.uvScale  || [0.4878, 0.90];
-    var tsec = (now - t0) / 1000;
+    // Tiempo acotado a 10·2π: con los multiplicadores de las ondas (0.6, 0.9,
+    // 1.0, 1.1, 1.3, 1.5) este wrap es PERFECTAMENTE continuo (sin saltos) y
+    // mantiene los argumentos de sin() chicos → precisión nítida en TODO GPU.
+    var tsec = ((now - t0) / 1000) % (10 * 2 * Math.PI);
 
     // armar gotas (edad en segundos; <0 = inactiva)
     for (var i = 0; i < MAX_DROPS; i++) {
