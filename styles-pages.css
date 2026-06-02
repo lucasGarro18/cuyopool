@@ -196,14 +196,13 @@ section{padding:140px var(--pad);max-width:1440px;margin:0 auto;position:relativ
   overflow:hidden;
   border-top:1px solid var(--line);
 }
+/* Imagen decorativa de sección oculta: dejamos ver el AGUA fija de fondo. */
 .lp-feature__bg{
-  position:absolute;inset:0;width:100%;height:100%;
-  object-fit:cover;object-position:center;
-  z-index:0;opacity:.55;filter:saturate(1.05) brightness(.65);
+  display:none;
 }
 .lp-feature::after{
   content:"";position:absolute;inset:0;
-  background:linear-gradient(180deg, rgba(3,19,30,.5) 0%, rgba(3,19,30,.92) 100%);
+  background:linear-gradient(180deg, rgba(3,19,30,.22) 0%, rgba(3,19,30,.44) 100%);
   z-index:1;pointer-events:none;
 }
 .lp-feature__inner{
@@ -272,7 +271,7 @@ section{padding:140px var(--pad);max-width:1440px;margin:0 auto;position:relativ
 .footer{
   padding:80px var(--pad) 40px;
   border-top:1px solid var(--line);
-  background:var(--bg);
+  background:rgba(3,19,30,.62);
 }
 .footer__grid{
   max-width:1440px;margin:0 auto;
