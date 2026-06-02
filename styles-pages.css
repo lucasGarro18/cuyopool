@@ -112,13 +112,16 @@ html.has-cursor, html.has-cursor *{cursor:none !important}
 
 /* ── Layout shell ── */
 main{position:relative;z-index:1}
+/* Espaciador: reserva la altura del HERO FIJO para que el contenido empiece
+   debajo y suba por encima al scrollear. */
+main::before{content:"";display:block;height:100vh;height:100dvh}
 section{padding:140px var(--pad);max-width:1440px;margin:0 auto;position:relative}
 
-/* ── Hero con imagen aérea ── */
+/* ── Hero FIJO (foto + agua + título quedan fijos; el contenido sube encima) ── */
 .lp-hero{
-  position:relative;min-height:100vh;padding:0;max-width:none;margin:0;
+  position:fixed;top:0;left:0;right:0;height:100vh;height:100dvh;padding:0;max-width:none;margin:0;
   display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
-  overflow:hidden;
+  overflow:hidden;z-index:1;
 }
 .lp-hero__img{
   position:absolute;inset:0;width:100%;height:100%;
@@ -196,10 +199,10 @@ section{padding:140px var(--pad);max-width:1440px;margin:0 auto;position:relativ
   overflow:hidden;
   border-top:1px solid var(--line);
 }
-/* Contenido con fondo SÓLIDO: el texto va en su propio espacio y, al scrollear,
-   cubre la portada fija (no flota encima de la foto). */
+/* Contenido con fondo SÓLIDO que SUBE por encima del hero fijo al scrollear. */
 .lp-feature{
   background:var(--bg);
+  z-index:2;
 }
 .lp-feature__bg{
   display:none;
@@ -262,6 +265,7 @@ section{padding:140px var(--pad);max-width:1440px;margin:0 auto;position:relativ
   padding:140px var(--pad);text-align:center;
   border-top:1px solid var(--line);
   background:var(--bg);
+  position:relative;z-index:2;
 }
 .lp-cta__title{
   font-family:var(--serif);font-weight:300;
@@ -276,6 +280,7 @@ section{padding:140px var(--pad);max-width:1440px;margin:0 auto;position:relativ
   padding:80px var(--pad) 40px;
   border-top:1px solid var(--line);
   background:var(--bg);
+  position:relative;z-index:2;
 }
 .footer__grid{
   max-width:1440px;margin:0 auto;
