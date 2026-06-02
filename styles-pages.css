@@ -112,16 +112,14 @@ html.has-cursor, html.has-cursor *{cursor:none !important}
 
 /* ── Layout shell ── */
 main{position:relative;z-index:1}
-/* Espaciador: reserva la altura del HERO FIJO para que el contenido empiece
-   debajo y suba por encima al scrollear. */
-main::before{content:"";display:block;height:100vh;height:100dvh}
 section{padding:140px var(--pad);max-width:1440px;margin:0 auto;position:relative}
 
-/* ── Hero FIJO (foto + agua + título quedan fijos; el contenido sube encima) ── */
+/* ── Hero ── El AGUA (fondo) queda fija; el título y el contenido scrollean
+   normalmente por encima (sin efecto de "subir tapando" el hero). ── */
 .lp-hero{
-  position:fixed;top:0;left:0;right:0;height:100vh;height:100dvh;padding:0;max-width:none;margin:0;
+  position:relative;min-height:100vh;padding:0;max-width:none;margin:0;
   display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
-  overflow:hidden;z-index:1;
+  overflow:hidden;
 }
 .lp-hero__img{
   position:absolute;inset:0;width:100%;height:100%;
