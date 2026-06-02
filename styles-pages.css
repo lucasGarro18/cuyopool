@@ -197,9 +197,10 @@ section{padding:140px var(--pad);max-width:1440px;margin:0 auto;position:relativ
   overflow:hidden;
   border-top:1px solid var(--line);
 }
-/* Contenido con fondo SÓLIDO que SUBE por encima del hero fijo al scrollear. */
+/* Contenido TRANSLÚCIDO: el agua fija de fondo se ve detrás de todo el sitio
+   (como el inicio). Un velo suave mantiene el texto legible. */
 .lp-feature{
-  background:var(--bg);
+  background:transparent;
   z-index:2;
 }
 .lp-feature__bg{
@@ -207,7 +208,7 @@ section{padding:140px var(--pad);max-width:1440px;margin:0 auto;position:relativ
 }
 .lp-feature::after{
   content:"";position:absolute;inset:0;
-  background:var(--bg);
+  background:linear-gradient(180deg, rgba(3,19,30,.18) 0%, rgba(3,19,30,.42) 100%);
   z-index:1;pointer-events:none;
 }
 .lp-feature__inner{
@@ -262,7 +263,7 @@ section{padding:140px var(--pad);max-width:1440px;margin:0 auto;position:relativ
 .lp-cta{
   padding:140px var(--pad);text-align:center;
   border-top:1px solid var(--line);
-  background:var(--bg);
+  background:rgba(3,19,30,.32);
   position:relative;z-index:2;
 }
 .lp-cta__title{
@@ -277,7 +278,7 @@ section{padding:140px var(--pad);max-width:1440px;margin:0 auto;position:relativ
 .footer{
   padding:80px var(--pad) 40px;
   border-top:1px solid var(--line);
-  background:var(--bg);
+  background:rgba(3,19,30,.55);
   position:relative;z-index:2;
 }
 .footer__grid{
