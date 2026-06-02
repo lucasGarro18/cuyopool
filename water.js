@@ -17,12 +17,13 @@
   // Si la página ya tiene el fondo (ej. index), no hacemos nada.
   if (document.getElementById('ripple-bg')) return;
 
-  var IMG = 'assets/lp-porcelana.jpg';   // misma foto cenital que el inicio
+  // La imagen de fondo se decide al iniciar: usamos la PORTADA de la obra
+  // (.lp-hero__img) para que esa misma foto quede FIJA con el agua encima.
 
   // ── 1) CSS del fondo ──
   var css =
     "#ripple-bg{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;z-index:0;" +
-      "background:#06222e url('" + IMG + "') center center/cover no-repeat;pointer-events:none}" +
+      "background:#06222e center center/cover no-repeat;pointer-events:none}" +
     "#water-bg{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;z-index:0;display:block;" +
       "background:#03131e;pointer-events:none;opacity:0;transition:opacity 1s ease}" +
     "#water-bg.is-ready{opacity:1}" +
@@ -83,7 +84,21 @@
   }
 
   function init() {
+    // Portada de la obra → será el fondo FIJO con agua. Si no hay, usamos la
+    // foto cenital del inicio.
+    var heroImg = document.querySelector('.lp-hero__img');
+    var IMG = (heroImg && (heroImg.currentSrc || heroImg.getAttribute('src'))) || 'assets/lp-porcelana.jpg';
+
+    // Para el respaldo Canvas 2D: que use la misma foto, completa.
+    window.POOL_WATER_PARAMS = { imageURL: IMG, uvOrigin: [0, 0], uvScale: [1, 1] };
+
     mountEls();
+    var rb = document.getElementById('ripple-bg');
+    if (rb) rb.style.backgroundImage = "url('" + IMG + "')";
+    // Ocultamos la foto que scrollea: la misma imagen ya queda FIJA detrás
+    // (con el agua), y el contenido baja por encima.
+    if (heroImg) heroImg.style.visibility = 'hidden';
+
     function go() { if (!startRipples()) fallbackCanvas(); }
     if (window.jQuery && jQuery.fn && jQuery.fn.ripples) { go(); return; }
     loadScript('https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js', function () {
