@@ -196,13 +196,17 @@ section{padding:140px var(--pad);max-width:1440px;margin:0 auto;position:relativ
   overflow:hidden;
   border-top:1px solid var(--line);
 }
-/* Imagen decorativa de sección oculta: dejamos ver el AGUA fija de fondo. */
+/* Contenido con fondo SÓLIDO: el texto va en su propio espacio y, al scrollear,
+   cubre la portada fija (no flota encima de la foto). */
+.lp-feature{
+  background:var(--bg);
+}
 .lp-feature__bg{
   display:none;
 }
 .lp-feature::after{
   content:"";position:absolute;inset:0;
-  background:linear-gradient(180deg, rgba(3,19,30,.22) 0%, rgba(3,19,30,.44) 100%);
+  background:var(--bg);
   z-index:1;pointer-events:none;
 }
 .lp-feature__inner{
@@ -257,7 +261,7 @@ section{padding:140px var(--pad);max-width:1440px;margin:0 auto;position:relativ
 .lp-cta{
   padding:140px var(--pad);text-align:center;
   border-top:1px solid var(--line);
-  background:rgba(3,19,30,.5);
+  background:var(--bg);
 }
 .lp-cta__title{
   font-family:var(--serif);font-weight:300;
@@ -271,7 +275,7 @@ section{padding:140px var(--pad);max-width:1440px;margin:0 auto;position:relativ
 .footer{
   padding:80px var(--pad) 40px;
   border-top:1px solid var(--line);
-  background:rgba(3,19,30,.62);
+  background:var(--bg);
 }
 .footer__grid{
   max-width:1440px;margin:0 auto;
