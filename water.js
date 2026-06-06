@@ -84,20 +84,16 @@
   }
 
   function init() {
-    // Portada de la obra → será el fondo FIJO con agua. Si no hay, usamos la
-    // foto cenital del inicio.
-    var heroImg = document.querySelector('.lp-hero__img');
-    var IMG = (heroImg && (heroImg.currentSrc || heroImg.getAttribute('src'))) || 'assets/lp-porcelana.jpg';
+    // AGUA GLOBAL del sitio (no la foto del hero): fondo fijo detrás de TODO.
+    // La foto del hero vive dentro del hero y scrollea/desaparece normalmente.
+    var IMG = 'assets/lp-porcelana.jpg';
 
-    // Para el respaldo Canvas 2D: que use la misma foto, completa.
+    // Para el respaldo Canvas 2D: misma imagen de agua, completa.
     window.POOL_WATER_PARAMS = { imageURL: IMG, uvOrigin: [0, 0], uvScale: [1, 1] };
 
     mountEls();
     var rb = document.getElementById('ripple-bg');
     if (rb) rb.style.backgroundImage = "url('" + IMG + "')";
-    // Ocultamos la foto que scrollea: la misma imagen ya queda FIJA detrás
-    // (con el agua), y el contenido baja por encima.
-    if (heroImg) heroImg.style.visibility = 'hidden';
 
     function go() { if (!startRipples()) fallbackCanvas(); }
     if (window.jQuery && jQuery.fn && jQuery.fn.ripples) { go(); return; }

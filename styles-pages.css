@@ -221,6 +221,7 @@ section{padding:140px var(--pad);max-width:1440px;margin:0 auto;position:relativ
 .lp-grid{
   display:grid;grid-template-columns:repeat(12,1fr);gap:1px;
   background:var(--line);border:1px solid var(--line);
+  box-shadow:0 30px 80px rgba(2,12,18,.45);border-radius:2px;overflow:hidden;
 }
 .lp-card{
   background:rgba(3,19,30,.55);
