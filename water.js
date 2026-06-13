@@ -21,16 +21,16 @@
   // (.lp-hero__img) para que esa misma foto quede FIJA con el agua encima.
 
   // ── 1) CSS del fondo ──
-  // Agua viva en el primer tramo (scrollea con la página, NO fija) + vela que
-  // cubre TODO el documento y se mueve 1:1 con el contenido.
+  // Agua ripple FIJA al viewport → presente e interactiva en toda la página.
   var css =
-    "#ripple-bg{position:absolute;top:0;left:0;width:100%;height:100vh;height:100dvh;z-index:0;" +
+    "#ripple-bg{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;z-index:0;" +
       "background:#06222e center center/cover no-repeat;pointer-events:none}" +
-    "#water-bg{position:absolute;top:0;left:0;width:100%;height:100vh;height:100dvh;z-index:0;display:block;" +
+    "#water-bg{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;z-index:0;display:block;" +
       "background:transparent;pointer-events:none;opacity:0;transition:opacity 1s ease}" +
     "#water-bg.is-ready{opacity:1}" +
-    "#bg-veil{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;" +
-      "background:linear-gradient(to bottom, rgba(2,11,17,.28) 0, rgba(2,11,17,.44) 100vh, rgba(2,11,17,.44) 100%)}";
+    "#bg-veil{position:fixed;inset:0;z-index:1;pointer-events:none;" +
+      "background:radial-gradient(ellipse at 50% 28%, rgba(2,11,17,.26) 0%, rgba(2,11,17,.50) 100%)," +
+      "linear-gradient(to bottom, rgba(2,11,17,.44) 0%, rgba(2,11,17,.40) 48%, rgba(2,11,17,.54) 100%)}";
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
   // ── 2) Elementos del fondo (al principio del body, detrás del contenido) ──
@@ -65,25 +65,31 @@
     } catch (e) { return false; }
     if (!$bg.data('ripples')) return false;
 
-    // Coords de PÁGINA (clientY + scrollY); la gota solo cuenta dentro del agua
-    // del primer tramo (alto = 1 pantalla), que scrollea con la página.
-    function heroH(){ return $bg[0] ? $bg[0].offsetHeight : window.innerHeight; }
-    function drop(x, y, s) { if (y < 0 || y > heroH()) return; try { $bg.ripples('drop', x, y, 20, s); } catch (e) {} }
+    // Agua FIJA al viewport → coords de pantalla; reacciona al cursor/dedo en
+    // cualquier sección de la página.
+    function drop(x, y, s) { try { $bg.ripples('drop', x, y, 20, s); } catch (e) {} }
     var last = 0;
     document.addEventListener('mousemove', function (e) {
-      var n = Date.now(); if (n - last < 60) return; last = n; drop(e.clientX, e.clientY + window.scrollY, 0.022);
+      var n = Date.now(); if (n - last < 60) return; last = n; drop(e.clientX, e.clientY, 0.022);
     }, { passive: true });
-    document.addEventListener('mousedown', function (e) { drop(e.clientX, e.clientY + window.scrollY, 0.03); }, { passive: true });
+    document.addEventListener('mousedown', function (e) { drop(e.clientX, e.clientY, 0.03); }, { passive: true });
     document.addEventListener('touchstart', function (e) {
-      var t = e.touches[0]; if (t) drop(t.clientX, t.clientY + window.scrollY, 0.03);
+      var t = e.touches[0]; if (t) drop(t.clientX, t.clientY, 0.03);
     }, { passive: true });
     document.addEventListener('touchmove', function (e) {
       var n = Date.now(); if (n - last < 60) return; last = n;
-      var t = e.touches[0]; if (t) drop(t.clientX, t.clientY + window.scrollY, 0.022);
+      var t = e.touches[0]; if (t) drop(t.clientX, t.clientY, 0.022);
+    }, { passive: true });
+    // Ondas al hacer scroll → el agua reacciona al movimiento de la página.
+    var lastScroll = 0, lastSY = window.scrollY;
+    document.addEventListener('scroll', function () {
+      var n = Date.now(); if (n - lastScroll < 90) return; lastScroll = n;
+      var dy = Math.abs(window.scrollY - lastSY); lastSY = window.scrollY;
+      if (dy < 2) return;
+      drop(Math.random() * window.innerWidth, window.innerHeight * (0.2 + Math.random() * 0.6), Math.min(0.03, 0.012 + dy * 0.00025));
     }, { passive: true });
     setInterval(function () {
-      if (window.scrollY > heroH()) return;
-      drop(Math.random() * window.innerWidth, Math.random() * heroH(), 0.022);
+      drop(Math.random() * window.innerWidth, Math.random() * window.innerHeight, 0.02);
     }, 5200);
     return true;
   }

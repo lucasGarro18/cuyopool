@@ -100,45 +100,10 @@
      en un contenedor de scroll independiente (provoca que window.scrollY
      siempre sea 0 y rompe el side rail + cualquier scrollspy). */
   html{overflow-x:clip}
-  body{min-height:100vh;font-family:var(--sans);color:var(--ink);
-       /* Fondo de AGUA que scrollea 1:1 con el contenido (no fijo).
-          El hero lleva encima el agua viva (jquery.ripples); el resto de la
-          página queda sobre este degradado de pileta profunda que se mueve
-          junto con el scroll. */
-       background:#03131e;
-       background-image:linear-gradient(180deg,
-         #0a3343 0%, #072835 24%, #05212d 56%, #041a26 84%, #03131e 100%);
+  body{min-height:100vh;font-family:var(--sans);color:var(--ink);background:var(--bg);
        -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
        font-weight:300;
        position:relative}
-  /* ── Caustics de agua ANIMADOS en TODA la página (scrollean con el contenido).
-     Dos campos de manchas de luz que derivan en sentidos opuestos → refracción
-     submarina orgánica (sin grilla). Compositing por GPU, liviano en mobile. ── */
-  body::before, body::after{
-    content:"";position:absolute;top:-8%;left:-8%;width:116%;height:116%;
-    z-index:0;pointer-events:none;will-change:transform;
-  }
-  body::before{
-    background-image:radial-gradient(circle at 34% 36%, rgba(140,228,238,.16) 0, transparent 46%);
-    background-size:215px 165px;background-repeat:repeat;
-    animation:causticsA 24s ease-in-out infinite alternate;
-  }
-  body::after{
-    background-image:radial-gradient(circle at 66% 60%, rgba(112,204,228,.12) 0, transparent 44%);
-    background-size:170px 205px;background-repeat:repeat;
-    animation:causticsB 31s ease-in-out infinite alternate;
-  }
-  @keyframes causticsA{
-    from{transform:translate3d(-2.4%,-1.6%,0)}
-    to{transform:translate3d(2.4%,1.8%,0)}
-  }
-  @keyframes causticsB{
-    from{transform:translate3d(2.2%,1.4%,0)}
-    to{transform:translate3d(-2.2%,-1.8%,0)}
-  }
-  @media (prefers-reduced-motion: reduce){
-    body::before, body::after{animation:none}
-  }
   a{color:inherit;text-decoration:none}
   button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   img{max-width:100%;display:block}
@@ -165,9 +130,9 @@
      Recibe los eventos del puntero para generar ondas (el contenido de arriba
      lleva pointer-events:none para que los clics "atraviesen" hasta el agua). */
   #ripple-bg{
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%;
+    position: fixed;
+    inset: 0;
+    width: 100vw;
     height: 100vh;
     height: 100dvh;
     z-index: 0;
@@ -176,9 +141,9 @@
   }
   /* Respaldo: canvas procedural (solo si el dispositivo no soporta ripples). */
   #water-bg{
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%;
+    position: fixed;
+    inset: 0;
+    width: 100vw;
     height: 100vh;
     height: 100dvh;
     z-index: 0;
@@ -189,21 +154,16 @@
     transition: opacity 1s ease;
   }
   #water-bg.is-ready{ opacity: 1; }
-  /* Velo sutil para legibilidad del texto sobre el agua. */
-  /* Velo más profundo y cinematográfico: el agua queda como telón de fondo
-     atenuado (iluminación suave), y el texto/imágenes ganan protagonismo. */
+  /* Velo para legibilidad del texto sobre el agua (fijo, cubre el viewport en
+     cualquier posición de scroll). Suave para lucir el agua, suficiente para leer. */
   #bg-veil{
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
+    position: fixed;
+    inset: 0;
     z-index: 1;
     pointer-events: none;
-    /* Vela que cubre TODA la página (scrollea con el contenido):
-       suave en el hero para lucir el agua, uniforme y legible más abajo. */
     background:
-      linear-gradient(to bottom,
-        rgba(2,11,17,.28) 0,
-        rgba(2,11,17,.44) 100vh,
-        rgba(2,11,17,.44) 100%);
+      radial-gradient(ellipse at 50% 28%, rgba(2,11,17,.26) 0%, rgba(2,11,17,.50) 100%),
+      linear-gradient(to bottom, rgba(2,11,17,.44) 0%, rgba(2,11,17,.40) 48%, rgba(2,11,17,.54) 100%);
   }
 
   /* Las ondas del agua se alimentan desde listeners pasivos a nivel documento
@@ -1452,32 +1412,39 @@
 
     // Ondas alimentadas desde el DOCUMENTO (pasivo) → reacciona al dedo/cursor
     // en cualquier parte sin robar el evento, así el scroll del celu sigue OK.
-    // El agua viva vive en el hero (absoluto, alto = 1 pantalla) y SCROLLEA con
-    // la página. Las coordenadas de la gota son de PÁGINA (clientY + scrollY) y
-    // solo cuentan si caen dentro del agua del hero → sin artefactos al bajar.
-    function heroH(){ return $bg[0] ? $bg[0].offsetHeight : window.innerHeight; }
+    // El agua es FIJA al viewport → coordenadas de pantalla (clientX/clientY).
+    // Reacciona al cursor/dedo en CUALQUIER sección de la página.
     function drop(cx, cy, strength) {
-      if (cy < 0 || cy > heroH()) return;
       try { $bg.ripples('drop', cx, cy, 20, strength); } catch (e) {}
     }
     var lastMove = 0;
     document.addEventListener('mousemove', function (e) {
       var now = Date.now(); if (now - lastMove < 60) return; lastMove = now;
-      drop(e.clientX, e.clientY + window.scrollY, 0.022);
+      drop(e.clientX, e.clientY, 0.022);
     }, { passive: true });
-    document.addEventListener('mousedown', function (e) { drop(e.clientX, e.clientY + window.scrollY, 0.03); }, { passive: true });
+    document.addEventListener('mousedown', function (e) { drop(e.clientX, e.clientY, 0.03); }, { passive: true });
     document.addEventListener('touchstart', function (e) {
-      var t = e.touches[0]; if (t) drop(t.clientX, t.clientY + window.scrollY, 0.03);
+      var t = e.touches[0]; if (t) drop(t.clientX, t.clientY, 0.03);
     }, { passive: true });
     document.addEventListener('touchmove', function (e) {
       var now = Date.now(); if (now - lastMove < 60) return; lastMove = now;
-      var t = e.touches[0]; if (t) drop(t.clientX, t.clientY + window.scrollY, 0.022);
+      var t = e.touches[0]; if (t) drop(t.clientX, t.clientY, 0.022);
     }, { passive: true });
 
-    // Gotas ambientales muy suaves (solo cuando el hero está a la vista).
+    // Ondas al hacer SCROLL → el agua reacciona al movimiento de la página
+    // (se siente conectada al scroll aunque el fondo sea fijo).
+    var lastScroll = 0, lastScrollY = window.scrollY;
+    document.addEventListener('scroll', function () {
+      var now = Date.now(); if (now - lastScroll < 90) return; lastScroll = now;
+      var dy = Math.abs(window.scrollY - lastScrollY); lastScrollY = window.scrollY;
+      if (dy < 2) return;
+      var s = Math.min(0.03, 0.012 + dy * 0.00025);
+      drop(Math.random() * window.innerWidth, window.innerHeight * (0.2 + Math.random() * 0.6), s);
+    }, { passive: true });
+
+    // Gotas ambientales muy suaves y espaciadas.
     setInterval(function () {
-      if (window.scrollY > heroH()) return;
-      drop(Math.random() * window.innerWidth, Math.random() * heroH(), 0.022);
+      drop(Math.random() * window.innerWidth, Math.random() * window.innerHeight, 0.02);
     }, 5200);
     return true;
   }
