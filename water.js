@@ -21,15 +21,16 @@
   // (.lp-hero__img) para que esa misma foto quede FIJA con el agua encima.
 
   // ── 1) CSS del fondo ──
+  // Agua viva en el primer tramo (scrollea con la página, NO fija) + vela que
+  // cubre TODO el documento y se mueve 1:1 con el contenido.
   var css =
-    "#ripple-bg{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;z-index:0;" +
+    "#ripple-bg{position:absolute;top:0;left:0;width:100%;height:100vh;height:100dvh;z-index:0;" +
       "background:#06222e center center/cover no-repeat;pointer-events:none}" +
-    "#water-bg{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;z-index:0;display:block;" +
-      "background:#03131e;pointer-events:none;opacity:0;transition:opacity 1s ease}" +
+    "#water-bg{position:absolute;top:0;left:0;width:100%;height:100vh;height:100dvh;z-index:0;display:block;" +
+      "background:transparent;pointer-events:none;opacity:0;transition:opacity 1s ease}" +
     "#water-bg.is-ready{opacity:1}" +
-    "#bg-veil{position:fixed;inset:0;z-index:1;pointer-events:none;" +
-      "background:radial-gradient(ellipse at 50% 26%, rgba(2,11,17,.30) 0%, rgba(2,11,17,.66) 100%)," +
-      "linear-gradient(to bottom, rgba(2,11,17,.66) 0%, rgba(2,11,17,.42) 26%, rgba(2,11,17,.48) 72%, rgba(2,11,17,.72) 100%)}";
+    "#bg-veil{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;" +
+      "background:linear-gradient(to bottom, rgba(2,11,17,.30) 0, rgba(2,11,17,.55) 100vh, rgba(2,11,17,.55) 100%)}";
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
   // ── 2) Elementos del fondo (al principio del body, detrás del contenido) ──
@@ -64,21 +65,25 @@
     } catch (e) { return false; }
     if (!$bg.data('ripples')) return false;
 
-    function drop(x, y, s) { try { $bg.ripples('drop', x, y, 20, s); } catch (e) {} }
+    // Coords de PÁGINA (clientY + scrollY); la gota solo cuenta dentro del agua
+    // del primer tramo (alto = 1 pantalla), que scrollea con la página.
+    function heroH(){ return $bg[0] ? $bg[0].offsetHeight : window.innerHeight; }
+    function drop(x, y, s) { if (y < 0 || y > heroH()) return; try { $bg.ripples('drop', x, y, 20, s); } catch (e) {} }
     var last = 0;
     document.addEventListener('mousemove', function (e) {
-      var n = Date.now(); if (n - last < 60) return; last = n; drop(e.clientX, e.clientY, 0.022);
+      var n = Date.now(); if (n - last < 60) return; last = n; drop(e.clientX, e.clientY + window.scrollY, 0.022);
     }, { passive: true });
-    document.addEventListener('mousedown', function (e) { drop(e.clientX, e.clientY, 0.03); }, { passive: true });
+    document.addEventListener('mousedown', function (e) { drop(e.clientX, e.clientY + window.scrollY, 0.03); }, { passive: true });
     document.addEventListener('touchstart', function (e) {
-      var t = e.touches[0]; if (t) drop(t.clientX, t.clientY, 0.03);
+      var t = e.touches[0]; if (t) drop(t.clientX, t.clientY + window.scrollY, 0.03);
     }, { passive: true });
     document.addEventListener('touchmove', function (e) {
       var n = Date.now(); if (n - last < 60) return; last = n;
-      var t = e.touches[0]; if (t) drop(t.clientX, t.clientY, 0.022);
+      var t = e.touches[0]; if (t) drop(t.clientX, t.clientY + window.scrollY, 0.022);
     }, { passive: true });
     setInterval(function () {
-      drop(Math.random() * window.innerWidth, Math.random() * window.innerHeight, 0.022);
+      if (window.scrollY > heroH()) return;
+      drop(Math.random() * window.innerWidth, Math.random() * heroH(), 0.022);
     }, 5200);
     return true;
   }
