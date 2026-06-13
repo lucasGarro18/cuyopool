@@ -5,6 +5,62 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <title>Cuyo Pool — Piscinas de autor | por Piscinas Cuyo · Mendoza · San Juan · San Luis</title>
 <meta name="description" content="Cuyo Pool: diseño y construcción de piscinas premium de autor en Mendoza, San Juan y San Luis. La marca de autor de Piscinas Cuyo — más de mil obras y treinta años de trayectoria." />
+<meta name="author" content="Piscinas Cuyo" />
+<meta name="robots" content="index,follow,max-image-preview:large" />
+<meta name="theme-color" content="#03131e" />
+<meta name="geo.region" content="AR-M" />
+<meta name="geo.placename" content="Mendoza, San Juan, San Luis" />
+<link rel="canonical" href="https://lucasgarro18.github.io/cuyopool/" />
+
+<!-- Open Graph (Facebook / WhatsApp / LinkedIn) -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Cuyo Pool" />
+<meta property="og:locale" content="es_AR" />
+<meta property="og:title" content="Cuyo Pool — Piscinas de autor en Mendoza, San Juan y San Luis" />
+<meta property="og:description" content="Diseño y construcción de piscinas premium de autor. La marca de autor de Piscinas Cuyo — más de mil obras y treinta años de trayectoria." />
+<meta property="og:url" content="https://lucasgarro18.github.io/cuyopool/" />
+<meta property="og:image" content="https://lucasgarro18.github.io/cuyopool/assets/obra-semiolimpica-sanrafael-2.jpg" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="1200" />
+<meta property="og:image:alt" content="Piscina semiolímpica de autor en San Rafael, Mendoza, construida por Cuyo Pool" />
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Cuyo Pool — Piscinas de autor en Cuyo" />
+<meta name="twitter:description" content="Diseño y construcción de piscinas premium en Mendoza, San Juan y San Luis. Más de mil obras desde 1995." />
+<meta name="twitter:image" content="https://lucasgarro18.github.io/cuyopool/assets/obra-semiolimpica-sanrafael-2.jpg" />
+
+<!-- Datos estructurados — negocio local (Google) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": ["LocalBusiness", "GeneralContractor"],
+  "name": "Cuyo Pool",
+  "alternateName": "Piscinas Cuyo",
+  "description": "Diseño y construcción de piscinas premium de autor en Mendoza, San Juan y San Luis. Más de mil obras y treinta años de trayectoria.",
+  "url": "https://lucasgarro18.github.io/cuyopool/",
+  "image": "https://lucasgarro18.github.io/cuyopool/assets/obra-semiolimpica-sanrafael-2.jpg",
+  "logo": "https://lucasgarro18.github.io/cuyopool/assets/logo.svg",
+  "foundingDate": "1995",
+  "email": "cuyopiscinas@gmail.com",
+  "telephone": "+54 9 264 544 1838",
+  "priceRange": "$$$",
+  "address": { "@type": "PostalAddress", "addressRegion": "Mendoza", "addressCountry": "AR" },
+  "areaServed": [
+    { "@type": "State", "name": "Mendoza" },
+    { "@type": "State", "name": "San Juan" },
+    { "@type": "State", "name": "San Luis" }
+  ],
+  "sameAs": [
+    "https://www.instagram.com/piscinascuyo",
+    "https://www.facebook.com/piscinascuyooficial"
+  ],
+  "contactPoint": [
+    { "@type": "ContactPoint", "contactType": "sales", "name": "Lucas Garro — San Juan", "telephone": "+54 9 264 544 1838", "areaServed": "AR", "availableLanguage": "Spanish" },
+    { "@type": "ContactPoint", "contactType": "sales", "name": "Lucas Garro — Mendoza", "telephone": "+54 9 261 557 4180", "areaServed": "AR", "availableLanguage": "Spanish" }
+  ]
+}
+</script>
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -518,9 +574,18 @@
       repeating-linear-gradient(0deg, rgba(207,233,232,.04) 0 1px, transparent 1px 28px),
       repeating-linear-gradient(90deg, rgba(207,233,232,.04) 0 1px, transparent 1px 28px);
     pointer-events:none}
-  .obra__media::after{content:"";position:absolute;inset:0;
+  .obra__media::after{content:"";position:absolute;inset:0;z-index:1;
     background:radial-gradient(ellipse 80% 60% at 50% 65%, rgba(207,233,232,.15) 0%, transparent 70%);
     pointer-events:none}
+  .obra__media::before{z-index:1}
+  /* Foto de obra (placeholder temporal — reemplazar por foto real) */
+  .obra__img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;
+             transition:transform .9s cubic-bezier(.2,.7,.2,1);filter:saturate(1.03) contrast(1.02)}
+  .obra:hover .obra__img{transform:scale(1.045)}
+  .obra__media.has-img{background:#06222e}
+  .obra__media.has-img::after{
+    background:linear-gradient(to top, rgba(2,12,18,.86) 0%, rgba(2,12,18,.22) 46%, rgba(2,12,18,0) 72%),
+               linear-gradient(to bottom, rgba(2,12,18,.50) 0%, rgba(2,12,18,0) 30%)}
   .obra__badge{position:absolute;top:18px;left:18px;
               font-size:9.5px;letter-spacing:.36em;text-transform:uppercase;color:var(--accent-warm);
               display:inline-flex;align-items:center;gap:8px;z-index:2}
@@ -589,6 +654,12 @@
   .agent__name{font-family:var(--serif);font-weight:300;font-size:40px;line-height:1;letter-spacing:-.01em;font-style:italic}
   .agent__phone{font-size:22px;color:var(--ink);font-family:var(--serif);font-weight:300;letter-spacing:.01em;margin-top:6px}
   .agent__mail{font-size:13px;color:var(--ink-dim)}
+  /* Dos números (San Juan + Mendoza) para el contacto principal */
+  .agent__lines{display:flex;flex-direction:column;gap:10px;margin-top:2px}
+  .agent__line{display:flex;align-items:baseline;gap:12px;transition:color .25s}
+  .agent__line:hover .agent__num{color:var(--accent)}
+  .agent__loc{flex:0 0 auto;min-width:74px;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--accent-warm)}
+  .agent__num{font-size:22px;color:var(--ink);font-family:var(--serif);font-weight:300;letter-spacing:.01em;transition:color .25s}
   .agent__cta{margin-top:16px;align-self:flex-start;display:inline-flex;align-items:center;gap:10px;
               padding:13px 22px;border:1px solid var(--accent);color:var(--accent);
               font-size:11px;letter-spacing:.22em;text-transform:uppercase;border-radius:999px;
@@ -1095,22 +1166,22 @@
         </div>
       </header>
       <div class="obras__rail reveal">
-        <article class="obra"><div class="obra__media"><span class="obra__badge">San Rafael</span><span class="obra__id">N° 01 — 2025</span></div>
+        <article class="obra"><div class="obra__media has-img"><img class="obra__img" src="assets/gallery/px-aerial.jpg" alt="Piscina semiolímpica con carriles, vista aérea" loading="lazy" /><span class="obra__badge">San Rafael</span><span class="obra__id">N° 01 — 2025</span></div>
           <h3 class="obra__name">Camping <em>Luz y Fuerza</em></h3>
           <div class="obra__meta"><span>Semiolímpica · símil venecita</span><span>25 × 15 m</span></div></article>
-        <article class="obra"><div class="obra__media"><span class="obra__badge">Las Heras</span><span class="obra__id">N° 02 — 2025</span></div>
+        <article class="obra"><div class="obra__media has-img"><img class="obra__img" src="assets/gallery/px-villa-luxury.jpg" alt="Piscina residencial con deck símil madera y muro de piedra" loading="lazy" /><span class="obra__badge">Las Heras</span><span class="obra__id">N° 02 — 2025</span></div>
           <h3 class="obra__name">Villa <em>Cordón</em></h3>
           <div class="obra__meta"><span>Muro de agua</span><span>14 × 1.6 m</span></div></article>
-        <article class="obra"><div class="obra__media"><span class="obra__badge">Manzano Histórico</span><span class="obra__id">N° 03 — 2025</span></div>
+        <article class="obra"><div class="obra__media has-img"><img class="obra__img" src="assets/gallery/px-classic.jpg" alt="Piscina íntima rodeada de vegetación con escalones" loading="lazy" /><span class="obra__badge">Manzano Histórico</span><span class="obra__id">N° 03 — 2025</span></div>
           <h3 class="obra__name">Refugio <em>Manzano</em></h3>
           <div class="obra__meta"><span>Espejo + cascada</span><span>9 × 6 m</span></div></article>
-        <article class="obra"><div class="obra__media"><span class="obra__badge">Chacras de Coria</span><span class="obra__id">N° 04 — 2024</span></div>
+        <article class="obra"><div class="obra__media has-img"><img class="obra__img" src="assets/gallery/px-modern-house.jpg" alt="Piscina familiar rectangular con deck de madera y casa moderna" loading="lazy" /><span class="obra__badge">Chacras de Coria</span><span class="obra__id">N° 04 — 2024</span></div>
           <h3 class="obra__name">Casa <em>Roldán</em></h3>
           <div class="obra__meta"><span>Familiar libre</span><span>16 × 7 m</span></div></article>
-        <article class="obra"><div class="obra__media"><span class="obra__badge">Potrerillos</span><span class="obra__id">N° 05 — 2024</span></div>
+        <article class="obra"><div class="obra__media has-img"><img class="obra__img" src="assets/gallery/px-villa-infinity.jpg" alt="Piscina con desborde infinito y vista a la montaña" loading="lazy" /><span class="obra__badge">Potrerillos</span><span class="obra__id">N° 05 — 2024</span></div>
           <h3 class="obra__name">Bodega <em>Altamira</em></h3>
           <div class="obra__meta"><span>Lap pool</span><span>25 m</span></div></article>
-        <article class="obra"><div class="obra__media"><span class="obra__badge">San Juan</span><span class="obra__id">N° 06 — 2024</span></div>
+        <article class="obra"><div class="obra__media has-img"><img class="obra__img" src="assets/gallery/px-sunset-seaview.jpg" alt="Piscina de hotel con reposeras y vista panorámica al atardecer" loading="lazy" /><span class="obra__badge">San Juan</span><span class="obra__id">N° 06 — 2024</span></div>
           <h3 class="obra__name">Hotel <em>Vista Andes</em></h3>
           <div class="obra__meta"><span>Atelier</span><span>32 × 8 m</span></div></article>
       </div>
@@ -1206,8 +1277,17 @@
         <div class="agent reveal">
           <span class="agent__role">Ventas · Asesoramiento</span>
           <h3 class="agent__name">Lucas Garro</h3>
-          <p class="agent__phone">+54 9 261 557 4180</p>
-          <a class="agent__cta" href="https://wa.me/5492615574180" target="_blank" rel="noopener" data-magnetic="0.24">
+          <div class="agent__lines">
+            <a class="agent__line" href="https://wa.me/5492645441838" target="_blank" rel="noopener" aria-label="WhatsApp Lucas Garro San Juan">
+              <span class="agent__loc">San Juan</span>
+              <span class="agent__num">+54 9 264 544 1838</span>
+            </a>
+            <a class="agent__line" href="https://wa.me/5492615574180" target="_blank" rel="noopener" aria-label="WhatsApp Lucas Garro Mendoza">
+              <span class="agent__loc">Mendoza</span>
+              <span class="agent__num">+54 9 261 557 4180</span>
+            </a>
+          </div>
+          <a class="agent__cta" href="https://wa.me/5492645441838" target="_blank" rel="noopener" data-magnetic="0.24">
             Escribir a Lucas
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 7h10M8 3l4 4-4 4"/></svg>
           </a>
@@ -1237,8 +1317,9 @@
         <p>Atención todo el año</p></div>
       <div class="foot__col"><h5>Contacto</h5>
         <a href="mailto:cuyopiscinas@gmail.com">cuyopiscinas@gmail.com</a>
-        <a href="tel:+5492615574180">+54 9 261 557 4180</a>
-        <a href="tel:+5492613446651">+54 9 261 344 6651</a></div>
+        <a href="tel:+5492645441838">Lucas · San Juan · +54 9 264 544 1838</a>
+        <a href="tel:+5492615574180">Lucas · Mendoza · +54 9 261 557 4180</a>
+        <a href="tel:+5492613446651">Ariel · +54 9 261 344 6651</a></div>
       <div class="foot__col"><h5>Seguinos</h5>
         <a href="https://www.instagram.com/piscinascuyo" target="_blank" rel="noopener">Instagram</a>
         <a href="https://www.facebook.com/piscinascuyooficial" target="_blank" rel="noopener">Facebook</a>
@@ -1249,6 +1330,53 @@
       <span>Calidad y compromiso, nuestra mejor garantía</span>
     </div>
   </footer>
+
+  <!-- WhatsApp flotante — elegí número (San Juan / Mendoza) -->
+  <style>
+    .wa-dock{position:fixed;bottom:28px;right:28px;z-index:50;
+      display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+    .wa-float{width:60px;height:60px;border-radius:50%;background:#25d366;
+      display:flex;align-items:center;justify-content:center;cursor:pointer;
+      box-shadow:0 8px 24px rgba(37,211,102,.45);transition:transform .3s, box-shadow .3s;
+      animation:waPulse 2.5s ease-in-out infinite}
+    .wa-float:hover{transform:scale(1.08);
+      box-shadow:0 12px 32px rgba(37,211,102,.6), 0 0 0 12px rgba(37,211,102,0)}
+    .wa-float svg{width:32px;height:32px;fill:#fff}
+    @keyframes waPulse{
+      0%,100%{box-shadow:0 8px 24px rgba(37,211,102,.45), 0 0 0 0 rgba(37,211,102,.5)}
+      50%{box-shadow:0 8px 24px rgba(37,211,102,.45), 0 0 0 14px rgba(37,211,102,0)}}
+    .wa-dock__switch{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+    .wa-dock__options{display:flex;flex-direction:column;align-items:flex-end;gap:10px;
+      opacity:0;transform:translateY(10px) scale(.96);transform-origin:bottom right;pointer-events:none;
+      transition:opacity .28s ease, transform .28s cubic-bezier(.2,.7,.2,1)}
+    .wa-dock:hover .wa-dock__options,
+    .wa-dock:focus-within .wa-dock__options,
+    .wa-dock__switch:checked ~ .wa-dock__options{opacity:1;transform:none;pointer-events:auto}
+    .wa-dock__opt{display:inline-flex;align-items:center;gap:10px;
+      background:rgba(8,30,36,.86);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+      border:1px solid rgba(37,211,102,.55);border-radius:999px;padding:9px 15px;
+      color:#eafff4;font-family:'Inter Tight',system-ui,sans-serif;font-size:12.5px;letter-spacing:.02em;
+      white-space:nowrap;box-shadow:0 10px 26px rgba(0,0,0,.4);
+      transition:background .25s,color .25s,transform .25s}
+    .wa-dock__opt:hover{background:#25d366;color:#06251c;transform:translateX(-3px)}
+    .wa-dock__opt svg{width:18px;height:18px;fill:currentColor;flex:0 0 auto}
+  </style>
+  <div class="wa-dock">
+    <input type="checkbox" id="wa-switch" class="wa-dock__switch" aria-label="Mostrar números de WhatsApp" />
+    <div class="wa-dock__options" role="menu" aria-label="Elegí número de WhatsApp">
+      <a class="wa-dock__opt" href="https://wa.me/5492645441838?text=Hola%2C%20quiero%20una%20consulta%20sobre%20mi%20piscina" target="_blank" rel="noopener" role="menuitem">
+        <span class="wa-dock__lbl">Lucas · San&nbsp;Juan</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.85.47 3.65 1.36 5.24L2 22l4.95-1.3c1.55.84 3.3 1.28 5.09 1.28h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.825 9.825 0 0 0 12.04 2zm4.52 12.13c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.38-1.72-.14-.25-.02-.39.11-.51.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.86.84-.86 2.05 0 1.21.88 2.38 1.01 2.55.12.17 1.74 2.66 4.22 3.73.59.25 1.05.41 1.41.52.59.19 1.13.16 1.56.1.47-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.11-.23-.18-.48-.31z"/></svg>
+      </a>
+      <a class="wa-dock__opt" href="https://wa.me/5492615574180?text=Hola%2C%20quiero%20una%20consulta%20sobre%20mi%20piscina" target="_blank" rel="noopener" role="menuitem">
+        <span class="wa-dock__lbl">Lucas · Mendoza</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.85.47 3.65 1.36 5.24L2 22l4.95-1.3c1.55.84 3.3 1.28 5.09 1.28h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.825 9.825 0 0 0 12.04 2zm4.52 12.13c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.38-1.72-.14-.25-.02-.39.11-.51.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.86.84-.86 2.05 0 1.21.88 2.38 1.01 2.55.12.17 1.74 2.66 4.22 3.73.59.25 1.05.41 1.41.52.59.19 1.13.16 1.56.1.47-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.11-.23-.18-.48-.31z"/></svg>
+      </a>
+    </div>
+    <label for="wa-switch" class="wa-float" aria-label="WhatsApp — elegí número">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.85.47 3.65 1.36 5.24L2 22l4.95-1.3c1.55.84 3.3 1.28 5.09 1.28h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.825 9.825 0 0 0 12.04 2zm4.52 12.13c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.38-1.72-.14-.25-.02-.39.11-.51.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.86.84-.86 2.05 0 1.21.88 2.38 1.01 2.55.12.17 1.74 2.66 4.22 3.73.59.25 1.05.41 1.41.52.59.19 1.13.16 1.56.1.47-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.11-.23-.18-.48-.31z"/></svg>
+    </label>
+  </div>
 
 <!-- ── Agua HIPERREALISTA: jQuery + jquery.ripples (CDN) ── -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -1290,8 +1418,8 @@
     }
     var lastMove = 0;
     document.addEventListener('mousemove', function (e) {
-      var now = Date.now(); if (now - lastMove < 70) return; lastMove = now;
-      drop(e.clientX, e.clientY, 0.018);
+      var now = Date.now(); if (now - lastMove < 60) return; lastMove = now;
+      drop(e.clientX, e.clientY, 0.022);
     }, { passive: true });
     document.addEventListener('mousedown', function (e) { drop(e.clientX, e.clientY, 0.03); }, { passive: true });
     document.addEventListener('touchstart', function (e) {
@@ -1310,6 +1438,8 @@
   }
 
   function init() {
+    // Respeta prefers-reduced-motion: dejamos el fondo (foto de pileta) estático.
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (!startRipples()) fallbackToCanvas();
   }
 

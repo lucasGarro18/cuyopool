@@ -67,7 +67,7 @@
     function drop(x, y, s) { try { $bg.ripples('drop', x, y, 20, s); } catch (e) {} }
     var last = 0;
     document.addEventListener('mousemove', function (e) {
-      var n = Date.now(); if (n - last < 70) return; last = n; drop(e.clientX, e.clientY, 0.018);
+      var n = Date.now(); if (n - last < 60) return; last = n; drop(e.clientX, e.clientY, 0.022);
     }, { passive: true });
     document.addEventListener('mousedown', function (e) { drop(e.clientX, e.clientY, 0.03); }, { passive: true });
     document.addEventListener('touchstart', function (e) {
@@ -94,6 +94,9 @@
     mountEls();
     var rb = document.getElementById('ripple-bg');
     if (rb) rb.style.backgroundImage = "url('" + IMG + "')";
+
+    // Respeta prefers-reduced-motion: el fondo (foto) queda fijo, sin agua animada.
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     function go() { if (!startRipples()) fallbackCanvas(); }
     if (window.jQuery && jQuery.fn && jQuery.fn.ripples) { go(); return; }

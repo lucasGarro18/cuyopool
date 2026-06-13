@@ -322,3 +322,23 @@ section{padding:140px var(--pad);max-width:1440px;margin:0 auto;position:relativ
   0%,100%{box-shadow:0 8px 24px rgba(37,211,102,.45), 0 0 0 0 rgba(37,211,102,.5)}
   50%{box-shadow:0 8px 24px rgba(37,211,102,.45), 0 0 0 14px rgba(37,211,102,0)}
 }
+
+/* ── WhatsApp dock: selector San Juan / Mendoza ── */
+.wa-dock{position:fixed;bottom:28px;right:28px;z-index:50;
+  display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+.wa-dock .wa-float{position:static;cursor:pointer}
+.wa-dock__switch{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.wa-dock__options{display:flex;flex-direction:column;align-items:flex-end;gap:10px;
+  opacity:0;transform:translateY(10px) scale(.96);transform-origin:bottom right;pointer-events:none;
+  transition:opacity .28s ease, transform .28s cubic-bezier(.2,.7,.2,1)}
+.wa-dock:hover .wa-dock__options,
+.wa-dock:focus-within .wa-dock__options,
+.wa-dock__switch:checked ~ .wa-dock__options{opacity:1;transform:none;pointer-events:auto}
+.wa-dock__opt{display:inline-flex;align-items:center;gap:10px;
+  background:rgba(8,30,36,.82);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  border:1px solid rgba(37,211,102,.55);border-radius:999px;padding:9px 15px;
+  color:#eafff4;font-family:'Inter Tight',system-ui,sans-serif;font-size:12.5px;letter-spacing:.02em;
+  white-space:nowrap;box-shadow:0 10px 26px rgba(0,0,0,.4);
+  transition:background .25s,color .25s,transform .25s}
+.wa-dock__opt:hover{background:#25d366;color:#06251c;transform:translateX(-3px)}
+.wa-dock__opt svg{width:18px;height:18px;fill:currentColor;flex:0 0 auto}
