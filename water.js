@@ -30,7 +30,7 @@
       "background:transparent;pointer-events:none;opacity:0;transition:opacity 1s ease}" +
     "#water-bg.is-ready{opacity:1}" +
     "#bg-veil{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;" +
-      "background:linear-gradient(to bottom, rgba(2,11,17,.30) 0, rgba(2,11,17,.55) 100vh, rgba(2,11,17,.55) 100%)}";
+      "background:linear-gradient(to bottom, rgba(2,11,17,.28) 0, rgba(2,11,17,.44) 100vh, rgba(2,11,17,.44) 100%)}";
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
   // ── 2) Elementos del fondo (al principio del body, detrás del contenido) ──
