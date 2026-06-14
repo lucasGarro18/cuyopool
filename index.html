@@ -136,7 +136,11 @@
     height: 100vh;
     height: 100dvh;
     z-index: 0;
-    background: #06222e url('assets/lp-porcelana.jpg') center center / cover no-repeat;
+    /* Agua ANIMADA de fondo (toda la página): superficie de pileta abstracta,
+       NO la foto del deck (esa es la portada del hero). Oscurecida para que el
+       texto se lea sobre ella. */
+    background: #05202b url('assets/water-surface.jpg') center center / cover no-repeat;
+    filter: brightness(.62) saturate(1.08);
     pointer-events: none;
   }
   /* Respaldo: canvas procedural (solo si el dispositivo no soporta ripples). */
@@ -287,7 +291,12 @@
 
   /* ── Hero ── */
   .hero{min-height:100vh;padding:140px var(--pad) 96px;
-        display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+        display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;
+        position:relative;
+        /* PORTADA: la foto de la pileta vive SOLO en el hero y scrollea/se va al
+           bajar. Detrás (fijo, toda la página) queda el agua animada. */
+        background:linear-gradient(180deg, rgba(3,16,24,.32) 0%, rgba(3,16,24,.30) 45%, rgba(3,16,24,.58) 100%),
+                   url('assets/lp-porcelana.jpg') center center / cover no-repeat}
   .hero__panel{display:flex;flex-direction:column;align-items:center;
                padding:54px clamp(28px,5vw,72px) 60px;max-width:780px;
                box-shadow:0 30px 90px rgba(2,12,18,.35)}

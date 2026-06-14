@@ -24,7 +24,7 @@
   // Agua ripple FIJA al viewport → presente e interactiva en toda la página.
   var css =
     "#ripple-bg{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;z-index:0;" +
-      "background:#06222e center center/cover no-repeat;pointer-events:none}" +
+      "background:#05202b center center/cover no-repeat;filter:brightness(.62) saturate(1.08);pointer-events:none}" +
     "#water-bg{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;z-index:0;display:block;" +
       "background:transparent;pointer-events:none;opacity:0;transition:opacity 1s ease}" +
     "#water-bg.is-ready{opacity:1}" +
@@ -97,7 +97,7 @@
   function init() {
     // AGUA GLOBAL del sitio (no la foto del hero): fondo fijo detrás de TODO.
     // La foto del hero vive dentro del hero y scrollea/desaparece normalmente.
-    var IMG = 'assets/lp-porcelana.jpg';
+    var IMG = 'assets/water-surface.jpg';
 
     // Para el respaldo Canvas 2D: misma imagen de agua, completa.
     window.POOL_WATER_PARAMS = { imageURL: IMG, uvOrigin: [0, 0], uvScale: [1, 1] };
