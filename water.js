@@ -24,13 +24,13 @@
   // Agua ripple FIJA al viewport → presente e interactiva en toda la página.
   var css =
     "#ripple-bg{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;z-index:0;" +
-      "background:#05202b center center/cover no-repeat;filter:brightness(.62) saturate(1.08);pointer-events:none}" +
+      "background:#0a3a4c center center/cover no-repeat;pointer-events:none}" +
     "#water-bg{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;z-index:0;display:block;" +
       "background:transparent;pointer-events:none;opacity:0;transition:opacity 1s ease}" +
     "#water-bg.is-ready{opacity:1}" +
     "#bg-veil{position:fixed;inset:0;z-index:1;pointer-events:none;" +
-      "background:radial-gradient(ellipse at 50% 28%, rgba(2,11,17,.26) 0%, rgba(2,11,17,.50) 100%)," +
-      "linear-gradient(to bottom, rgba(2,11,17,.44) 0%, rgba(2,11,17,.40) 48%, rgba(2,11,17,.54) 100%)}";
+      "background:radial-gradient(ellipse at 50% 26%, rgba(2,11,17,.34) 0%, rgba(2,11,17,.60) 100%)," +
+      "linear-gradient(to bottom, rgba(2,11,17,.56) 0%, rgba(2,11,17,.50) 48%, rgba(2,11,17,.64) 100%)}";
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
   // ── 2) Elementos del fondo (al principio del body, detrás del contenido) ──
@@ -61,7 +61,7 @@
     if (!window.jQuery || typeof jQuery.fn.ripples !== 'function') return false;
     var $bg = jQuery('#ripple-bg'); if (!$bg.length) return false;
     try {
-      $bg.ripples({ resolution: 512, dropRadius: 22, perturbance: 0.02, interactive: false });
+      $bg.ripples({ resolution: 512, dropRadius: 18, perturbance: 0.032, interactive: false });
     } catch (e) { return false; }
     if (!$bg.data('ripples')) return false;
 
@@ -88,9 +88,10 @@
       if (dy < 2) return;
       drop(Math.random() * window.innerWidth, window.innerHeight * (0.2 + Math.random() * 0.6), Math.min(0.03, 0.012 + dy * 0.00025));
     }, { passive: true });
+    // Gotas ambientales CONTINUAS → el agua se mueve sola en toda la página.
     setInterval(function () {
-      drop(Math.random() * window.innerWidth, Math.random() * window.innerHeight, 0.02);
-    }, 5200);
+      drop(Math.random() * window.innerWidth, Math.random() * window.innerHeight, 0.012 + Math.random() * 0.012);
+    }, 900);
     return true;
   }
 
