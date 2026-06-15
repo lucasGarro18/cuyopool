@@ -28,8 +28,7 @@
       "background:#03131e;pointer-events:none;opacity:0;transition:opacity 1s ease}" +
     "#water-bg.is-ready{opacity:1}" +
     "#bg-veil{position:fixed;inset:0;z-index:1;pointer-events:none;" +
-      "background:radial-gradient(ellipse at 50% 26%, rgba(2,11,17,.30) 0%, rgba(2,11,17,.66) 100%)," +
-      "linear-gradient(to bottom, rgba(2,11,17,.66) 0%, rgba(2,11,17,.42) 26%, rgba(2,11,17,.48) 72%, rgba(2,11,17,.72) 100%)}";
+      "background:linear-gradient(to bottom, rgba(3,19,30,.80) 0%, rgba(3,19,30,.85) 100%)}";
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
   // ── 2) Elementos del fondo (al principio del body, detrás del contenido) ──
