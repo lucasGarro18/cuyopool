@@ -24,7 +24,7 @@
   }
   function loadShader() {
     if (document.getElementById('water-gl-loader')) return;
-    var s = document.createElement('script'); s.id = 'water-gl-loader'; s.src = 'water-gl.js?v=1';
+    var s = document.createElement('script'); s.id = 'water-gl-loader'; s.src = 'water-gl.js?v=2';
     document.body.appendChild(s);
   }
   function init() { mountVeil(); loadShader(); }

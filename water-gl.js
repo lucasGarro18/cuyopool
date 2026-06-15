@@ -1,11 +1,10 @@
-/* water-gl.js — Fondo de agua procedural (WebGL) para TODO el sitio.
+/* water-gl.js — Fondo de agua REALISTA (WebGL) para todo el sitio.
  *
- * Un shader fullscreen genera agua con caustics (luz refractada). El patrón se
- * desplaza 1:1 con el SCROLL (uScroll) → el agua "se mueve junto" con la página,
- * aunque el canvas sea fijo al viewport: así es performante y no tiene el límite
- * de tamaño del GPU (un canvas WebGL no puede cubrir 15.000px en mobile).
- * Anima sola (uTime) y reacciona al cursor/dedo (uMouse). Si no hay WebGL, no
- * monta nada y queda el fondo CSS de respaldo.
+ * Un shader fullscreen toma una FOTO real de agua de pileta (assets/water-surface.jpg)
+ * y le aplica ondas de refracción + caustics → agua de pileta realista que se mueve
+ * sola (uTime) y reacciona al cursor/dedo (uMouse). El canvas es fijo al viewport
+ * (performante, sin el límite de tamaño del GPU); un leve parallax acompaña el scroll.
+ * Si no hay WebGL, queda el fondo CSS de respaldo.
  */
 (function () {
   'use strict';
@@ -19,40 +18,39 @@
   var st = document.createElement('style');
   st.textContent = '#water-gl{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;z-index:0;display:block;pointer-events:none}';
   document.head.appendChild(st);
-
   function mount() { if (document.body && !canvas.parentNode) document.body.insertBefore(canvas, document.body.firstChild); }
   if (document.body) mount(); else document.addEventListener('DOMContentLoaded', mount);
 
-  var gl = canvas.getContext('webgl', { antialias: false, depth: false, alpha: false })
-        || canvas.getContext('experimental-webgl');
-  if (!gl) { return; } // sin WebGL → queda el fondo CSS
+  var gl = canvas.getContext('webgl', { antialias: false, depth: false, alpha: false, preserveDrawingBuffer: true })
+        || canvas.getContext('experimental-webgl', { preserveDrawingBuffer: true });
+  if (!gl) { return; }
 
   var VS = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.0,1.0);}';
   var FS = [
     'precision highp float;',
-    'uniform float uTime,uScroll,uMouseT;',
+    'uniform float uTime,uScroll,uMouseT,uTexAspect,uReady;',
     'uniform vec2 uRes,uMouse;',
+    'uniform sampler2D uTex;',
     'float hash(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}',
     'float noise(vec2 p){vec2 i=floor(p),f=fract(p);float a=hash(i),b=hash(i+vec2(1,0)),c=hash(i+vec2(0,1)),d=hash(i+vec2(1,1));vec2 u=f*f*(3.0-2.0*f);return mix(mix(a,b,u.x),mix(c,d,u.x),u.y);}',
-    'float fbm(vec2 p){float v=0.0,a=0.5;for(int i=0;i<4;i++){v+=a*noise(p);p=p*2.03;a*=0.5;}return v;}',
+    'float fbm(vec2 p){float v=0.0,a=0.5;for(int i=0;i<3;i++){v+=a*noise(p);p=p*2.03;a*=0.5;}return v;}',
     'void main(){',
-    '  vec2 frag=gl_FragCoord.xy+vec2(0.0,uScroll);',     // scroll 1:1 con la página
-    '  vec2 uv=frag/uRes.y;',
-    '  float t=uTime*0.05;',
-    '  vec2 q=vec2(fbm(uv*2.0+t),fbm(uv*2.0+vec2(5.2,1.3)-t));',  // domain warp → flujo
-    '  float n=fbm(uv*2.6+q*1.5+t);',
-    '  float n2=fbm(uv*5.5-q*0.8+t*1.4);',
-    '  float net=pow(1.0-abs(n2-0.5)*2.0,5.0);',           // red fina de caustics
-    '  float glow=pow(clamp(smoothstep(0.25,0.85,n),0.0,1.0),1.5);',
-    '  float light=clamp(glow*0.7+net*0.95,0.0,1.3);',
-    '  vec3 deep=vec3(0.02,0.13,0.18);',                   // paleta teal de la marca
-    '  vec3 mid=vec3(0.04,0.30,0.36);',
-    '  vec3 hi=vec3(0.55,0.92,0.95);',
-    '  vec3 col=mix(deep,mid,glow);',
-    '  col=mix(col,hi,clamp(light,0.0,1.0));',
-    '  float md=distance(gl_FragCoord.xy,uMouse);',        // onda del cursor
-    '  float rip=sin(md*0.06-uTime*5.0)*exp(-md*0.005)*exp(-uMouseT*2.5);',
-    '  col+=rip*0.18*vec3(0.6,0.95,1.0);',
+    '  vec2 uv=gl_FragCoord.xy/uRes;',
+    '  uv.y+=uScroll*0.00002;',                          // parallax suave con el scroll
+    '  vec2 c=uv-0.5;',                                   // cover-fit de la textura
+    '  float va=uRes.x/uRes.y;',
+    '  if(va>uTexAspect){c.y*=uTexAspect/va;}else{c.x*=va/uTexAspect;}',
+    '  vec2 tuv=c+0.5;',
+    '  float t=uTime*0.13;',
+    '  vec2 d=vec2(fbm(tuv*3.0+vec2(t,0.0)),fbm(tuv*3.0+vec2(0.0,t)+5.0))-0.5;',  // ondas
+    '  vec3 col=texture2D(uTex,clamp(tuv+d*0.022,0.0,1.0)).rgb;',
+    '  float ca=fbm(tuv*6.0+d*2.0+t*1.4);',              // brillo de caustics
+    '  col+=pow(clamp(ca,0.0,1.0),3.0)*0.22*vec3(0.6,0.95,1.0);',
+    '  float md=distance(gl_FragCoord.xy,uMouse);',      // onda del cursor
+    '  float rip=sin(md*0.07-uTime*6.0)*exp(-md*0.006)*exp(-uMouseT*2.5);',
+    '  col+=rip*0.12*vec3(0.7,1.0,1.0);',
+    '  vec3 fallback=vec3(0.03,0.20,0.26);',             // color hasta que carga la foto
+    '  col=mix(fallback,col,uReady);',
     '  gl_FragColor=vec4(col,1.0);',
     '}'
   ].join('\n');
@@ -73,11 +71,29 @@
   var ploc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(ploc); gl.vertexAttribPointer(ploc, 2, gl.FLOAT, false, 0, 0);
   var uTime = gl.getUniformLocation(prog, 'uTime'), uScroll = gl.getUniformLocation(prog, 'uScroll'),
       uRes = gl.getUniformLocation(prog, 'uRes'), uMouse = gl.getUniformLocation(prog, 'uMouse'),
-      uMouseT = gl.getUniformLocation(prog, 'uMouseT');
+      uMouseT = gl.getUniformLocation(prog, 'uMouseT'), uTexAspect = gl.getUniformLocation(prog, 'uTexAspect'),
+      uReady = gl.getUniformLocation(prog, 'uReady'), uTexLoc = gl.getUniformLocation(prog, 'uTex');
 
-  // Render a resolución reducida (el agua es suave) → liviano en mobile.
+  // Textura de agua (foto real). NPOT → CLAMP + LINEAR (sin mipmaps).
+  var tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([8, 51, 66, 255]));
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.uniform1i(uTexLoc, 0);
+  var texAspect = 1920 / 2262, ready = 0;
+  var img = new Image();
+  img.onload = function () {
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    try { gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img); texAspect = img.width / img.height; ready = 1; }
+    catch (e) {}
+  };
+  img.src = 'assets/water-surface.jpg';
+
   var DPR = Math.min(window.devicePixelRatio || 1, 1.0), SCALE = 0.6;
-  var FPS = 30, FRAME_MS = 1000 / FPS;  // cap de fps → menos GPU/batería en celu
+  var FPS = 30, FRAME_MS = 1000 / FPS;
   var W, H, mx = -1e4, my = -1e4, mt = 999;
   function resize() {
     W = Math.max(1, Math.floor(window.innerWidth * DPR * SCALE));
@@ -92,24 +108,28 @@
   document.addEventListener('touchmove', function (e) { var t = e.touches[0]; if (t) setM(t.clientX, t.clientY); }, { passive: true });
   document.addEventListener('touchstart', function (e) { var t = e.touches[0]; if (t) setM(t.clientX, t.clientY); }, { passive: true });
 
-  var start = performance.now(), last = start, running = true;
+  var start = performance.now(), running = true, lastDraw = 0;
   document.addEventListener('visibilitychange', function () {
     running = !document.hidden;
-    if (running) { last = performance.now(); requestAnimationFrame(frame); }
+    if (running) { requestAnimationFrame(frame); }
   });
 
-  var lastDraw = 0;
   function frame(now) {
-    if (!running) return;
+    if (!running || window.__waterPaused) return;     // __waterPaused: para capturas
     requestAnimationFrame(frame);
-    if (now - lastDraw < FRAME_MS) return;   // cap de fps
+    if (now - lastDraw < FRAME_MS) return;
     var dt = (now - lastDraw) / 1000; lastDraw = now; mt += dt;
     gl.uniform1f(uTime, reduce ? 0.0 : (now - start) / 1000);
     gl.uniform1f(uScroll, (window.scrollY || window.pageYOffset || 0) * DPR * SCALE);
     gl.uniform2f(uRes, W, H);
     gl.uniform2f(uMouse, mx, my);
     gl.uniform1f(uMouseT, mt);
+    gl.uniform1f(uTexAspect, texAspect);
+    gl.uniform1f(uReady, ready);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
   requestAnimationFrame(frame);
+  // Permitir reanudar tras pausa (para capturas de verificación).
+  window.__waterResume = function () { if (!running) return; window.__waterPaused = false; requestAnimationFrame(frame); };
 }());
