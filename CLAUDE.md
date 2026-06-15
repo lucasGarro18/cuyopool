@@ -18,11 +18,13 @@ Piscinas premium en **Mendoza · San Juan · San Luis**, desde 1995.
 - `styles-pages.css` — estilos compartidos de subpáginas. `water.js` — inyecta el fondo de agua en subpáginas. `interactions.js`, `page-init.js`. `editor.js` (modo edición con `?edit`, invisible para visitantes).
 - `assets/` — imágenes. `assets/gallery/px-*.jpg` = **stock de Pexels TEMPORAL** (reemplazar 1:1 por fotos reales de obras cuando lleguen).
 
-## Animación de agua (clave — mucha iteración)
-- El usuario quiere que **TODO scrollee junto** (NO fondo fijo) y que el fondo sea **agua en movimiento en toda la página**.
-- Estructura final: el ripple WebGL real (`jquery.ripples` sobre `assets/water-surface.jpg`) vive SOLO en el hero (`position:absolute`, se va con el scroll). El fondo de toda la página es agua animada por CSS (`#water-fx`: caustics difuminados que derivan, `position:absolute` dentro de `overflow:clip` para no agrandar el scroll).
-- **Límite técnico:** un canvas WebGL no puede cubrir+scrollear los ~15.000px de la página en mobile (límite de textura del GPU ~4096px). **NO volver a poner el agua `position:fixed`.** La parte CSS es tuneable en visibilidad (vela + opacidad de los caustics).
-- Mejora futura posible: shader de agua procedural (Three.js) con UV desplazada por scroll → más realista y controlable.
+## Animación de agua (SOLUCIÓN FINAL — shader WebGL)
+- El fondo de TODO el sitio es un **shader de agua WebGL procedural** en `water-gl.js`.
+- Cómo funciona: un canvas `#water-gl` **fijo al viewport** dibuja caustics procedurales; el patrón se **desplaza 1:1 con el scroll** (`uScroll`) → el agua se mueve junto con la página (lo que el usuario pidió), **anima sola** (`uTime`) y **reacciona al cursor/dedo** (`uMouse`). Por ser procedural y del tamaño del viewport, es liviano y NO tiene el límite de tamaño del GPU que tenía un canvas único en mobile.
+- Performance: render a `0.6x` + cap `30fps` + pausa en pestaña oculta. Respeta `prefers-reduced-motion`. Si no hay WebGL, queda el degradado CSS del `body`.
+- Index lo carga con `<script src="water-gl.js?v=N">`. Subpáginas: `water.js` monta la vela `#bg-veil` y carga `water-gl.js`. La **vela** (`#bg-veil`, fija) regula la legibilidad; tunear ahí si el agua tapa el texto o si se quiere más/menos visible.
+- Las portadas/heroes NO se tocan (en subpáginas, su foto de estilo sigue arriba y se va con el scroll).
+- Eliminados por quedar sin uso: `jquery.ripples` (CDN), `water-surface.jpg`, `water-bg.js`, `ripple.js`, `water-canvas.js`, `water-flow.js`. Para tunear el agua: editar el fragment shader (colores `deep/mid/hi`, `light`) o la vela.
 
 ## Contactos
 - **Lucas Garro** (principal, 2 números): San Juan +54 9 264 544 1838 · Mendoza +54 9 261 557 4180.
