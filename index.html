@@ -288,7 +288,12 @@
 
   /* ── Hero ── */
   .hero{min-height:100vh;padding:140px var(--pad) 96px;
-        display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+        display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;
+        position:relative;
+        /* PORTADA ESTÁTICA: foto quieta de pileta en el hero. El agua animada
+           (jquery.ripples, fija detrás) cubre el resto de la página al scrollear. */
+        background:linear-gradient(180deg, rgba(3,16,24,.30) 0%, rgba(3,16,24,.30) 55%, rgba(3,16,24,.55) 100%),
+                   url('assets/lp-porcelana.jpg') center center / cover no-repeat}
   .hero__panel{display:flex;flex-direction:column;align-items:center;
                padding:54px clamp(28px,5vw,72px) 60px;max-width:780px;
                box-shadow:0 30px 90px rgba(2,12,18,.35)}
