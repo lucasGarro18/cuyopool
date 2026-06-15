@@ -100,10 +100,7 @@
      en un contenedor de scroll independiente (provoca que window.scrollY
      siempre sea 0 y rompe el side rail + cualquier scrollspy). */
   html{overflow-x:clip}
-  body{min-height:100vh;font-family:var(--sans);color:var(--ink);
-       /* Fondo de agua: degradado de pileta profunda. Scrollea CON el contenido. */
-       background:#03131e;
-       background-image:linear-gradient(180deg,#0b3a4b 0%,#083040 24%,#062633 54%,#041c28 82%,#03131e 100%);
+  body{min-height:100vh;font-family:var(--sans);color:var(--ink);background:var(--bg);
        -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
        font-weight:300;
        position:relative}
@@ -128,18 +125,46 @@
                     background:rgba(207,233,232,.06)}
   #c-ring.is-down{width:80px;height:80px;border-color:var(--accent-warm)}
 
-  /* ── Fondo de agua = shader WebGL procedural (water-gl.js): canvas #water-gl
-     fijo al viewport, pero el patrón se desplaza 1:1 con el scroll → el agua se
-     mueve junto con la página, anima sola y reacciona al cursor. ── */
-  /* Velo para legibilidad del texto sobre el agua (fijo, sobre el canvas). */
+  /* ── Fondo: agua HIPERREALISTA (jquery.ripples sobre foto de pileta) ──
+     Div FIJO con la foto de la pileta; jquery.ripples le superpone el agua.
+     Recibe los eventos del puntero para generar ondas (el contenido de arriba
+     lleva pointer-events:none para que los clics "atraviesen" hasta el agua). */
+  #ripple-bg{
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 0;
+    background: #06222e url('assets/lp-porcelana.jpg') center center / cover no-repeat;
+    pointer-events: none;
+  }
+  /* Respaldo: canvas procedural (solo si el dispositivo no soporta ripples). */
+  #water-bg{
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 0;
+    display: block;
+    background: var(--bg);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 1s ease;
+  }
+  #water-bg.is-ready{ opacity: 1; }
+  /* Velo sutil para legibilidad del texto sobre el agua. */
+  /* Velo más profundo y cinematográfico: el agua queda como telón de fondo
+     atenuado (iluminación suave), y el texto/imágenes ganan protagonismo. */
   #bg-veil{
     position: fixed;
     inset: 0;
     z-index: 1;
     pointer-events: none;
     background:
-      radial-gradient(ellipse at 50% 32%, rgba(2,11,17,.16) 0%, rgba(2,11,17,.44) 100%),
-      linear-gradient(to bottom, rgba(2,11,17,.34) 0%, rgba(2,11,17,.30) 50%, rgba(2,11,17,.46) 100%);
+      radial-gradient(ellipse at 50% 26%, rgba(2,11,17,.28) 0%, rgba(2,11,17,.66) 100%),
+      linear-gradient(to bottom, rgba(2,11,17,.66) 0%, rgba(2,11,17,.40) 26%, rgba(2,11,17,.46) 72%, rgba(2,11,17,.72) 100%);
   }
 
   /* Las ondas del agua se alimentan desde listeners pasivos a nivel documento
@@ -754,7 +779,11 @@
     <div class="ld-bar"></div>
   </div>
 
-  <!-- Fondo de agua: el canvas #water-gl lo monta water-gl.js (shader WebGL). -->
+  <!-- Background — agua HIPERREALISTA (jquery.ripples sobre foto de pileta).
+       #water-bg (canvas procedural) queda como RESPALDO automático si el
+       dispositivo no soporta las texturas float que necesita ripples. -->
+  <div id="ripple-bg" aria-hidden="true"></div>
+  <canvas id="water-bg" aria-hidden="true"></canvas>
   <div id="bg-veil" aria-hidden="true"></div>
 
   <!-- Side rail (dots populated by JS) -->
@@ -1349,8 +1378,75 @@
     </label>
   </div>
 
-<!-- ── Fondo de agua: shader WebGL procedural (water-gl.js) ── -->
-<script src="water-gl.js?v=2"></script>
+<!-- ── Agua HIPERREALISTA: jQuery + jquery.ripples (CDN) ── -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.ripples/0.5.3/jquery.ripples.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+(function () {
+  // Inicializa el agua hiperrealista; si el dispositivo NO soporta las texturas
+  // float que necesita ripples, cae automáticamente al agua procedural (canvas).
+  function fallbackToCanvas() {
+    var wb = document.getElementById('water-bg');
+    var rb = document.getElementById('ripple-bg');
+    if (rb) rb.style.display = 'none';            // ocultar la foto fija
+    if (wb) wb.style.zIndex = '0';
+    var s = document.createElement('script');
+    s.src = 'water-bg.js?v=3';
+    document.body.appendChild(s);
+    console.warn('[agua] ripples no soportado → respaldo procedural (canvas).');
+  }
+
+  function startRipples() {
+    if (!window.jQuery || typeof jQuery.fn.ripples !== 'function') return false;
+    var $bg = jQuery('#ripple-bg');
+    if (!$bg.length) return false;
+    try {
+      $bg.ripples({
+        resolution: 512,      // malla de simulación
+        dropRadius: 22,       // gota más amplia → ondas más suaves
+        perturbance: 0.02,    // distorsión MUY baja → agua calma, cinematográfica
+        interactive: false    // NO usamos el modo nativo (robaría el scroll en mobile)
+      });
+    } catch (e) { console.warn('[agua] ripples error:', e); return false; }
+    // ¿Inicializó de verdad? (si el GPU no soporta float, no queda data)
+    if (!$bg.data('ripples')) return false;
+
+    // Ondas alimentadas desde el DOCUMENTO (pasivo) → reacciona al dedo/cursor
+    // en cualquier parte sin robar el evento, así el scroll del celu sigue OK.
+    function drop(cx, cy, strength) {
+      try { $bg.ripples('drop', cx, cy, 20, strength); } catch (e) {}
+    }
+    var lastMove = 0;
+    document.addEventListener('mousemove', function (e) {
+      var now = Date.now(); if (now - lastMove < 60) return; lastMove = now;
+      drop(e.clientX, e.clientY, 0.022);
+    }, { passive: true });
+    document.addEventListener('mousedown', function (e) { drop(e.clientX, e.clientY, 0.03); }, { passive: true });
+    document.addEventListener('touchstart', function (e) {
+      var t = e.touches[0]; if (t) drop(t.clientX, t.clientY, 0.03);
+    }, { passive: true });
+    document.addEventListener('touchmove', function (e) {
+      var now = Date.now(); if (now - lastMove < 60) return; lastMove = now;
+      var t = e.touches[0]; if (t) drop(t.clientX, t.clientY, 0.022);
+    }, { passive: true });
+
+    // Gotas ambientales muy suaves y espaciadas (movimiento sutil, no llamativo).
+    setInterval(function () {
+      drop(Math.random() * window.innerWidth, Math.random() * window.innerHeight, 0.022);
+    }, 5200);
+    return true;
+  }
+
+  function init() {
+    // Respeta prefers-reduced-motion: dejamos el fondo (foto de pileta) estático.
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!startRipples()) fallbackToCanvas();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
 
 <script src="interactions.js?v=8"></script>
 <script src="editor.js"></script>
