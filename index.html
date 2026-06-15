@@ -107,36 +107,6 @@
        -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
        font-weight:300;
        position:relative}
-  /* ── AGUA EN MOVIMIENTO de fondo: luz refractada que deriva suavemente.
-     #water-fx es position:absolute → SCROLLEA junto con la página (todo se mueve
-     como una sola pieza, no fijo). overflow:clip recorta el desborde del scale
-     (sin agrandar el scroll). Difuminada para que parezca agua, no una grilla. ── */
-  #water-fx{position:absolute;top:0;left:0;width:100%;height:100%;
-    z-index:0;pointer-events:none;overflow:clip}
-  #water-fx i{position:absolute;top:0;left:0;width:100%;height:100%;display:block;
-    filter:blur(16px);will-change:transform;transform-origin:center;background-repeat:no-repeat}
-  #water-fx i:nth-child(1){
-    background-image:
-      radial-gradient(32% 22% at 24% 18%, rgba(126,226,238,.42), transparent 60%),
-      radial-gradient(28% 18% at 70% 34%, rgba(96,204,226,.36), transparent 60%),
-      radial-gradient(36% 24% at 44% 60%, rgba(116,216,232,.34), transparent 62%),
-      radial-gradient(28% 18% at 84% 74%, rgba(100,200,222,.34), transparent 60%),
-      radial-gradient(32% 22% at 14% 86%, rgba(126,222,236,.30), transparent 62%);
-    animation:waterFlowA 24s ease-in-out infinite alternate}
-  #water-fx i:nth-child(2){
-    background-image:
-      radial-gradient(28% 18% at 60% 12%, rgba(146,232,242,.30), transparent 60%),
-      radial-gradient(32% 22% at 30% 44%, rgba(100,204,226,.28), transparent 62%),
-      radial-gradient(26% 16% at 82% 56%, rgba(124,218,234,.30), transparent 60%),
-      radial-gradient(32% 22% at 18% 72%, rgba(112,212,230,.26), transparent 62%);
-    animation:waterFlowB 31s ease-in-out infinite alternate}
-  @keyframes waterFlowA{
-    0%{transform:translate3d(-3%,-2.4%,0) scale(1.06)}
-    100%{transform:translate3d(3%,2.6%,0) scale(1.14)}}
-  @keyframes waterFlowB{
-    0%{transform:translate3d(2.6%,1.8%,0) scale(1.12)}
-    100%{transform:translate3d(-3%,-2.4%,0) scale(1.05)}}
-  @media (prefers-reduced-motion: reduce){ #water-fx i{animation:none} }
   a{color:inherit;text-decoration:none}
   button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   img{max-width:100%;display:block}
@@ -158,46 +128,18 @@
                     background:rgba(207,233,232,.06)}
   #c-ring.is-down{width:80px;height:80px;border-color:var(--accent-warm)}
 
-  /* ── Fondo: agua HIPERREALISTA (jquery.ripples sobre foto de pileta) ──
-     Div FIJO con la foto de la pileta; jquery.ripples le superpone el agua.
-     Recibe los eventos del puntero para generar ondas (el contenido de arriba
-     lleva pointer-events:none para que los clics "atraviesen" hasta el agua). */
-  /* Agua real (jquery.ripples) en la PORTADA/hero: alto = 1 pantalla y SCROLLEA
-     con la página (se va al bajar). El resto del fondo es el agua en movimiento
-     CSS (body::before/::after), que también scrollea con el contenido. */
-  #ripple-bg{
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%;
-    height: 100vh;
-    height: 100dvh;
-    z-index: 0;
-    background: #0a3a4c url('assets/water-surface.jpg') center center / cover no-repeat;
-    pointer-events: none;
-  }
-  /* Respaldo: canvas procedural (solo si el dispositivo no soporta ripples). */
-  #water-bg{
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%;
-    height: 100vh;
-    height: 100dvh;
-    z-index: 0;
-    display: block;
-    background: transparent;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 1s ease;
-  }
-  #water-bg.is-ready{ opacity: 1; }
-  /* Velo suave para legibilidad — cubre TODO el documento y scrollea con él. */
+  /* ── Fondo de agua = shader WebGL procedural (water-gl.js): canvas #water-gl
+     fijo al viewport, pero el patrón se desplaza 1:1 con el scroll → el agua se
+     mueve junto con la página, anima sola y reacciona al cursor. ── */
+  /* Velo para legibilidad del texto sobre el agua (fijo, sobre el canvas). */
   #bg-veil{
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
+    position: fixed;
+    inset: 0;
     z-index: 1;
     pointer-events: none;
     background:
-      linear-gradient(to bottom, rgba(2,11,17,.16) 0, rgba(2,11,17,.22) 100vh, rgba(2,11,17,.22) 100%);
+      radial-gradient(ellipse at 50% 32%, rgba(2,11,17,.16) 0%, rgba(2,11,17,.44) 100%),
+      linear-gradient(to bottom, rgba(2,11,17,.34) 0%, rgba(2,11,17,.30) 50%, rgba(2,11,17,.46) 100%);
   }
 
   /* Las ondas del agua se alimentan desde listeners pasivos a nivel documento
@@ -812,12 +754,7 @@
     <div class="ld-bar"></div>
   </div>
 
-  <!-- Background — agua HIPERREALISTA (jquery.ripples sobre foto de pileta).
-       #water-bg (canvas procedural) queda como RESPALDO automático si el
-       dispositivo no soporta las texturas float que necesita ripples. -->
-  <div id="water-fx" aria-hidden="true"><i></i><i></i></div>
-  <div id="ripple-bg" aria-hidden="true"></div>
-  <canvas id="water-bg" aria-hidden="true"></canvas>
+  <!-- Fondo de agua: el canvas #water-gl lo monta water-gl.js (shader WebGL). -->
   <div id="bg-veil" aria-hidden="true"></div>
 
   <!-- Side rail (dots populated by JS) -->
@@ -1412,81 +1349,8 @@
     </label>
   </div>
 
-<!-- ── Agua HIPERREALISTA: jQuery + jquery.ripples (CDN) ── -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.ripples/0.5.3/jquery.ripples.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script>
-(function () {
-  // Inicializa el agua hiperrealista; si el dispositivo NO soporta las texturas
-  // float que necesita ripples, cae automáticamente al agua procedural (canvas).
-  function fallbackToCanvas() {
-    var wb = document.getElementById('water-bg');
-    var rb = document.getElementById('ripple-bg');
-    if (rb) rb.style.display = 'none';            // ocultar la foto fija
-    if (wb) wb.style.zIndex = '0';
-    var s = document.createElement('script');
-    s.src = 'water-bg.js?v=3';
-    document.body.appendChild(s);
-    console.warn('[agua] ripples no soportado → respaldo procedural (canvas).');
-  }
-
-  function startRipples() {
-    if (!window.jQuery || typeof jQuery.fn.ripples !== 'function') return false;
-    var $bg = jQuery('#ripple-bg');
-    if (!$bg.length) return false;
-    try {
-      $bg.ripples({
-        resolution: 512,      // malla de simulación (equilibrio realismo/performance)
-        dropRadius: 18,       // ondas naturales con detalle
-        perturbance: 0.032,   // distorsión visible pero natural (no exagerada)
-        interactive: false    // NO usamos el modo nativo (robaría el scroll en mobile)
-      });
-    } catch (e) { console.warn('[agua] ripples error:', e); return false; }
-    // ¿Inicializó de verdad? (si el GPU no soporta float, no queda data)
-    if (!$bg.data('ripples')) return false;
-
-    // Ondas alimentadas desde el DOCUMENTO (pasivo) → reacciona al dedo/cursor
-    // en cualquier parte sin robar el evento, así el scroll del celu sigue OK.
-    // El agua del hero (absoluta, alto = 1 pantalla) SCROLLEA con la página.
-    // Coordenadas de PÁGINA (clientY + scrollY); la gota solo cuenta dentro del
-    // agua del hero → sin artefactos al bajar.
-    function heroH(){ return $bg[0] ? $bg[0].offsetHeight : window.innerHeight; }
-    function drop(cx, cy, strength) {
-      if (cy < 0 || cy > heroH()) return;
-      try { $bg.ripples('drop', cx, cy, 20, strength); } catch (e) {}
-    }
-    var lastMove = 0;
-    document.addEventListener('mousemove', function (e) {
-      var now = Date.now(); if (now - lastMove < 60) return; lastMove = now;
-      drop(e.clientX, e.clientY + window.scrollY, 0.022);
-    }, { passive: true });
-    document.addEventListener('mousedown', function (e) { drop(e.clientX, e.clientY + window.scrollY, 0.03); }, { passive: true });
-    document.addEventListener('touchstart', function (e) {
-      var t = e.touches[0]; if (t) drop(t.clientX, t.clientY + window.scrollY, 0.03);
-    }, { passive: true });
-    document.addEventListener('touchmove', function (e) {
-      var now = Date.now(); if (now - lastMove < 60) return; lastMove = now;
-      var t = e.touches[0]; if (t) drop(t.clientX, t.clientY + window.scrollY, 0.022);
-    }, { passive: true });
-
-    // Gotas ambientales en el agua del hero (mientras está a la vista).
-    setInterval(function () {
-      if (window.scrollY > heroH()) return;
-      drop(Math.random() * window.innerWidth, Math.random() * heroH(), 0.012 + Math.random() * 0.012);
-    }, 1100);
-    return true;
-  }
-
-  function init() {
-    // Respeta prefers-reduced-motion: dejamos el fondo (foto de pileta) estático.
-    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    if (!startRipples()) fallbackToCanvas();
-  }
-
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
-})();
-</script>
+<!-- ── Fondo de agua: shader WebGL procedural (water-gl.js) ── -->
+<script src="water-gl.js?v=1"></script>
 
 <script src="interactions.js?v=8"></script>
 <script src="editor.js"></script>
