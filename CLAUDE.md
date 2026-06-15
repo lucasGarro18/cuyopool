@@ -20,7 +20,7 @@ Piscinas premium en **Mendoza · San Juan · San Luis**, desde 1995.
 
 ## Animación de agua (SOLUCIÓN FINAL — shader WebGL)
 - El fondo de TODO el sitio es un **shader de agua WebGL procedural** en `water-gl.js`.
-- Cómo funciona: un canvas `#water-gl` **fijo al viewport** dibuja caustics procedurales; el patrón se **desplaza 1:1 con el scroll** (`uScroll`) → el agua se mueve junto con la página (lo que el usuario pidió), **anima sola** (`uTime`) y **reacciona al cursor/dedo** (`uMouse`). Por ser procedural y del tamaño del viewport, es liviano y NO tiene el límite de tamaño del GPU que tenía un canvas único en mobile.
+- Cómo funciona: un canvas `#water-gl` **fijo al viewport** toma la **foto real del agua** (`assets/water-surface.jpg`) como textura y le aplica **ondas de refracción + caustics** → agua de pileta **realista** que se mueve sola (`uTime`), reacciona al cursor (`uMouse`) y tiene **parallax suave al scrollear** (`uScroll`). Es liviano y sin el límite de tamaño del GPU. (Importante: el usuario rechazó la versión de caustics 100% procedural por "muy abstracta" — el agua DEBE verse como pileta realista, usando la foto.) Para tunear el look: la fuerza de las ondas (`d*0.022`), los caustics, o cambiar `water-surface.jpg`.
 - Performance: render a `0.6x` + cap `30fps` + pausa en pestaña oculta. Respeta `prefers-reduced-motion`. Si no hay WebGL, queda el degradado CSS del `body`.
 - Index lo carga con `<script src="water-gl.js?v=N">`. Subpáginas: `water.js` monta la vela `#bg-veil` y carga `water-gl.js`. La **vela** (`#bg-veil`, fija) regula la legibilidad; tunear ahí si el agua tapa el texto o si se quiere más/menos visible.
 - Las portadas/heroes NO se tocan (en subpáginas, su foto de estilo sigue arriba y se va con el scroll).
