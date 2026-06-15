@@ -18,13 +18,9 @@ Piscinas premium en **Mendoza · San Juan · San Luis**, desde 1995.
 - `styles-pages.css` — estilos compartidos de subpáginas. `water.js` — inyecta el fondo de agua en subpáginas. `interactions.js`, `page-init.js`. `editor.js` (modo edición con `?edit`, invisible para visitantes).
 - `assets/` — imágenes. `assets/gallery/px-*.jpg` = **stock de Pexels TEMPORAL** (reemplazar 1:1 por fotos reales de obras cuando lleguen).
 
-## Animación de agua (SOLUCIÓN FINAL — shader WebGL)
-- El fondo de TODO el sitio es un **shader de agua WebGL procedural** en `water-gl.js`.
-- Cómo funciona: un canvas `#water-gl` **fijo al viewport** toma la **foto real del agua** (`assets/water-surface.jpg`) como textura y le aplica **ondas de refracción + caustics** → agua de pileta **realista** que se mueve sola (`uTime`), reacciona al cursor (`uMouse`) y tiene **parallax suave al scrollear** (`uScroll`). Es liviano y sin el límite de tamaño del GPU. (Importante: el usuario rechazó la versión de caustics 100% procedural por "muy abstracta" — el agua DEBE verse como pileta realista, usando la foto.) Para tunear el look: la fuerza de las ondas (`d*0.022`), los caustics, o cambiar `water-surface.jpg`.
-- Performance: render a `0.6x` + cap `30fps` + pausa en pestaña oculta. Respeta `prefers-reduced-motion`. Si no hay WebGL, queda el degradado CSS del `body`.
-- Index lo carga con `<script src="water-gl.js?v=N">`. Subpáginas: `water.js` monta la vela `#bg-veil` y carga `water-gl.js`. La **vela** (`#bg-veil`, fija) regula la legibilidad; tunear ahí si el agua tapa el texto o si se quiere más/menos visible.
-- Las portadas/heroes NO se tocan (en subpáginas, su foto de estilo sigue arriba y se va con el scroll).
-- Eliminados por quedar sin uso: `jquery.ripples` (CDN), `water-surface.jpg`, `water-bg.js`, `ripple.js`, `water-canvas.js`, `water-flow.js`. Para tunear el agua: editar el fragment shader (colores `deep/mid/hi`, `light`) o la vela.
+## Animación de agua — USAR EL EFECTO REAL (jquery.ripples). NO inventar shaders.
+- El agua es el efecto **hiperrealista `jquery.ripples`** sobre la foto de pileta (`assets/lp-porcelana.jpg`): `#ripple-bg` + jQuery + jquery.ripples (CDN) en el index; en subpáginas lo inyecta `water.js` (con fallback canvas `water-bg.js`). Vela `#bg-veil` para legibilidad.
+- **REGLA (aprendida con dolor, jun 2026):** NO construir shaders WebGL custom ni reemplazar este efecto. Se probaron caustics CSS y shaders WebGL (procedural y con textura) y todos salieron peor/distintos y gastaron créditos. El usuario quiere el efecto real de jquery.ripples y nada más. Si pide ajustes, tunear **parámetros de jquery.ripples** (`perturbance`, `dropRadius`) o la **vela**, sin reescribir el sistema.
 
 ## Contactos
 - **Lucas Garro** (principal, 2 números): San Juan +54 9 264 544 1838 · Mendoza +54 9 261 557 4180.
