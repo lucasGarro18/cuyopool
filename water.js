@@ -43,8 +43,9 @@
     document.body.insertBefore(rb, wb);
   }
 
-  function loadScript(src, cb) {
+  function loadScript(src, cb, sri) {
     var s = document.createElement('script'); s.src = src;
+    if (sri) { s.integrity = sri; s.crossOrigin = 'anonymous'; }
     s.onload = cb; s.onerror = cb; document.head.appendChild(s);
   }
 
@@ -100,8 +101,9 @@
     function go() { if (!startRipples()) fallbackCanvas(); }
     if (window.jQuery && jQuery.fn && jQuery.fn.ripples) { go(); return; }
     loadScript('https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js', function () {
-      loadScript('https://cdnjs.cloudflare.com/ajax/libs/jquery.ripples/0.5.3/jquery.ripples.min.js', go);
-    });
+      loadScript('https://cdnjs.cloudflare.com/ajax/libs/jquery.ripples/0.5.3/jquery.ripples.min.js', go,
+        'sha384-1r1qcEBzbTCbPHTmg+2unjZIS3z513OcjjY27Ev/AMczsUzfqO0VryKtPzdRANzU');
+    }, 'sha384-1H217gwSVyLSIfaLxHbE7dRb3v4mYCKbpQvzx0cegeju1MVsGrX5xXxAvs/HgeFs');
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
